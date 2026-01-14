@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="フィッシング・エボリューション - 魚を釣り、売り、装備を強化する成長型釣りゲーム">
+    <title>フィッシング・エボリューション</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+
+<body>
+    <!-- ========================================
+         スタート画面
+         ======================================== -->
+    <div id="start-screen" class="screen active">
+        <div class="ocean-bg">
+            <div class="wave wave1"></div>
+            <div class="wave wave2"></div>
+            <div class="wave wave3"></div>
+        </div>
+        <div class="start-content">
+            <h1 class="game-title">
+                <span class="title-icon"><span class="material-icons">phishing</span></span>
+                <span class="title-text">フィッシング</span>
+                <span class="title-sub">エボリューション</span>
+            </h1>
+            <div class="start-buttons">
+                <button id="start-btn" class="btn-main">
+                    <span class="btn-icon">▶</span>
+                    はじめから
+                </button>
+                <button id="continue-btn" class="btn-main btn-continue hidden">
+                    <span class="btn-icon">↻</span>
+                    つづきから
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================
+         釣り画面
+         ======================================== -->
+    <div id="fishing-screen" class="screen">
+        <!-- フローティングステータス（左側） -->
+        <div class="floating-status floating-status-left">
+            <div class="status-pill">
+                <span class="status-icon"><span class="material-icons">paid</span></span>
+                <span id="money-display" class="status-value">0 G</span>
+            </div>
+            <div class="status-pill">
+                <span class="status-icon"><span class="material-icons">bolt</span></span>
+                <span id="power-display" class="status-value">パワー: 10</span>
+            </div>
+        </div>
+
+        <!-- フローティングステータス（右側） -->
+        <div class="floating-status floating-status-right">
+            <button id="shop-btn-top" class="floating-btn">
+                <span class="material-icons">shopping_cart</span>
+            </button>
+            <div class="status-card">
+                <div class="status-label">餌の残数</div>
+                <div id="bait-info" class="status-value-lg">0 個</div>
+            </div>
+            <div class="status-card">
+                <div class="status-label">所持魚</div>
+                <div id="inventory-count" class="status-value-lg">0 匹</div>
+            </div>
+        </div>
+
+        <!-- 装備中の竿（左下表示） -->
+        <div id="rod-info" class="rod-badge">
+            <span class="rod-name">木の釣竿</span>
+            <span class="rod-stars"><span class="material-icons star-empty">star_border</span><span
+                    class="material-icons star-empty">star_border</span><span
+                    class="material-icons star-empty">star_border</span><span
+                    class="material-icons star-empty">star_border</span><span
+                    class="material-icons star-empty">star_border</span></span>
+        </div>
+
+        <!-- メイン釣りエリア -->
+        <main id="fishing-area" class="fishing-area">
+            <div class="idle-state">
+                <div class="instruction">画面をタップしてキャスト</div>
+            </div>
+        </main>
+
+        <!-- 1人称視点の釣り竿 -->
+        <div id="fishing-rod-view" class="fishing-rod-view">
+            <div class="rod-shaft"></div>
+            <div class="rod-line"></div>
+        </div>
+
+        <!-- 底部ナビゲーション -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-screen="fishing">
+                <span class="nav-icon"><span class="material-icons">phishing</span></span>
+                <span class="nav-label">釣り場</span>
+            </button>
+            <button id="shop-btn" class="nav-item" data-screen="shop">
+                <span class="nav-icon"><span class="material-icons">store</span></span>
+                <span class="nav-label">ショップ</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- ========================================
+         ショップ画面
+         ======================================== -->
+    <div id="shop-screen" class="screen">
+        <header class="shop-header">
+            <h2 class="shop-title"><span class="material-icons">store</span> ショップ</h2>
+            <div class="shop-money">
+                <span class="status-icon"><span class="material-icons">paid</span></span>
+                <span id="shop-money-display">¥0</span>
+            </div>
+        </header>
+
+        <!-- カテゴリタブ -->
+        <nav class="shop-tabs">
+            <button class="shop-tab active" data-category="rods">
+                <span class="material-icons">phishing</span> 釣り竿
+            </button>
+            <button class="shop-tab" data-category="skills">
+                <span class="material-icons">bolt</span> スキル
+            </button>
+            <button class="shop-tab" data-category="baits">
+                <span class="material-icons">grass</span> 餌
+            </button>
+        </nav>
+
+        <!-- ショップコンテンツ -->
+        <main class="shop-content">
+            <!-- 強化・装備情報セクション -->
+            <section id="upgrade-section" class="upgrade-section">
+                <!-- 動的に表示 -->
+            </section>
+
+            <!-- アイテムリスト -->
+            <section id="shop-items" class="shop-items">
+                <!-- 動的に表示 -->
+            </section>
+        </main>
+
+        <!-- フッター -->
+        <footer class="shop-footer">
+            <button id="sell-btn" class="btn-action">
+                <span class="material-icons">sell</span>
+                魚を全て売却
+            </button>
+            <button id="back-btn" class="btn-nav">
+                <span class="material-icons">phishing</span>
+                釣りに戻る
+            </button>
+        </footer>
+    </div>
+
+    <!-- ========================================
+         スクリプト読み込み
+         ======================================== -->
+    <script src="data/gameData.js"></script>
+    <script src="js/SaveManager.js"></script>
+    <script src="js/GameState.js"></script>
+    <script src="js/FishingGame.js"></script>
+    <script src="js/ShopManager.js"></script>
+    <script src="js/UIManager.js"></script>
+    <script src="js/main.js"></script>
+</body>
+
+</html>

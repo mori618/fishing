@@ -1,0 +1,1468 @@
+/* ========================================
+   フィッシング・エボリューション
+   メインスタイルシート
+   ======================================== */
+
+/* ----------------------------------------
+   CSS変数（テーマ設定）
+   ---------------------------------------- */
+:root {
+    /* カラーパレット */
+    --primary-color: #0ea5e9;
+    --primary-dark: #0284c7;
+    --primary-light: #38bdf8;
+    --secondary-color: #22c55e;
+    --secondary-dark: #16a34a;
+    --accent-color: #f59e0b;
+    --danger-color: #ef4444;
+
+    /* 海のグラデーション */
+    --ocean-dark: #0c4a6e;
+    --ocean-mid: #0369a1;
+    --ocean-light: #0ea5e9;
+    --ocean-surface: #7dd3fc;
+
+    /* UI色 */
+    --bg-dark: #0f172a;
+    --bg-card: rgba(15, 23, 42, 0.85);
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --border-color: rgba(148, 163, 184, 0.2);
+
+    /* レア度カラー */
+    --rarity-common: #94a3b8;
+    --rarity-uncommon: #22c55e;
+    --rarity-rare: #3b82f6;
+    --rarity-epic: #a855f7;
+    --rarity-legendary: #f59e0b;
+
+    /* フォント */
+    --font-main: 'Noto Sans JP', sans-serif;
+
+    /* スペーシング */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+
+    /* ボーダー */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 20px;
+    --radius-full: 9999px;
+
+    /* シャドウ */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
+    --shadow-glow: 0 0 20px rgba(14, 165, 233, 0.5);
+}
+
+/* ----------------------------------------
+   リセット・ベース
+   ---------------------------------------- */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    height: 100%;
+    font-family: var(--font-main);
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--text-primary);
+    background: var(--bg-dark);
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+
+/* ----------------------------------------
+   Material Icons スタイル
+   ---------------------------------------- */
+.material-icons {
+    font-size: inherit;
+    vertical-align: middle;
+}
+
+.status-icon .material-icons,
+.nav-icon .material-icons,
+.btn-icon .material-icons {
+    font-size: 20px;
+}
+
+.title-icon .material-icons {
+    font-size: 48px;
+}
+
+/* 星のスタイル */
+.star-filled,
+.rod-stars .material-icons[class*="star"]:not(.star-empty) {
+    color: #fbbf24;
+}
+
+.star-empty,
+.rod-stars .material-icons.star-empty {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.stars-display .material-icons {
+    font-size: 24px;
+}
+
+.star-icon {
+    font-size: 14px;
+    vertical-align: baseline;
+}
+
+/* 結果表示アイコン */
+.result-icon {
+    font-size: 64px;
+    color: var(--secondary-color);
+}
+
+.result-icon.escaped {
+    opacity: 0.5;
+}
+
+.sparkle-icon {
+    font-size: 32px;
+    color: #fbbf24;
+    position: absolute;
+    top: 0;
+    right: -10px;
+    animation: sparkle 0.5s ease-out;
+}
+
+@keyframes sparkle {
+    from {
+        transform: scale(0) rotate(-45deg);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+/* ----------------------------------------
+   画面ベース
+   ---------------------------------------- */
+.screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    flex-direction: column;
+}
+
+.screen.active {
+    display: flex;
+}
+
+/* ----------------------------------------
+   スタート画面
+   ---------------------------------------- */
+#start-screen {
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(180deg, var(--ocean-dark) 0%, var(--ocean-mid) 50%, var(--ocean-light) 100%);
+}
+
+.ocean-bg {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 40%;
+    overflow: hidden;
+}
+
+.wave {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 200%;
+    height: 100%;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,60 C150,120 350,0 600,60 C850,120 1050,0 1200,60 L1200,120 L0,120 Z' fill='%237dd3fc' fill-opacity='0.3'/%3E%3C/svg%3E");
+    background-size: 50% 100%;
+    animation: wave-move 8s linear infinite;
+}
+
+.wave2 {
+    opacity: 0.6;
+    animation-duration: 10s;
+    animation-delay: -2s;
+}
+
+.wave3 {
+    opacity: 0.4;
+    animation-duration: 12s;
+    animation-delay: -4s;
+}
+
+@keyframes wave-move {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+.start-content {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    padding: var(--spacing-xl);
+}
+
+.game-title {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+.title-icon {
+    font-size: 80px;
+    animation: bobbing 2s ease-in-out infinite;
+}
+
+@keyframes bobbing {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.title-text {
+    font-size: 48px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #fff 0%, var(--ocean-surface) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    letter-spacing: 4px;
+}
+
+.title-sub {
+    font-size: 24px;
+    font-weight: 500;
+    color: var(--ocean-surface);
+    letter-spacing: 8px;
+    text-transform: uppercase;
+}
+
+.start-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+/* ----------------------------------------
+   ボタンスタイル
+   ---------------------------------------- */
+.btn-main {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-xl);
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    border: none;
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-md), var(--shadow-glow);
+}
+
+.btn-main:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: var(--shadow-lg), 0 0 30px rgba(14, 165, 233, 0.6);
+}
+
+.btn-main:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.btn-continue {
+    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--secondary-dark) 100%);
+    box-shadow: var(--shadow-md), 0 0 20px rgba(34, 197, 94, 0.5);
+}
+
+.hidden {
+    display: none !important;
+}
+
+.btn-nav,
+.btn-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+}
+
+.btn-nav:hover,
+.btn-action:hover {
+    background: rgba(14, 165, 233, 0.2);
+    border-color: var(--primary-color);
+}
+
+.btn-action {
+    background: linear-gradient(135deg, var(--accent-color) 0%, #d97706 100%);
+    border: none;
+    color: white;
+    font-weight: 600;
+}
+
+.btn-action:hover {
+    background: linear-gradient(135deg, #fbbf24 0%, var(--accent-color) 100%);
+}
+
+/* ----------------------------------------
+   釣り画面
+   ---------------------------------------- */
+#fishing-screen {
+    position: relative;
+    background: linear-gradient(180deg,
+            #87CEEB 0%,
+            /* 空 */
+            #7dd3fc 30%,
+            /* 明るい空 */
+            #38bdf8 50%,
+            /* 水平線付近 */
+            #0284c7 55%,
+            /* 水面 */
+            #0369a1 70%,
+            /* 水中上層 */
+            #0c4a6e 100%
+            /* 水中深層 */
+        );
+    overflow: hidden;
+}
+
+/* 水面の反射効果 */
+#fishing-screen::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.4) 20%,
+            rgba(255, 255, 255, 0.6) 50%,
+            rgba(255, 255, 255, 0.4) 80%,
+            transparent 100%);
+    z-index: 5;
+}
+
+/* 水中のパーティクル効果 */
+#fishing-screen::after {
+    content: '';
+    position: absolute;
+    top: 52%;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0.15;
+    background-image: radial-gradient(circle at 50% 50%, white 1px, transparent 1px);
+    background-size: 50px 50px;
+    z-index: 1;
+}
+
+/* ----------------------------------------
+   フローティングステータス
+   ---------------------------------------- */
+.floating-status {
+    position: absolute;
+    top: var(--spacing-md);
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    pointer-events: auto;
+}
+
+.floating-status-left {
+    left: var(--spacing-md);
+}
+
+.floating-status-right {
+    right: var(--spacing-md);
+    align-items: flex-end;
+}
+
+/* ステータスピル（左側） */
+.status-pill {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-full);
+}
+
+.status-pill .status-icon {
+    font-size: 18px;
+}
+
+.status-pill .status-value {
+    font-weight: 700;
+    color: white;
+    font-size: 14px;
+}
+
+/* フローティングボタン（右上） */
+.floating-btn {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 20px;
+}
+
+.floating-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+/* ステータスカード（右側） */
+.status-card {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    text-align: right;
+}
+
+.status-label {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-value-lg {
+    font-size: 16px;
+    font-weight: 700;
+    color: white;
+}
+
+/* 竿バッジ（左下） */
+.rod-badge {
+    position: absolute;
+    bottom: calc(80px + var(--spacing-md));
+    left: var(--spacing-md);
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+}
+
+.rod-badge .rod-name {
+    font-weight: 600;
+    color: var(--accent-color);
+    font-size: 14px;
+}
+
+.rod-badge .rod-stars {
+    color: var(--accent-color);
+    letter-spacing: 1px;
+    font-size: 12px;
+}
+
+/* ----------------------------------------
+   1人称視点の釣り竿
+   ---------------------------------------- */
+.fishing-rod-view {
+    position: absolute;
+    bottom: 80px;
+    right: 20px;
+    z-index: 10;
+    transform-origin: bottom right;
+    transition: transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+}
+
+.fishing-rod-view.idle {
+    transform: translateY(50px) rotate(15deg);
+}
+
+.fishing-rod-view.casting {
+    transform: translateY(0) rotate(-10deg);
+}
+
+.fishing-rod-view.waiting,
+.fishing-rod-view.nibble,
+.fishing-rod-view.hit {
+    transform: translateY(0) rotate(-8deg);
+}
+
+.rod-shaft {
+    width: 8px;
+    height: 350px;
+    background: #8B4513;
+    border-left: 2px solid #5c4033;
+    border-right: 2px solid #a0522d;
+}
+
+.rod-line {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 1px;
+    height: 500px;
+    background: rgba(255, 255, 255, 0.5);
+    transform: translateX(-50%);
+}
+
+/* ----------------------------------------
+   底部ナビゲーション
+   ---------------------------------------- */
+.bottom-nav {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 var(--spacing-lg);
+    z-index: 100;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.nav-item:hover {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.nav-item.active {
+    color: var(--primary-light);
+}
+
+.nav-icon {
+    font-size: 24px;
+}
+
+.nav-label {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+/* ----------------------------------------
+   釣りエリア
+   ---------------------------------------- */
+.fishing-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.idle-state,
+.waiting-state,
+.nibble-state,
+.hit-state,
+.result-state,
+.gauge-battle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: var(--spacing-lg);
+}
+
+.instruction {
+    font-size: 18px;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-lg);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 0.7;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+.bobber-resting {
+    font-size: 80px;
+    animation: bobbing 3s ease-in-out infinite;
+}
+
+/* 水面とウキ */
+.water-surface {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.bobber {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* ウキの棒（上部） */
+.bobber-stick {
+    width: 3px;
+    height: 16px;
+    background: #f97316;
+}
+
+/* ウキの本体（丸い赤） */
+.bobber-body {
+    width: 28px;
+    height: 28px;
+    background: #ef4444;
+    border-radius: 50%;
+    border-bottom: 3px solid white;
+}
+
+/* 待機中は静止（アニメーションなし） */
+
+/* 揺れ（回数と間隔はインラインスタイルで動的に設定） */
+.bobber.nibbling {
+    animation-name: nibble-shake;
+    animation-timing-function: ease-in-out;
+    /* animation-duration と animation-iteration-count はインラインで設定 */
+}
+
+@keyframes nibble-shake {
+
+    0%,
+    100% {
+        transform: translateY(0) rotate(0deg);
+    }
+
+    25% {
+        transform: translateY(3px) rotate(-5deg);
+    }
+
+    75% {
+        transform: translateY(3px) rotate(5deg);
+    }
+}
+
+/* 沈む */
+.bobber.sinking {
+    animation: sink 0.4s ease-in forwards;
+}
+
+@keyframes sink {
+    0% {
+        transform: translateY(0);
+    }
+
+    100% {
+        transform: translateY(40px);
+        opacity: 0.6;
+    }
+}
+
+.ripple {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    animation: ripple-expand 2s ease-out infinite;
+}
+
+.ripple.active {
+    animation: ripple-expand 0.5s ease-out infinite;
+}
+
+@keyframes ripple-expand {
+    0% {
+        width: 40px;
+        height: 40px;
+        opacity: 1;
+    }
+
+    100% {
+        width: 120px;
+        height: 120px;
+        opacity: 0;
+    }
+}
+
+.splash {
+    position: absolute;
+    width: 100px;
+    height: 50px;
+    background: radial-gradient(ellipse, rgba(255, 255, 255, 0.4) 0%, transparent 70%);
+    animation: splash 0.3s ease-out;
+}
+
+@keyframes splash {
+    0% {
+        transform: scale(0.5);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+.wait-text,
+.nibble-text {
+    margin-top: var(--spacing-lg);
+    font-size: 16px;
+    color: var(--text-secondary);
+}
+
+.nibble-text {
+    color: var(--accent-color);
+    animation: blink 0.5s ease-in-out infinite;
+}
+
+.hit-text {
+    margin-top: var(--spacing-lg);
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--danger-color);
+}
+
+.hit-text.flash {
+    animation: flash 0.2s ease-in-out infinite;
+}
+
+@keyframes flash {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* ----------------------------------------
+   ゲージバトル（インライン）
+   ---------------------------------------- */
+.gauge-battle {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: var(--spacing-lg);
+}
+
+.gauge-battle-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: var(--spacing-sm);
+}
+
+.gauge-battle-subtitle {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: var(--spacing-xl);
+}
+
+.fish-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin-bottom: var(--spacing-lg);
+}
+
+.fish-name {
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.fish-power {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+/* レア度別の色 */
+.rarity-common {
+    color: var(--rarity-common);
+}
+
+.rarity-uncommon {
+    color: var(--rarity-uncommon);
+}
+
+.rarity-rare {
+    color: var(--rarity-rare);
+}
+
+.rarity-epic {
+    color: var(--rarity-epic);
+}
+
+.rarity-legendary {
+    color: var(--rarity-legendary);
+    text-shadow: 0 0 20px var(--rarity-legendary);
+    animation: legendary-glow 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes legendary-glow {
+    from {
+        text-shadow: 0 0 10px var(--rarity-legendary);
+    }
+
+    to {
+        text-shadow: 0 0 30px var(--rarity-legendary), 0 0 50px var(--rarity-legendary);
+    }
+}
+
+.gauge-container {
+    width: 100%;
+    padding: var(--spacing-lg) 0;
+    margin-bottom: var(--spacing-xl);
+}
+
+.gauge-bar {
+    position: relative;
+    width: 100%;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    border: 4px solid rgba(255, 255, 255, 0.2);
+}
+
+.zone {
+    position: absolute;
+    top: 0;
+    height: 100%;
+}
+
+.white-zone {
+    left: 0;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.green-zone {
+    background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
+}
+
+.red-zone {
+    background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+}
+
+.gauge-indicator {
+    position: absolute;
+    top: -4px;
+    bottom: -4px;
+    width: 6px;
+    background: #fbbf24;
+    box-shadow: 0 0 15px rgba(251, 191, 36, 1), 0 0 30px rgba(251, 191, 36, 0.5);
+    transform: translateX(-50%);
+    transition: none;
+    border-radius: 3px;
+}
+
+.gauge-instruction {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* STOPボタン */
+.btn-stop {
+    padding: var(--spacing-lg) var(--spacing-xl);
+    font-size: 24px;
+    font-weight: 700;
+    color: white;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    border: none;
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 8px 32px rgba(239, 68, 68, 0.4);
+    min-width: 200px;
+}
+
+.btn-stop:hover {
+    transform: scale(1.05);
+    box-shadow: 0 12px 40px rgba(239, 68, 68, 0.6);
+}
+
+.btn-stop:active {
+    transform: scale(0.95);
+}
+
+/* ゲージバトル結果表示 */
+.gauge-result {
+    font-size: 48px;
+    font-weight: 900;
+    font-style: italic;
+    letter-spacing: -2px;
+}
+
+.gauge-result.success {
+    color: #fbbf24;
+    text-shadow: 0 0 20px rgba(251, 191, 36, 0.8);
+}
+
+.gauge-result.failed {
+    color: #ef4444;
+    text-shadow: 0 0 20px rgba(239, 68, 68, 0.8);
+}
+
+/* ----------------------------------------
+   結果表示
+   ---------------------------------------- */
+.result-state {
+    text-align: center;
+}
+
+.result-animation {
+    font-size: 64px;
+    margin-bottom: var(--spacing-md);
+}
+
+.result-state.success .result-animation {
+    animation: success-bounce 0.5s ease-out;
+}
+
+@keyframes success-bounce {
+    0% {
+        transform: scale(0.5);
+    }
+
+    50% {
+        transform: scale(1.2);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.sparkles {
+    position: absolute;
+    font-size: 32px;
+    animation: sparkle 1s ease-out infinite;
+}
+
+@keyframes sparkle {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.5;
+        transform: scale(1.2);
+    }
+}
+
+.result-text {
+    font-size: 20px;
+    margin-bottom: var(--spacing-sm);
+}
+
+.result-details {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.result-state.failed .result-animation {
+    animation: fail-shake 0.5s ease-out;
+}
+
+@keyframes fail-shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-10px);
+    }
+
+    75% {
+        transform: translateX(10px);
+    }
+}
+
+.result-state.missed .missed-text {
+    font-size: 18px;
+    color: var(--text-secondary);
+}
+
+/* ----------------------------------------
+   釣り画面フッター
+   ---------------------------------------- */
+.fishing-footer {
+    padding: var(--spacing-md);
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: center;
+}
+
+/* ----------------------------------------
+   ショップ画面
+   ---------------------------------------- */
+#shop-screen {
+    background: var(--bg-dark);
+}
+
+.shop-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md);
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.shop-title {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.shop-money {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    color: var(--accent-color);
+    font-weight: 600;
+}
+
+/* ----------------------------------------
+   ショップタブ
+   ---------------------------------------- */
+.shop-tabs {
+    display: flex;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.shop-tab {
+    flex: 1;
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.shop-tab:hover {
+    color: var(--text-primary);
+    background: rgba(14, 165, 233, 0.1);
+}
+
+.shop-tab.active {
+    color: var(--primary-light);
+    border-bottom-color: var(--primary-color);
+}
+
+/* ----------------------------------------
+   ショップコンテンツ
+   ---------------------------------------- */
+.shop-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--spacing-md);
+}
+
+.upgrade-section {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    border: 1px solid var(--border-color);
+}
+
+.upgrade-section h3 {
+    font-size: 16px;
+    margin-bottom: var(--spacing-sm);
+    color: var(--primary-light);
+}
+
+.stars-display {
+    font-size: 24px;
+    margin-bottom: var(--spacing-sm);
+}
+
+.stars-display .star.filled {
+    color: var(--accent-color);
+}
+
+.stars-display .star.empty {
+    color: var(--text-secondary);
+    opacity: 0.3;
+}
+
+.current-power,
+.skill-slots,
+.slot-info,
+.bait-info {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.current-power strong,
+.skill-slots strong,
+.slot-info strong {
+    color: var(--text-primary);
+}
+
+.hint {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+/* ----------------------------------------
+   ショップアイテム
+   ---------------------------------------- */
+.shop-items {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.shop-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md);
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+}
+
+.shop-item:hover {
+    border-color: var(--primary-color);
+    background: rgba(14, 165, 233, 0.1);
+}
+
+.shop-item.equipped {
+    border-color: var(--secondary-color);
+    background: rgba(34, 197, 94, 0.1);
+}
+
+.shop-item.locked {
+    opacity: 0.5;
+}
+
+.item-info {
+    flex: 1;
+}
+
+.item-name {
+    font-weight: 600;
+    margin-bottom: var(--spacing-xs);
+}
+
+.item-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.item-stats {
+    font-size: 12px;
+    color: var(--primary-light);
+    margin-top: var(--spacing-xs);
+}
+
+.item-action {
+    margin-left: var(--spacing-md);
+}
+
+/* ショップボタン */
+.btn {
+    padding: var(--spacing-xs) var(--spacing-md);
+    font-size: 13px;
+    font-weight: 500;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-buy {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+}
+
+.btn-buy:hover:not(.disabled) {
+    transform: scale(1.05);
+}
+
+.btn-equip {
+    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--secondary-dark) 100%);
+    color: white;
+}
+
+.btn-unequip {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--danger-color);
+    border: 1px solid var(--danger-color);
+}
+
+.btn-upgrade {
+    background: linear-gradient(135deg, var(--accent-color) 0%, #d97706 100%);
+    color: white;
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin-top: var(--spacing-sm);
+}
+
+.btn.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.status {
+    font-size: 12px;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+}
+
+.status.equipped {
+    background: rgba(34, 197, 94, 0.2);
+    color: var(--secondary-color);
+}
+
+.status.max {
+    background: rgba(245, 158, 11, 0.2);
+    color: var(--accent-color);
+}
+
+/* ----------------------------------------
+   ショップフッター
+   ---------------------------------------- */
+.shop-footer {
+    display: flex;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--bg-card);
+    border-top: 1px solid var(--border-color);
+}
+
+.shop-footer .btn-action,
+.shop-footer .btn-nav {
+    flex: 1;
+}
+
+/* ----------------------------------------
+   トーストメッセージ
+   ---------------------------------------- */
+.toast-message {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    padding: var(--spacing-md) var(--spacing-xl);
+    background: var(--bg-card);
+    border: 1px solid var(--primary-color);
+    border-radius: var(--radius-md);
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-primary);
+    box-shadow: var(--shadow-lg), var(--shadow-glow);
+    backdrop-filter: blur(10px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.toast-message.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* ----------------------------------------
+   レスポンシブ対応
+   ---------------------------------------- */
+@media (max-width: 480px) {
+    .title-text {
+        font-size: 36px;
+    }
+
+    .title-sub {
+        font-size: 16px;
+        letter-spacing: 4px;
+    }
+
+    .btn-main {
+        font-size: 18px;
+        padding: var(--spacing-sm) var(--spacing-lg);
+    }
+
+    .status-bar {
+        flex-wrap: wrap;
+    }
+
+    .rod-display {
+        flex-wrap: wrap;
+        gap: var(--spacing-sm);
+    }
+
+    .gauge-battle {
+        padding: var(--spacing-md);
+    }
+
+    .shop-tabs {
+        font-size: 12px;
+    }
+}
+
+/* ----------------------------------------
+   キャストアニメーション
+   ---------------------------------------- */
+.cast-animation {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.cast-animation .rod {
+    font-size: 60px;
+    animation: cast-swing 0.5s ease-out;
+}
+
+@keyframes cast-swing {
+    0% {
+        transform: rotate(-30deg);
+    }
+
+    50% {
+        transform: rotate(30deg);
+    }
+
+    100% {
+        transform: rotate(0deg);
+    }
+}
+
+.line {
+    width: 2px;
+    height: 0;
+    background: linear-gradient(180deg, #fff 0%, transparent 100%);
+}
+
+.line.casting {
+    animation: line-extend 0.5s ease-out forwards;
+}
+
+@keyframes line-extend {
+    0% {
+        height: 0;
+    }
+
+    100% {
+        height: 100px;
+    }
+}
