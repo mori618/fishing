@@ -599,6 +599,13 @@ const FISHING_CONFIG = {
 
     // ヒット判定可能時間（ミリ秒）
     hitWindowTime: 600,
+    hitWindowByRarity: {
+        D: 800,
+        C: 600,
+        B: 500,
+        A: 400,
+        S: 300
+    },
 
     // ヒットを逃した場合のペナルティ時間（ミリ秒）
     missedPenalty: 500

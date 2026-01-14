@@ -92,6 +92,13 @@ const FishingGame = {
     cast() {
         if (this.state !== 'idle') return false;
 
+        // 餌のチェック
+        const currentBaitCount = GameState.getCurrentBaitCount();
+        if (currentBaitCount === 0) {
+            UIManager.showBaitPurchaseDialog(GameState.baitType);
+            return false;
+        }
+
         this.state = 'casting';
         UIManager.showCasting();
 
@@ -171,10 +178,13 @@ const FishingGame = {
         this.state = 'hit';
         UIManager.showHit();
 
-        // ヒット判定可能時間を設定 (スキルによる倍率を反映)
-        const baseHitWindow = GAME_DATA.FISHING_CONFIG.hitWindowTime;
+        // ヒット判定可能時間を設定 (レア度とスキルによる倍率を反映)
+        const config = GAME_DATA.FISHING_CONFIG;
+        const rarityBase = config.hitWindowByRarity[this.currentFish.rarity] || config.hitWindowTime;
         const multiplier = GameState.getHitWindowMultiplier();
-        const finalHitWindow = baseHitWindow * multiplier;
+        const finalHitWindow = rarityBase * multiplier;
+
+        console.log(`⏱ ヒット窓口: レア度ベース ${rarityBase}ms × 倍率 ${multiplier} = ${finalHitWindow}ms`);
 
         this.hitTimer = setTimeout(() => {
             // 時間切れで逃げられた
@@ -184,6 +194,7 @@ const FishingGame = {
             // 餌を消費（ヒットを逃した＝失敗）
             if (GameState.baitType) {
                 GameState.useBait(false);
+                UIManager.updateBaitInfo();
             }
         }, finalHitWindow);
     },
@@ -358,6 +369,7 @@ const FishingGame = {
         // 餌を消費
         if (GameState.baitType) {
             GameState.useBait(true);
+            UIManager.updateBaitInfo();
         }
 
         // UI表示（ユーザーが閉じたらidleに戻る）
@@ -378,6 +390,7 @@ const FishingGame = {
         // 餌を消費
         if (GameState.baitType) {
             GameState.useBait(false);
+            UIManager.updateBaitInfo();
         }
 
         // UI表示（簡易メッセージ）
@@ -405,6 +418,7 @@ const FishingGame = {
         // 餌を消費
         if (GameState.baitType) {
             GameState.useBait(false);
+            UIManager.updateBaitInfo();
         }
 
         // UI表示（ユーザーが閉じたらidleに戻る）

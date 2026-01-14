@@ -183,6 +183,24 @@ const UIManager = {
         `;
 
         this.updateRodView('hit');
+
+        // 画面シェイクとバイブレーションを発生させる
+        this.shakeScreen();
+        if (typeof navigator.vibrate === 'function') {
+            navigator.vibrate([100]); // 100msのバイブレーション
+        }
+    },
+
+    // ========================================
+    // 画面を一時的に揺らす（スクリーンシェイク）
+    // ========================================
+    shakeScreen() {
+        const screen = document.querySelector('.screen.active');
+        if (!screen) return;
+
+        screen.classList.remove('screen-shake');
+        void screen.offsetWidth; // 強制リフロー
+        screen.classList.add('screen-shake');
     },
 
     // ========================================
@@ -279,7 +297,10 @@ const UIManager = {
                     </div>
 
                     <div class="result-content">
-                        <div class="rarity-badge rarity-${fish.rarity}">${fish.rarity} Rank</div>
+                        <div class="rank-display">
+                            <span class="rank-label">RANK</span>
+                            <span class="rank-char rarity-${fish.rarity}">${fish.rarity}</span>
+                        </div>
                         <h2 class="fish-name">${fish.name}</h2>
                         
                         <div class="stats-grid">
@@ -448,17 +469,91 @@ const UIManager = {
     },
 
     // ========================================
-    // 餌情報更新
+    // 餌情報更新（セレクター表示）
     // ========================================
     updateBaitInfo() {
         const baitInfo = document.getElementById('bait-info');
         if (!baitInfo) return;
 
-        if (GameState.baitCount > 0) {
-            baitInfo.textContent = `${GameState.baitCount} 個`;
-        } else {
-            baitInfo.textContent = '0 個';
+        const currentBaitId = GameState.baitType;
+        const bait = GAME_DATA.BAITS.find(b => b.id === currentBaitId);
+        const count = GameState.getCurrentBaitCount();
+        const displayCount = count === -1 ? '∞' : count;
+
+        baitInfo.innerHTML = `
+            <div class="bait-selector">
+                <button class="selector-btn prev" onclick="GameState.switchBait(-1); UIManager.updateBaitInfo();">◀</button>
+                <div class="bait-display" onclick="UIManager.showBaitPurchaseDialog('${currentBaitId}')">
+                    <span class="bait-name">${bait.name}</span>
+                    <span class="bait-count">${displayCount}個</span>
+                </div>
+                <button class="selector-btn next" onclick="GameState.switchBait(1); UIManager.updateBaitInfo();">▶</button>
+            </div>
+        `;
+    },
+
+    // ========================================
+    // 餌購入ダイアログを表示
+    // ========================================
+    showBaitPurchaseDialog(baitId) {
+        const bait = GAME_DATA.BAITS.find(b => b.id === baitId);
+        if (!bait) return;
+
+        // Dランク（無限）は購入不可
+        if (bait.rank === 'D') {
+            this.showMessage('この餌は無限に使えます');
+            return;
         }
+
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay';
+        overlay.id = 'bait-purchase-modal';
+
+        // 単価 (セット価格 / 個数)
+        const unitPrice = bait.quantity > 0 ? bait.price / bait.quantity : 0;
+
+        overlay.innerHTML = `
+            <div class="modal-content">
+                <h3>餌を購入</h3>
+                <p>${bait.name} が不足しています。</p>
+                <p>購入しますか？</p>
+                
+                <div class="purchase-options">
+                    <div class="option" data-amount="${bait.quantity}">
+                        <span class="amount">${bait.quantity}個</span>
+                        <span class="price">¥${bait.price}</span>
+                    </div>
+                    <div class="option" data-amount="${bait.quantity * 5}">
+                        <span class="amount">${bait.quantity * 5}個</span>
+                        <span class="price">¥${bait.price * 5}</span>
+                    </div>
+                     <div class="option" data-amount="${bait.quantity * 10}">
+                        <span class="amount">${bait.quantity * 10}個</span>
+                        <span class="price">¥${bait.price * 10}</span>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn-cancel" onclick="document.getElementById('bait-purchase-modal').remove()">キャンセル</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+
+        // 購入オプションのイベントリスナ
+        overlay.querySelectorAll('.option').forEach(option => {
+            option.addEventListener('click', () => {
+                const amount = parseInt(option.dataset.amount);
+                if (GameState.buyBait(baitId, amount)) {
+                    this.showMessage(`${bait.name}を${amount}個購入しました！`);
+                    this.updateStatus(); // お金と餌の表示更新
+                    overlay.remove();
+                } else {
+                    this.showMessage('お金が足りません！');
+                }
+            });
+        });
     },
 
     // ========================================
