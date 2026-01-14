@@ -594,7 +594,7 @@ const FISHING_CONFIG = {
     nibbleCountMin: 3,
     nibbleCountMax: 6,
     nibbleIntervalMin: 500,  // 0.5秒
-    nibbleIntervalMax: 1000, // 1.0秒
+    nibbleIntervalMax: 2000, // 2.0秒
     nibbleShakeDuration: 200, // 1回の揺れにかかる時間（ミリ秒）
 
     // ヒット判定可能時間（ミリ秒）
