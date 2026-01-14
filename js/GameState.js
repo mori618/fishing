@@ -195,6 +195,106 @@ const GameState = {
     },
 
     // ========================================
+    // HIT受付時間のスキル補正（倍率）を取得
+    // ========================================
+    getHitWindowMultiplier() {
+        let maxMult = 1;
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'hit_window_mult') {
+                maxMult = Math.max(maxMult, skill.effect.value);
+            }
+        }
+        return maxMult;
+    },
+
+    // ========================================
+    // 待ち時間短縮のスキル補正を取得
+    // ========================================
+    getWaitTimeReduction() {
+        let reduction = 0;
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'wait_time_reduction') {
+                reduction += skill.effect.value;
+            }
+        }
+        return reduction;
+    },
+
+    // ========================================
+    // 餌の消費回避確率を取得
+    // ========================================
+    getBaitSaveChance() {
+        let chance = 0;
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'bait_save') {
+                chance += skill.effect.value;
+            }
+        }
+        return chance;
+    },
+
+    // ========================================
+    // 赤ゾーン拡大のスキル補正を取得
+    // ========================================
+    getRedZoneBonus() {
+        let bonus = 0;
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'red_zone_boost') {
+                bonus += skill.effect.value;
+            }
+        }
+        return bonus;
+    },
+
+    // ========================================
+    // 起死回生（白を緑に）の確率を取得
+    // ========================================
+    getSecondChanceRate() {
+        let rate = 0;
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'second_chance') {
+                rate += skill.effect.value;
+            }
+        }
+        return rate;
+    },
+
+    // ========================================
+    // 称号出現率の倍率を取得
+    // ========================================
+    getTitleChanceMultiplier() {
+        let multiplier = 1;
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'title_boost') {
+                // 重複した場合は加算ではなく乗算、あるいは最大のものを採用
+                // ここでは分かりやすく最大の倍率を採用する
+                multiplier = Math.max(multiplier, skill.effect.value);
+            }
+        }
+        return multiplier;
+    },
+
+    // ========================================
+    // 大物出現率のスキル補正を取得
+    // ========================================
+    getBigGameBonus() {
+        let bonus = 1;
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'big_game_boost') {
+                bonus = Math.max(bonus, skill.effect.value);
+            }
+        }
+        return bonus;
+    },
+
+    // ========================================
     // 魚をインベントリに追加
     // ========================================
     addFish(fish) {
@@ -212,11 +312,13 @@ const GameState = {
 
         // 図鑑データを更新
         if (!this.encyclopedia[fish.id]) {
-            this.encyclopedia[fish.id] = { count: 0, hasSpecial: false };
+            this.encyclopedia[fish.id] = { count: 0, hasSpecial: false, specialCount: 0 };
         }
         this.encyclopedia[fish.id].count++;
+
         if (fish.hasTitle) {
             this.encyclopedia[fish.id].hasSpecial = true;
+            this.encyclopedia[fish.id].specialCount = (this.encyclopedia[fish.id].specialCount || 0) + 1;
         }
 
         this.totalFishCaught++;
@@ -433,6 +535,15 @@ const GameState = {
         if (this.baitCount <= 0) {
             this.baitType = null;
             return false;
+        }
+
+        // 餌の達人スキルの判定 (成功時のみ)
+        if (isSuccess) {
+            const saveChance = this.getBaitSaveChance();
+            if (Math.random() < saveChance) {
+                console.log('✨ 餌の達人発動！餌を消費しませんでした');
+                return true;
+            }
         }
 
         this.baitCount--;

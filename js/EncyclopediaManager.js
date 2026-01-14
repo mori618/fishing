@@ -12,29 +12,45 @@ const EncyclopediaManager = {
 
         container.innerHTML = '';
 
-        let caughtCount = 0;
-        const totalFishCount = GAME_DATA.FISH.length;
+        let caughtNormalCount = 0;
+        let caughtSpecialCount = 0;
+        const totalNormalEntries = GAME_DATA.FISH.length;
+        // 称号付きの総数は魚の種類と同じ
+        const totalSpecialEntries = GAME_DATA.FISH.length;
 
         GAME_DATA.FISH.forEach(fish => {
-            const data = GameState.encyclopedia[fish.id] || { count: 0, hasSpecial: false };
-            const isCaught = data.count > 0;
-            if (isCaught) caughtCount++;
+            const data = GameState.encyclopedia[fish.id] || { count: 0, hasSpecial: false, specialCount: 0 };
 
-            const item = document.createElement('div');
-            item.className = `encyclopedia-item ${isCaught ? '' : 'unknown'}`;
+            // 既存データ互換性: hasSpecialがtrueでspecialCountがない場合は1とする
+            const specialCount = data.specialCount !== undefined ? data.specialCount : (data.hasSpecial ? 1 : 0);
+            const normalCount = Math.max(0, data.count - specialCount);
 
-            if (isCaught) {
-                item.innerHTML = `
-                    ${data.hasSpecial ? '<span class="material-icons special-mark">stars</span>' : ''}
+            // ========================================
+            // 1. 通常種の表示
+            // ========================================
+            const normalItem = document.createElement('div');
+            // 通常種をまだ釣っていないが称号付きだけ釣った場合でも、その魚種を知っているなら表示
+            const isDiscovered = data.count > 0;
+
+            normalItem.className = `encyclopedia-item ${isDiscovered ? '' : 'unknown'}`;
+
+            if (isDiscovered) {
+                if (normalCount > 0 || specialCount > 0) caughtNormalCount++;
+
+                normalItem.innerHTML = `
                     <div class="fish-icon">
-                        <span class="material-icons">set_meal</span>
+                        <span class="material-icons">${fish.icon || 'set_meal'}</span>
                     </div>
-                    <div class="fish-name rarity-${fish.rarity}">${fish.name}</div>
-                    <div class="fish-count">${data.count} 匹</div>
-                    ${data.hasSpecial ? `<div class="special-tag">${fish.specialTitle}</div>` : ''}
+                    <div class="fish-info-col">
+                        <div class="fish-header">
+                            <div class="fish-name rarity-${fish.rarity}">${fish.name}</div>
+                        </div>
+                        <div class="fish-count">捕獲数: ${normalCount} 匹</div>
+                        <div class="fish-description">${fish.description}</div>
+                    </div>
                 `;
             } else {
-                item.innerHTML = `
+                normalItem.innerHTML = `
                     <div class="fish-icon">
                         <span class="material-icons">help_outline</span>
                     </div>
@@ -42,13 +58,50 @@ const EncyclopediaManager = {
                     <div class="fish-count">???</div>
                 `;
             }
+            container.appendChild(normalItem);
 
-            container.appendChild(item);
+            // ========================================
+            // 2. 称号付き種の表示
+            // ========================================
+            // 未発見の場合は表示しない
+
+            const isSpecialCaught = specialCount > 0;
+            if (isSpecialCaught) {
+                caughtSpecialCount++;
+
+                const specialItem = document.createElement('div');
+                specialItem.className = 'encyclopedia-item special-entry';
+
+                specialItem.innerHTML = `
+                    <span class="material-icons special-mark">stars</span>
+                    <div class="fish-icon special-icon-bg">
+                        <span class="material-icons">${fish.icon || 'set_meal'}</span>
+                    </div>
+                    <div class="fish-info-col">
+                        <div class="fish-header">
+                            <div class="fish-name rarity-${fish.rarity}">【${fish.specialTitle}】${fish.name}</div>
+                            <div class="special-tag">ヌシ級</div>
+                        </div>
+                        <div class="fish-count">捕獲数: ${specialCount} 匹</div>
+                        <div class="fish-description">${fish.titleDescription}</div>
+                    </div>
+                `;
+
+                container.appendChild(specialItem);
+            }
         });
 
         // 進捗更新
         if (progressDisplay) {
-            progressDisplay.textContent = `コンプリート: ${caughtCount} / ${totalFishCount}`;
+            // 通常種と称号付きの進捗を分けて表示
+            progressDisplay.innerHTML = `
+                <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+                    <span>通常種: ${caughtNormalCount} / ${totalNormalEntries}</span>
+                    <span style="color: #ffd700; font-weight: bold; text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);">
+                        ヌシ種: ${caughtSpecialCount}
+                    </span>
+                </div>
+            `;
         }
     }
 };

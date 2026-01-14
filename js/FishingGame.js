@@ -58,6 +58,11 @@ const FishingGame = {
                 weight *= (1 + skillRareBonus);
             }
 
+            // 大物狙いボーナス
+            if ((fish.rarity === 'A' || fish.rarity === 'S') && GameState.getBigGameBonus() > 1) {
+                weight *= GameState.getBigGameBonus();
+            }
+
             // 重みに応じてプールに追加
             const count = Math.max(1, Math.floor(weight * 10));
             for (let i = 0; i < count; i++) {
@@ -70,11 +75,12 @@ const FishingGame = {
         const selectedFish = { ...fishPool[index] };
 
         // 称号付きの抽選
-        if (Math.random() < GAME_DATA.TITLE_CONFIG.chance) {
+        const titleChanceMult = GameState.getTitleChanceMultiplier();
+        if (Math.random() < GAME_DATA.TITLE_CONFIG.chance * titleChanceMult) {
             selectedFish.hasTitle = true;
             selectedFish.name = `${selectedFish.specialTitle}${selectedFish.name}`;
             selectedFish.price = Math.floor(selectedFish.price * GAME_DATA.TITLE_CONFIG.priceMultiplier);
-            console.log(`✨ 称号付き出現！: ${selectedFish.name}`);
+            console.log(`✨ 称号付き出現！: ${selectedFish.name} (倍率: ${titleChanceMult})`);
         }
 
         return selectedFish;
@@ -105,7 +111,10 @@ const FishingGame = {
         // 待機時間を計算
         const baseWaitTime = GAME_DATA.FISHING_CONFIG.waitTimeMin +
             Math.random() * (GAME_DATA.FISHING_CONFIG.waitTimeMax - GAME_DATA.FISHING_CONFIG.waitTimeMin);
-        const waitTime = baseWaitTime * (1 - waitTimeReduction);
+
+        // 忍耐力スキルの反映
+        const patienceReduction = GameState.getWaitTimeReduction();
+        const waitTime = baseWaitTime * (1 - waitTimeReduction) * (1 - patienceReduction);
 
         // キャストアニメーション後に待機状態へ
         setTimeout(() => {
@@ -124,24 +133,35 @@ const FishingGame = {
     // ========================================
     // 予兆（ウキが揺れる）
     // ========================================
-    nibble() {
-        this.state = 'nibble';
+    nibble(currentCount = 0, targetCount = null) {
+        if (targetCount === null) {
+            this.state = 'nibble';
+            UIManager.showNibble();
 
-        // 揺れ回数を決定（スキルで固定 or ランダム3〜5回）
-        const fixedCount = GameState.getNibbleFixCount();
-        const shakeCount = fixedCount !== null ? fixedCount : 3 + Math.floor(Math.random() * 3);
+            // 揺れ回数を決定（スキルで固定 or 設定範囲内でランダム）
+            const fixedCount = GameState.getNibbleFixCount();
+            targetCount = fixedCount !== null ? fixedCount :
+                GAME_DATA.FISHING_CONFIG.nibbleCountMin +
+                Math.floor(Math.random() * (GAME_DATA.FISHING_CONFIG.nibbleCountMax - GAME_DATA.FISHING_CONFIG.nibbleCountMin + 1));
 
-        // 揺れの間隔をランダムに決定（100〜200ms）
-        const shakeInterval = 100 + Math.floor(Math.random() * 100);
+            console.log(`🎣 予兆開始: 合計 ${targetCount} 回揺れます`);
+        }
 
-        // UIManagerにパラメータを渡してアニメーション開始
-        UIManager.showNibble(shakeCount, shakeInterval);
+        if (currentCount < targetCount) {
+            // ウキを1回揺らす
+            UIManager.triggerBobberShake(GAME_DATA.FISHING_CONFIG.nibbleShakeDuration);
 
-        // 揺れ終了後にヒットタイミング
-        const totalNibbleTime = shakeCount * shakeInterval + 100;  // +100msの余裕
-        this.nibbleTimer = setTimeout(() => {
+            // 次の揺れ（またはヒット）までの間隔をランダムに決定（500〜1000ms）
+            const interval = GAME_DATA.FISHING_CONFIG.nibbleIntervalMin +
+                Math.floor(Math.random() * (GAME_DATA.FISHING_CONFIG.nibbleIntervalMax - GAME_DATA.FISHING_CONFIG.nibbleIntervalMin));
+
+            this.nibbleTimer = setTimeout(() => {
+                this.nibble(currentCount + 1, targetCount);
+            }, interval);
+        } else {
+            // 全ての揺れが終了後にヒットタイミングへ
             this.hit();
-        }, totalNibbleTime);
+        }
     },
 
     // ========================================
@@ -151,7 +171,11 @@ const FishingGame = {
         this.state = 'hit';
         UIManager.showHit();
 
-        // ヒット判定可能時間を設定
+        // ヒット判定可能時間を設定 (スキルによる倍率を反映)
+        const baseHitWindow = GAME_DATA.FISHING_CONFIG.hitWindowTime;
+        const multiplier = GameState.getHitWindowMultiplier();
+        const finalHitWindow = baseHitWindow * multiplier;
+
         this.hitTimer = setTimeout(() => {
             // 時間切れで逃げられた
             this.state = 'idle';
@@ -161,7 +185,7 @@ const FishingGame = {
             if (GameState.baitType) {
                 GameState.useBait(false);
             }
-        }, GAME_DATA.FISHING_CONFIG.hitWindowTime);
+        }, finalHitWindow);
     },
 
     // ========================================
@@ -238,8 +262,13 @@ const FishingGame = {
         this.gaugeSpeed = config.baseSpeed * speedMultiplier * (1 - slowBonus);
 
         // 赤ゾーンの幅：パワー差が小さいほど広い
-        const redZoneWidth = config.redZoneWidthMin +
+        let redZoneWidth = config.redZoneWidthMin +
             (powerRatio * (config.redZoneWidthMax - config.redZoneWidthMin));
+
+        // テクニシャンスキルの反映
+        const redZoneBonus = GameState.getRedZoneBonus();
+        redZoneWidth *= (1 + redZoneBonus);
+        redZoneWidth = Math.min(redZoneWidth, 40); // 最大幅を制限
 
         // UIにゲージを表示
         UIManager.showGaugeBattle(this.currentFish, redZoneWidth);
@@ -283,7 +312,17 @@ const FishingGame = {
         cancelAnimationFrame(this.gaugeAnimationId);
 
         // ゾーン判定
-        const zone = UIManager.getGaugeZone(this.gaugePosition);
+        let zone = UIManager.getGaugeZone(this.gaugePosition);
+
+        // 起死回生スキルの反映
+        if (zone === 'white') {
+            const secondChanceRate = GameState.getSecondChanceRate();
+            if (Math.random() < secondChanceRate) {
+                zone = 'green';
+                console.log('⚡ 起死回生発動！白ゾーンを成功扱いに変更');
+            }
+        }
+
         const config = GAME_DATA.GAUGE_CONFIG.zones[zone];
 
         // 捕獲確率を計算
@@ -321,16 +360,13 @@ const FishingGame = {
             GameState.useBait(true);
         }
 
-        // UI表示
-        UIManager.showCatchSuccess(this.currentFish);
-
-        console.log(`🎉 ${this.currentFish.name}を釣り上げた！`);
-
-        // 少し待ってから待機状態に戻る
-        setTimeout(() => {
+        // UI表示（ユーザーが閉じたらidleに戻る）
+        UIManager.showCatchSuccess(this.currentFish, () => {
             this.state = 'idle';
             UIManager.showIdle();
-        }, 2000);
+        });
+
+        console.log(`🎉 ${this.currentFish.name}を釣り上げた！`);
     },
 
     // ========================================
@@ -371,20 +407,22 @@ const FishingGame = {
             GameState.useBait(false);
         }
 
-        // UI表示
+        // UI表示（ユーザーが閉じたらidleに戻る）
         if (this.currentFish) {
-            UIManager.showCatchFailed(this.currentFish);
+            UIManager.showCatchFailed(this.currentFish, () => {
+                this.state = 'idle';
+                UIManager.showIdle();
+            });
             console.log(`💔 ${this.currentFish.name}に逃げられた...`);
         } else {
             UIManager.showMissed('魚に逃げられた...');
             console.log('💔 魚に逃げられた...');
+            // showMissedはタイムアウトで戻る
+            setTimeout(() => {
+                this.state = 'idle';
+                UIManager.showIdle();
+            }, 1500);
         }
-
-        // 少し待ってから待機状態に戻る
-        setTimeout(() => {
-            this.state = 'idle';
-            UIManager.showIdle();
-        }, 1500);
     },
 
     // ========================================

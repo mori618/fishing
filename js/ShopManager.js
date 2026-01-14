@@ -349,6 +349,8 @@ const ShopManager = {
         UIManager.showMessage(`魚${count}匹を売却して¥${earned.toLocaleString()}を獲得！`);
         UIManager.updateMoney();
         UIManager.updateInventory();
+        // ショップを再描画して購入ボタンを更新
+        this.renderShop();
     }
 };
 

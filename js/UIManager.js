@@ -119,7 +119,6 @@ const UIManager = {
                     </div>
                     <div class="ripple"></div>
                 </div>
-                <div class="wait-text">当たりを待っています...</div>
             </div>
         `;
 
@@ -129,28 +128,39 @@ const UIManager = {
     // ========================================
     // 釣り画面: 予兆（ウキ揺れ）
     // ========================================
-    showNibble(shakeCount = 4, shakeInterval = 150) {
+    showNibble() {
         const fishingArea = document.getElementById('fishing-area');
         if (!fishingArea) return;
-
-        // アニメーション時間を計算
-        const animationDuration = shakeInterval / 1000;  // 秒に変換
-        const totalDuration = animationDuration * shakeCount;
 
         fishingArea.innerHTML = `
             <div class="nibble-state">
                 <div class="water-surface">
-                    <div class="bobber nibbling" style="animation-duration: ${animationDuration}s; animation-iteration-count: ${shakeCount};">
+                    <div class="bobber">
                         <div class="bobber-stick"></div>
                         <div class="bobber-body"></div>
                     </div>
                     <div class="ripple active"></div>
                 </div>
-                <div class="nibble-text">何かがつついている...!</div>
             </div>
         `;
 
         this.updateRodView('nibble');
+    },
+
+    // ========================================
+    // ウキの揺れを1回分実行
+    // ========================================
+    triggerBobberShake(durationMs) {
+        const bobber = document.querySelector('.bobber');
+        if (!bobber) return;
+
+        // アニメーションをリセットして実行
+        bobber.classList.remove('nibbling');
+        void bobber.offsetWidth; // 強制リフロー
+
+        bobber.style.animationDuration = `${durationMs / 1000}s`;
+        bobber.style.animationIterationCount = '1';
+        bobber.classList.add('nibbling');
     },
 
     // ========================================
@@ -169,7 +179,6 @@ const UIManager = {
                     </div>
                     <div class="splash"></div>
                 </div>
-                <div class="hit-text flash">今だ！クリック！</div>
             </div>
         `;
 
@@ -193,9 +202,8 @@ const UIManager = {
         fishingArea.innerHTML = `
             <div class="gauge-battle">
                 <h2 class="gauge-battle-title">キャッチング中！</h2>
-                <p class="gauge-battle-subtitle">赤いゾーンで止めて確率アップ！</p>
                 <div class="fish-info">
-                    <span class="fish-name rarity-${fish.rarity}">${fish.name}</span>
+                    <span class="fish-name rarity-${fish.rarity}"></span>
                     <span class="fish-power">パワー: ${fish.power}</span>
                 </div>
                 <div class="gauge-container">
@@ -251,47 +259,115 @@ const UIManager = {
     // ========================================
     // 釣り上げ成功
     // ========================================
-    showCatchSuccess(fish) {
+    showCatchSuccess(fish, onClose) {
         const fishingArea = document.getElementById('fishing-area');
         if (!fishingArea) return;
 
+        const fishIcon = fish.icon || 'set_meal';
+
         fishingArea.innerHTML = `
-            <div class="result-state success">
-                <div class="result-animation">
-                    <span class="material-icons result-icon">set_meal</span>
-                    <span class="material-icons sparkle-icon">auto_awesome</span>
-                </div>
-                <div class="result-text">
-                    <span class="fish-name rarity-${fish.rarity}">${fish.name}</span>
-                    を釣り上げた！
-                </div>
-                <div class="result-details">
-                    パワー: ${fish.power} | 価値: ¥${fish.price.toLocaleString()}
+            <div class="result-overlay success" id="result-overlay">
+                <div class="result-card rarity-${fish.rarity}">
+                    <div class="card-header">NEW CATCH!</div>
+                    
+                    <div class="result-animation">
+                        <div class="icon-circle rarity-${fish.rarity}">
+                            <span class="material-icons result-icon">${fishIcon}</span>
+                            <span class="material-icons sparkle-icon">auto_awesome</span>
+                            <div class="rarity-glow"></div>
+                        </div>
+                    </div>
+
+                    <div class="result-content">
+                        <div class="rarity-badge rarity-${fish.rarity}">${fish.rarity} Rank</div>
+                        <h2 class="fish-name">${fish.name}</h2>
+                        
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="label">POWER</span>
+                                <span class="value">${fish.power}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="label">VALUE</span>
+                                <span class="value">¥${fish.price.toLocaleString()}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tap-hint">TAP TO CLOSE</div>
                 </div>
             </div>
         `;
 
+        // クリックとスペースキーで閉じる
+        this.setupResultOverlayClose(onClose);
         this.updateInventory();
     },
 
     // ========================================
     // 釣り上げ失敗
     // ========================================
-    showCatchFailed(fish) {
+    showCatchFailed(fish, onClose) {
         const fishingArea = document.getElementById('fishing-area');
         if (!fishingArea) return;
 
+        const fishIcon = fish.icon || 'set_meal';
         fishingArea.innerHTML = `
-            <div class="result-state failed">
-                <div class="result-animation">
-                    <span class="material-icons result-icon escaped">set_meal</span>
-                </div>
-                <div class="result-text">
-                    <span class="fish-name rarity-${fish.rarity}">${fish.name}</span>
-                    に逃げられた...
+            <div class="result-overlay failed" id="result-overlay">
+                <div class="result-card type-failed">
+                    <div class="card-header">ESCAPED...</div>
+                    
+                    <div class="result-animation">
+                        <div class="icon-circle type-failed">
+                            <span class="material-icons result-icon escaped">${fishIcon}</span>
+                            <span class="material-icons escape-cloud">cloud</span>
+                        </div>
+                    </div>
+
+                    <div class="result-content">
+                        <p class="fail-message">
+                            <span class="fish-name-small">${fish.name}</span> は<br>
+                            力強く逃げ去ってしまった...
+                        </p>
+                    </div>
+                    
+                    <div class="tap-hint">TAP TO CLOSE</div>
                 </div>
             </div>
         `;
+
+        // クリックとスペースキーで閉じる
+        this.setupResultOverlayClose(onClose);
+    },
+
+    // ========================================
+    // 結果オーバーレイのクローズ処理
+    // ========================================
+    setupResultOverlayClose(onClose) {
+        const overlay = document.getElementById('result-overlay');
+        if (!overlay) return;
+
+        // クローズ処理
+        const closeOverlay = () => {
+            overlay.remove();
+            document.removeEventListener('keydown', handleKeydown);
+            // コールバックを実行
+            if (typeof onClose === 'function') {
+                onClose();
+            }
+        };
+
+        // クリックで閉じる
+        overlay.addEventListener('click', closeOverlay);
+
+        // スペースキーで閉じる
+        const handleKeydown = (e) => {
+            if (e.code === 'Space' || e.key === ' ') {
+                e.preventDefault();
+                closeOverlay();
+            }
+        };
+        document.addEventListener('keydown', handleKeydown);
     },
 
     // ========================================
