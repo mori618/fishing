@@ -97,6 +97,16 @@ document.addEventListener('DOMContentLoaded', () => {
         UIManager.showScreen('fishing');
     });
 
+    // 図鑑ボタン
+    document.getElementById('encyclopedia-btn').addEventListener('click', () => {
+        UIManager.showScreen('encyclopedia');
+    });
+
+    // 図鑑から戻るボタン
+    document.getElementById('encyclopedia-back-btn').addEventListener('click', () => {
+        UIManager.showScreen('shop');
+    });
+
     // 底部ナビゲーションの釣り場ボタン
     const fishingNavBtn = document.querySelector('.nav-item[data-screen="fishing"]');
     if (fishingNavBtn) {

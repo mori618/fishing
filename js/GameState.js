@@ -22,6 +22,11 @@ const GameState = {
     inventory: [],
 
     // ========================================
+    // 図鑑データ
+    // ========================================
+    encyclopedia: {},
+
+    // ========================================
     // アンロック状態
     // ========================================
     unlockedRods: [0],
@@ -56,6 +61,9 @@ const GameState = {
             this.totalFishCaught = saveData.statistics.totalFishCaught;
             this.totalMoneyEarned = saveData.statistics.totalMoneyEarned;
             this.biggestFish = saveData.statistics.biggestFish;
+
+            // 図鑑データを復元
+            this.encyclopedia = saveData.encyclopedia ? { ...saveData.encyclopedia } : {};
         } else {
             // 新規ゲーム
             const defaultData = SaveManager.getDefaultData();

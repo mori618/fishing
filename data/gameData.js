@@ -322,6 +322,7 @@ if (typeof window !== 'undefined') {
         BAITS,
         GAUGE_CONFIG,
         FISHING_CONFIG,
-        RARITY_WEIGHTS
+        RARITY_WEIGHTS,
+        TITLE_CONFIG
     };
 }

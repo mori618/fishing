@@ -12,6 +12,7 @@ const FishingGame = {
     gaugeSpeed: 0,
     gaugeAnimationId: null,
     waitTimer: null,
+    nibbleTimer: null,
     hitTimer: null,
 
     // ========================================
@@ -96,7 +97,7 @@ const FishingGame = {
         let waitTimeReduction = 0;
         if (GameState.baitType) {
             const bait = GAME_DATA.BAITS.find(b => b.id === GameState.baitType);
-            if (bait) {
+            if (bait && bait.hitTimeReduction) {
                 waitTimeReduction = bait.hitTimeReduction;
             }
         }
@@ -138,7 +139,7 @@ const FishingGame = {
 
         // 揺れ終了後にヒットタイミング
         const totalNibbleTime = shakeCount * shakeInterval + 100;  // +100msの余裕
-        setTimeout(() => {
+        this.nibbleTimer = setTimeout(() => {
             this.hit();
         }, totalNibbleTime);
     },
@@ -175,11 +176,16 @@ const FishingGame = {
                 this.cast();
                 break;
 
+            case 'casting':
+            case 'result':
+                // キャスト中・結果表示中は無視
+                break;
+
             case 'waiting':
             case 'nibble':
                 // 早すぎるクリック - 失敗扱いにする
                 this.cleanupTimers();
-                this.catchFailed('タイミングが早すぎた！');
+                this.earlyClickFailed();
                 break;
 
             case 'hit':
@@ -328,6 +334,30 @@ const FishingGame = {
     },
 
     // ========================================
+    // 早すぎるクリックで失敗
+    // ========================================
+    earlyClickFailed() {
+        this.state = 'result';
+
+        // 餌を消費
+        if (GameState.baitType) {
+            GameState.useBait(false);
+        }
+
+        // UI表示（簡易メッセージ）
+        UIManager.showMissed('タイミングが早すぎた！');
+
+        console.log('💔 タイミングが早すぎた！');
+
+        // 少し待ってから待機状態に戻る
+        setTimeout(() => {
+            this.state = 'idle';
+            this.currentFish = null;
+            UIManager.showIdle();
+        }, 1500);
+    },
+
+    // ========================================
     // 釣り上げ失敗
     // ========================================
     catchFailed() {
@@ -342,9 +372,13 @@ const FishingGame = {
         }
 
         // UI表示
-        UIManager.showCatchFailed(this.currentFish);
-
-        console.log(`💔 ${this.currentFish.name}に逃げられた...`);
+        if (this.currentFish) {
+            UIManager.showCatchFailed(this.currentFish);
+            console.log(`💔 ${this.currentFish.name}に逃げられた...`);
+        } else {
+            UIManager.showMissed('魚に逃げられた...');
+            console.log('💔 魚に逃げられた...');
+        }
 
         // 少し待ってから待機状態に戻る
         setTimeout(() => {
@@ -358,9 +392,11 @@ const FishingGame = {
     // ========================================
     cleanupTimers() {
         clearTimeout(this.waitTimer);
+        clearTimeout(this.nibbleTimer);
         clearTimeout(this.hitTimer);
         cancelAnimationFrame(this.gaugeAnimationId);
         this.waitTimer = null;
+        this.nibbleTimer = null;
         this.hitTimer = null;
         this.gaugeAnimationId = null;
         this.isProcessing = false;
