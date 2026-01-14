@@ -35,6 +35,8 @@ const UIManager = {
             this.updateStatus();
         } else if (screenId === 'shop') {
             ShopManager.renderShop();
+        } else if (screenId === 'encyclopedia') {
+            EncyclopediaManager.render();
         }
     },
 
@@ -304,10 +306,6 @@ const UIManager = {
                 <div class="missed-text">${message}</div>
             </div>
         `;
-
-        setTimeout(() => {
-            this.showIdle();
-        }, 1500);
     },
 
     // ========================================

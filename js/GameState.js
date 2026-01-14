@@ -60,6 +60,10 @@ const GameState = {
             // 新規ゲーム
             const defaultData = SaveManager.getDefaultData();
             this.init(defaultData);
+
+            // Dランクの餌は初期状態で無限に使用可能（または最初から持っている）
+            this.baitType = 'bait_d';
+            this.baitCount = 1; // 表示上は1（内部的には消費されない）
         }
 
         console.log('🎮 ゲーム状態を初期化しました');
@@ -186,14 +190,26 @@ const GameState = {
     // 魚をインベントリに追加
     // ========================================
     addFish(fish) {
-        this.inventory.push({
+        const fishData = {
             id: fish.id,
             name: fish.name,
             price: fish.price,
             power: fish.power,
             rarity: fish.rarity,
+            hasTitle: fish.hasTitle || false,
             caughtAt: new Date().toISOString()
-        });
+        };
+
+        this.inventory.push(fishData);
+
+        // 図鑑データを更新
+        if (!this.encyclopedia[fish.id]) {
+            this.encyclopedia[fish.id] = { count: 0, hasSpecial: false };
+        }
+        this.encyclopedia[fish.id].count++;
+        if (fish.hasTitle) {
+            this.encyclopedia[fish.id].hasSpecial = true;
+        }
 
         this.totalFishCaught++;
 
@@ -391,7 +407,21 @@ const GameState = {
     // ========================================
     // 餌を1つ消費
     // ========================================
-    useBait() {
+    useBait(isSuccess = true) {
+        if (!this.baitType) return false;
+
+        const bait = GAME_DATA.BAITS.find(b => b.id === this.baitType);
+        if (!bait) return false;
+
+        // Dランクは常に消費しない
+        if (bait.rank === 'D') return true;
+
+        // C, B ランクは失敗した時は消費しない
+        if ((bait.rank === 'C' || bait.rank === 'B') && !isSuccess) {
+            return true;
+        }
+
+        // それ以外（A, S ランク、または C, B の成功時）は消費
         if (this.baitCount <= 0) {
             this.baitType = null;
             return false;
@@ -402,6 +432,8 @@ const GameState = {
             this.baitType = null;
         }
 
+        // オートセーブ
+        SaveManager.save(this);
         return true;
     }
 };

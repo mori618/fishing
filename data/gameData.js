@@ -57,31 +57,64 @@ const RODS = [
 // 魚データ
 // レア度: common(一般), uncommon(珍しい), rare(レア), epic(超レア), legendary(伝説)
 // ========================================
+// ========================================
+// 魚データ (計35種類)
+// ランク: D(9), C(8), B(7), A(6), S(5)
+// ========================================
 const FISH = [
-    // 一般魚（common）
-    { id: 'sardine', name: 'イワシ', power: 5, price: 10, rarity: 'common', weight: 100 },
-    { id: 'horse_mackerel', name: 'アジ', power: 8, price: 20, rarity: 'common', weight: 90 },
-    { id: 'mackerel', name: 'サバ', power: 12, price: 35, rarity: 'common', weight: 80 },
-    { id: 'sea_bream', name: 'タイ', power: 18, price: 60, rarity: 'common', weight: 60 },
+    // Dランク (9種)
+    { id: 'fish_d1', name: 'メダカ', power: 5, price: 10, rarity: 'D', weight: 100, specialTitle: '水たまりの' },
+    { id: 'fish_d2', name: 'フナ', power: 6, price: 15, rarity: 'D', weight: 95, specialTitle: '泥まみれの' },
+    { id: 'fish_d3', name: 'クチボソ', power: 7, price: 20, rarity: 'D', weight: 90, specialTitle: '小生意気な' },
+    { id: 'fish_d4', name: 'ヌマエビ', power: 8, price: 25, rarity: 'D', weight: 85, specialTitle: '透き通った' },
+    { id: 'fish_d5', name: 'ザリガニ', power: 9, price: 30, rarity: 'D', weight: 80, specialTitle: '真紅の鋏の' },
+    { id: 'fish_d6', name: 'ハゼ', power: 10, price: 35, rarity: 'D', weight: 75, specialTitle: '砂底の' },
+    { id: 'fish_d7', name: 'タナゴ', power: 11, price: 40, rarity: 'D', weight: 70, specialTitle: '虹色に輝く' },
+    { id: 'fish_d8', name: 'ドジョウ', power: 12, price: 45, rarity: 'D', weight: 65, specialTitle: 'ぬるぬるした' },
+    { id: 'fish_d9', name: 'オタマジャクシ', power: 4, price: 5, rarity: 'D', weight: 110, specialTitle: '明日に夢見る' },
 
-    // 珍しい魚（uncommon）
-    { id: 'flounder', name: 'ヒラメ', power: 25, price: 100, rarity: 'uncommon', weight: 40 },
-    { id: 'yellowtail', name: 'ブリ', power: 35, price: 150, rarity: 'uncommon', weight: 35 },
-    { id: 'bonito', name: 'カツオ', power: 45, price: 200, rarity: 'uncommon', weight: 30 },
+    // Cランク (8種)
+    { id: 'fish_c1', name: 'アユ', power: 15, price: 60, rarity: 'C', weight: 50, specialTitle: '清流の' },
+    { id: 'fish_c2', name: 'イワナ', power: 18, price: 75, rarity: 'C', weight: 45, specialTitle: '岩陰の紳士' },
+    { id: 'fish_c3', name: 'ヤマメ', power: 20, price: 90, rarity: 'C', weight: 40, specialTitle: '渓流の女王' },
+    { id: 'fish_c4', name: 'コイ', power: 22, price: 100, rarity: 'C', weight: 35, specialTitle: '大河の主候補' },
+    { id: 'fish_c5', name: 'ニジマス', power: 25, price: 120, rarity: 'C', weight: 30, specialTitle: '宝石を纏った' },
+    { id: 'fish_c6', name: 'ブラックバス', power: 28, price: 150, rarity: 'C', weight: 25, specialTitle: '湖の暴君' },
+    { id: 'fish_c7', name: 'ブルーギル', power: 14, price: 50, rarity: 'C', weight: 55, specialTitle: '青い鱗の' },
+    { id: 'fish_c8', name: 'ウグイ', power: 12, price: 40, rarity: 'C', weight: 60, specialTitle: 'どこにでも居る' },
 
-    // レア魚（rare）
-    { id: 'tuna', name: 'マグロ', power: 60, price: 400, rarity: 'rare', weight: 15 },
-    { id: 'salmon', name: 'サーモン', power: 50, price: 300, rarity: 'rare', weight: 18 },
-    { id: 'eel', name: 'ウナギ', power: 40, price: 350, rarity: 'rare', weight: 20 },
+    // Bランク (7種)
+    { id: 'fish_b1', name: 'タイ', power: 35, price: 250, rarity: 'B', weight: 20, specialTitle: '目出度い' },
+    { id: 'fish_b2', name: 'ヒラメ', power: 40, price: 300, rarity: 'B', weight: 18, specialTitle: '砂漠の忍者の' },
+    { id: 'fish_b3', name: 'ブリ', power: 45, price: 350, rarity: 'B', weight: 16, specialTitle: '荒波に揉まれた' },
+    { id: 'fish_b4', name: 'スズキ', power: 50, price: 400, rarity: 'B', weight: 14, specialTitle: '出世を夢見る' },
+    { id: 'fish_b5', name: 'サワラ', power: 55, price: 450, rarity: 'B', weight: 12, specialTitle: '春を告げる' },
+    { id: 'fish_b6', name: 'カツオ', power: 30, price: 200, rarity: 'B', weight: 22, specialTitle: '一本釣りの' },
+    { id: 'fish_b7', name: 'ボラ', power: 28, price: 180, rarity: 'B', weight: 25, specialTitle: '海辺の跳躍者' },
 
-    // 超レア魚（epic）
-    { id: 'giant_tuna', name: 'クロマグロ', power: 90, price: 1000, rarity: 'epic', weight: 5 },
-    { id: 'swordfish', name: 'カジキ', power: 100, price: 1200, rarity: 'epic', weight: 4 },
+    // Aランク (6種)
+    { id: 'fish_a1', name: 'マグロ', power: 70, price: 800, rarity: 'A', weight: 8, specialTitle: '大海を駆ける' },
+    { id: 'fish_a2', name: 'カジキ', power: 85, price: 1200, rarity: 'A', weight: 6, specialTitle: '水中の狙撃手' },
+    { id: 'fish_a3', name: 'ウナギ', power: 65, price: 1000, rarity: 'A', weight: 10, specialTitle: '精力のつく' },
+    { id: 'fish_a4', name: 'クエ', power: 95, price: 1500, rarity: 'A', weight: 4, specialTitle: '幻の磯の主' },
+    { id: 'fish_a5', name: 'エイ', power: 60, price: 700, rarity: 'A', weight: 12, specialTitle: '海を舞う' },
+    { id: 'fish_a6', name: 'チョウザメ', power: 110, price: 2000, rarity: 'A', weight: 3, specialTitle: 'キャビアを産む' },
 
-    // 伝説魚（legendary）
-    { id: 'golden_fish', name: '黄金のタイ', power: 130, price: 3000, rarity: 'legendary', weight: 1 },
-    { id: 'ancient_coelacanth', name: 'シーラカンス', power: 150, price: 5000, rarity: 'legendary', weight: 0.5 }
+    // Sランク (5種)
+    { id: 'fish_s1', name: 'シーラカンス', power: 130, price: 5000, rarity: 'S', weight: 2, specialTitle: '太古より目覚めし' },
+    { id: 'fish_s2', name: 'リュウグウノツカイ', power: 150, price: 8000, rarity: 'S', weight: 1, specialTitle: '深海よりの使者' },
+    { id: 'fish_s3', name: '大王イカ', power: 120, price: 4000, rarity: 'S', weight: 3, specialTitle: '全てを呑み込む' },
+    { id: 'fish_s4', name: '黄金のタイ', power: 140, price: 10000, rarity: 'S', weight: 0.5, specialTitle: '伝説の輝きを放つ' },
+    { id: 'fish_s5', name: '伝説の海龍', power: 200, price: 30000, rarity: 'S', weight: 0.1, specialTitle: '天を統べし' }
 ];
+
+// ========================================
+// 称号付き魚の設定
+// ========================================
+const TITLE_CONFIG = {
+    chance: 0.05,        // 称号付きが出る確率 (5%)
+    priceMultiplier: 5,  // 称号付きの売値倍率
+};
 
 // ========================================
 // スキルデータ
@@ -180,32 +213,48 @@ const SKILLS = [
 // ========================================
 // 餌データ
 // ========================================
+// ========================================
+// 餌データ
+// ========================================
 const BAITS = [
     {
-        id: 'normal_bait',
-        name: '普通の餌',
-        description: 'ヒット時間を少し短縮',
-        hitTimeReduction: 0.2,  // 20%短縮
-        rareBoost: 0,
-        price: 20,
+        id: 'bait_d',
+        name: 'Dランクの餌',
+        rank: 'D',
+        description: '基本の餌。Dランクが釣れやすい。釣れても消費されない。',
+        price: 0,
+        quantity: 1
+    },
+    {
+        id: 'bait_c',
+        name: 'Cランクの餌',
+        rank: 'C',
+        description: 'Cランクが釣れやすい。失敗しても消費されない。',
+        price: 50,
         quantity: 5
     },
     {
-        id: 'premium_bait',
-        name: '高級餌',
-        description: 'ヒット時間を短縮、レア魚が出やすい',
-        hitTimeReduction: 0.4,
-        rareBoost: 0.3,
-        price: 100,
+        id: 'bait_b',
+        name: 'Bランクの餌',
+        rank: 'B',
+        description: 'Bランクが釣れやすい。失敗しても消費されない。',
+        price: 200,
         quantity: 5
     },
     {
-        id: 'legendary_bait',
-        name: '伝説の餌',
-        description: 'ヒット時間大幅短縮、超レア魚が出やすい',
-        hitTimeReduction: 0.6,
-        rareBoost: 0.8,
-        price: 500,
+        id: 'bait_a',
+        name: 'Aランクの餌',
+        rank: 'A',
+        description: 'Aランクが釣れやすい。釣れなくても消費される。',
+        price: 800,
+        quantity: 5
+    },
+    {
+        id: 'bait_s',
+        name: 'Sランクの餌',
+        rank: 'S',
+        description: 'Sランクが釣れやすい。釣れなくても消費される。',
+        price: 3000,
         quantity: 3
     }
 ];
@@ -253,12 +302,15 @@ const FISHING_CONFIG = {
 // ========================================
 // レア度別の出現重み調整
 // ========================================
+// ========================================
+// レア度別の出現重み調整 (ベース)
+// ========================================
 const RARITY_WEIGHTS = {
-    common: 1.0,
-    uncommon: 0.5,
-    rare: 0.2,
-    epic: 0.05,
-    legendary: 0.01
+    D: 1.0,
+    C: 0.3,
+    B: 0.1,
+    A: 0.03,
+    S: 0.01
 };
 
 // エクスポート用（グローバル変数として使用）

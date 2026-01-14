@@ -39,10 +39,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // 釣り画面のイベント
     // ========================================
 
-    // 釣りエリアのクリック
-    document.getElementById('fishing-area').addEventListener('click', (e) => {
-        // ボタンのクリックは無視
-        if (e.target.tagName === 'BUTTON') return;
+    // 釣り画面のクリック（全画面対応）
+    document.getElementById('fishing-screen').addEventListener('click', (e) => {
+        // ボタンまたはその子要素（アイコンなど）のクリックは無視
+        if (e.target.closest('button')) return;
         FishingGame.onClick();
     });
 

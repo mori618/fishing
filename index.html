@@ -153,9 +153,38 @@
                 <span class="material-icons">sell</span>
                 魚を全て売却
             </button>
+            <button id="encyclopedia-btn" class="btn-action">
+                <span class="material-icons">menu_book</span>
+                図鑑
+            </button>
             <button id="back-btn" class="btn-nav">
                 <span class="material-icons">phishing</span>
                 釣りに戻る
+            </button>
+        </footer>
+    </div>
+
+    <!-- ========================================
+         図鑑画面
+         ======================================== -->
+    <div id="encyclopedia-screen" class="screen">
+        <header class="shop-header">
+            <h2 class="shop-title"><span class="material-icons">menu_book</span> 魚図鑑</h2>
+            <div id="encyclopedia-progress" class="shop-money" style="color: var(--text-secondary); font-size: 14px;">
+                コンプリート: 0 / 35
+            </div>
+        </header>
+
+        <main class="shop-content">
+            <div id="encyclopedia-list" class="encyclopedia-list">
+                <!-- 動的に表示 -->
+            </div>
+        </main>
+
+        <footer class="shop-footer">
+            <button id="encyclopedia-back-btn" class="btn-nav" style="flex: 1;">
+                <span class="material-icons">store</span>
+                ショップに戻る
             </button>
         </footer>
     </div>
@@ -168,6 +197,7 @@
     <script src="js/GameState.js"></script>
     <script src="js/FishingGame.js"></script>
     <script src="js/ShopManager.js"></script>
+    <script src="js/EncyclopediaManager.js"></script>
     <script src="js/UIManager.js"></script>
     <script src="js/main.js"></script>
 </body>

@@ -27,6 +27,7 @@ const SaveManager = {
                 rods: [0],          // アンロック済み釣り竿のインデックス
                 skills: []          // 購入済みスキルID配列
             },
+            encyclopedia: {},       // 図鑑データ { fishId: { count: 0, hasSpecial: false } }
             statistics: {
                 totalFishCaught: 0,
                 totalMoneyEarned: 0,
@@ -58,6 +59,7 @@ const SaveManager = {
                     rods: [...gameState.unlockedRods],
                     skills: [...gameState.unlockedSkills]
                 },
+                encyclopedia: { ...gameState.encyclopedia },
                 statistics: {
                     totalFishCaught: gameState.totalFishCaught,
                     totalMoneyEarned: gameState.totalMoneyEarned,
@@ -136,6 +138,7 @@ const SaveManager = {
             player: { ...defaultData.player, ...oldData.player },
             rod: { ...defaultData.rod, ...oldData.rod },
             unlocked: { ...defaultData.unlocked, ...oldData.unlocked },
+            encyclopedia: { ...defaultData.encyclopedia, ...oldData.encyclopedia },
             statistics: { ...defaultData.statistics, ...oldData.statistics }
         };
     }

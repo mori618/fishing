@@ -47,9 +47,13 @@ const ShopManager = {
             const item = document.createElement('div');
             item.className = `shop-item ${isEquipped ? 'equipped' : ''} ${!isUnlocked && !canBuy ? 'locked' : ''}`;
 
+            // ランクカラーのマッピング (index 0:D, 1:C, 2:B, 3:A, 4:S)
+            const rankMap = ['D', 'C', 'B', 'A', 'S'];
+            const rankClass = `rarity-${rankMap[index] || 'D'}`;
+
             item.innerHTML = `
                 <div class="item-info">
-                    <div class="item-name">${rod.name}</div>
+                    <div class="item-name ${rankClass}">${rod.name}</div>
                     <div class="item-desc">${rod.description}</div>
                     <div class="item-stats">
                         パワー: ${rod.basePower} (+${rod.starPowerBonus}/<span class="material-icons star-icon">star</span>)

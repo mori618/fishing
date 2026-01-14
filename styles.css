@@ -29,12 +29,19 @@
     --text-secondary: #94a3b8;
     --border-color: rgba(148, 163, 184, 0.2);
 
-    /* レア度カラー */
-    --rarity-common: #94a3b8;
-    --rarity-uncommon: #22c55e;
-    --rarity-rare: #3b82f6;
-    --rarity-epic: #a855f7;
-    --rarity-legendary: #f59e0b;
+    /* ランクカラー (新仕様) */
+    --rarity-D: #94a3b8;
+    --rarity-C: #22c55e;
+    --rarity-B: #3b82f6;
+    --rarity-A: #a855f7;
+    --rarity-S: #f59e0b;
+
+    /* レア度カラー (互換用) */
+    --rarity-common: var(--rarity-D);
+    --rarity-uncommon: var(--rarity-C);
+    --rarity-rare: var(--rarity-B);
+    --rarity-epic: var(--rarity-A);
+    --rarity-legendary: var(--rarity-S);
 
     /* フォント */
     --font-main: 'Noto Sans JP', sans-serif;
@@ -878,6 +885,29 @@ body {
 }
 
 /* レア度別の色 */
+.rarity-D {
+    color: var(--rarity-D);
+}
+
+.rarity-C {
+    color: var(--rarity-C);
+}
+
+.rarity-B {
+    color: var(--rarity-B);
+}
+
+.rarity-A {
+    color: var(--rarity-A);
+}
+
+.rarity-S {
+    color: var(--rarity-S);
+    text-shadow: 0 0 20px var(--rarity-S);
+    animation: legendary-glow 1.5s ease-in-out infinite alternate;
+}
+
+/* 互換用 */
 .rarity-common {
     color: var(--rarity-common);
 }
@@ -902,11 +932,11 @@ body {
 
 @keyframes legendary-glow {
     from {
-        text-shadow: 0 0 10px var(--rarity-legendary);
+        text-shadow: 0 0 10px var(--rarity-S);
     }
 
     to {
-        text-shadow: 0 0 30px var(--rarity-legendary), 0 0 50px var(--rarity-legendary);
+        text-shadow: 0 0 30px var(--rarity-S), 0 0 50px var(--rarity-S);
     }
 }
 

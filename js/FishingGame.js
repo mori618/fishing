@@ -27,20 +27,35 @@ const FishingGame = {
     // 魚の抽選
     // ========================================
     selectFish() {
-        const rareBonus = GameState.getRareBonus();
+        const bait = GAME_DATA.BAITS.find(b => b.id === GameState.baitType) || GAME_DATA.BAITS[0]; // デフォルトD
         const fishPool = [];
 
-        // レア度に応じた重み付きプールを作成
-        for (const fish of GAME_DATA.FISH) {
-            let weight = fish.weight;
-            const rarityMultiplier = GAME_DATA.RARITY_WEIGHTS[fish.rarity];
+        // レアボーナス（スキル由来のみ）
+        const skillRareBonus = GameState.equippedSkills.reduce((bonus, skillId) => {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            return bonus + (skill && skill.effect.type === 'rare_boost' ? skill.effect.value : 0);
+        }, 0);
 
-            // レアボーナスがある場合、レア度の高い魚の重みを増加
-            if (rareBonus > 0 && fish.rarity !== 'common') {
-                weight *= (1 + rareBonus);
+        for (const fish of GAME_DATA.FISH) {
+            let weight = fish.weight * GAME_DATA.RARITY_WEIGHTS[fish.rarity];
+
+            // 餌ランクによる出現制限と補正
+            if (bait.rank === 'D') {
+                if (fish.rarity === 'A' || fish.rarity === 'S') continue; // A, Sは釣れない
+                if (fish.rarity === 'D') weight *= 2.0; // Dが釣れやすい
+                if (fish.rarity === 'C') weight *= 0.5; // たまに
+                if (fish.rarity === 'B') weight *= 0.1; // まれに
+            } else {
+                // その他のランクの餌は、自分と同じランクの出現率を大幅に上げる
+                if (fish.rarity === bait.rank) {
+                    weight *= 10.0;
+                }
             }
 
-            weight *= rarityMultiplier;
+            // スキルボーナス
+            if (skillRareBonus > 0 && fish.rarity !== 'D') {
+                weight *= (1 + skillRareBonus);
+            }
 
             // 重みに応じてプールに追加
             const count = Math.max(1, Math.floor(weight * 10));
@@ -51,7 +66,17 @@ const FishingGame = {
 
         // ランダムに抽選
         const index = Math.floor(Math.random() * fishPool.length);
-        return fishPool[index];
+        const selectedFish = { ...fishPool[index] };
+
+        // 称号付きの抽選
+        if (Math.random() < GAME_DATA.TITLE_CONFIG.chance) {
+            selectedFish.hasTitle = true;
+            selectedFish.name = `${selectedFish.specialTitle}${selectedFish.name}`;
+            selectedFish.price = Math.floor(selectedFish.price * GAME_DATA.TITLE_CONFIG.priceMultiplier);
+            console.log(`✨ 称号付き出現！: ${selectedFish.name}`);
+        }
+
+        return selectedFish;
     },
 
     // ========================================
@@ -131,9 +156,9 @@ const FishingGame = {
             this.state = 'idle';
             UIManager.showMissed('反応が遅かった！魚に逃げられた...');
 
-            // 餌を消費
+            // 餌を消費（ヒットを逃した＝失敗）
             if (GameState.baitType) {
-                GameState.useBait();
+                GameState.useBait(false);
             }
         }, GAME_DATA.FISHING_CONFIG.hitWindowTime);
     },
@@ -142,6 +167,8 @@ const FishingGame = {
     // クリック処理（メイン入力）
     // ========================================
     onClick() {
+        if (this.isProcessing) return;
+
         switch (this.state) {
             case 'idle':
                 // キャスト開始
@@ -150,10 +177,9 @@ const FishingGame = {
 
             case 'waiting':
             case 'nibble':
-                // 早すぎるクリック - すべてのタイマーをクリア
+                // 早すぎるクリック - 失敗扱いにする
                 this.cleanupTimers();
-                this.state = 'idle';
-                UIManager.showMissed('タイミングが早すぎた！');
+                this.catchFailed('タイミングが早すぎた！');
                 break;
 
             case 'hit':
@@ -244,6 +270,9 @@ const FishingGame = {
     // ゲージバトル解決
     // ========================================
     resolveCatch() {
+        // 二重クリック防止
+        this.isProcessing = true;
+
         // アニメーション停止
         cancelAnimationFrame(this.gaugeAnimationId);
 
@@ -261,12 +290,15 @@ const FishingGame = {
 
         console.log(`🎯 ゾーン: ${zone}, 捕獲率: ${(catchRate * 100).toFixed(1)}%`);
 
-        // 判定
-        if (Math.random() < catchRate) {
-            this.catchSuccess();
-        } else {
-            this.catchFailed();
-        }
+        // 少し停止して見せてから結果を表示
+        setTimeout(() => {
+            this.isProcessing = false;
+            if (Math.random() < catchRate) {
+                this.catchSuccess();
+            } else {
+                this.catchFailed();
+            }
+        }, 1000);
     },
 
     // ========================================
@@ -280,7 +312,7 @@ const FishingGame = {
 
         // 餌を消費
         if (GameState.baitType) {
-            GameState.useBait();
+            GameState.useBait(true);
         }
 
         // UI表示
@@ -306,7 +338,7 @@ const FishingGame = {
 
         // 餌を消費
         if (GameState.baitType) {
-            GameState.useBait();
+            GameState.useBait(false);
         }
 
         // UI表示
@@ -331,15 +363,14 @@ const FishingGame = {
         this.waitTimer = null;
         this.hitTimer = null;
         this.gaugeAnimationId = null;
+        this.isProcessing = false;
     },
 
     // ========================================
     // 釣りを中断（ショップ画面に移動など）
     // ========================================
     abort() {
-        clearTimeout(this.waitTimer);
-        clearTimeout(this.hitTimer);
-        cancelAnimationFrame(this.gaugeAnimationId);
+        this.cleanupTimers();
         this.state = 'idle';
         this.currentFish = null;
     }
