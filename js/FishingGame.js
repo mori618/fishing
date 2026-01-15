@@ -62,57 +62,98 @@ const FishingGame = {
         }
 
         const bait = GAME_DATA.BAITS.find(b => b.id === GameState.baitType) || GAME_DATA.BAITS[0]; // デフォルトD
-        const fishPool = [];
 
-        // レアボーナス（スキル由来のみ）
-        const skillRareBonus = GameState.equippedSkills.reduce((bonus, skillId) => {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            return bonus + (skill && skill.effect.type === 'rare_boost' ? skill.effect.value : 0);
-        }, 0);
+        // 餌ごとのランク出現重み設定 (ユーザー要望に基づく)
+        // D餌: D(80%), C(20%), S(1%) -> 重み: D:4, C:1, S:0.05 (合計5.05) ※比率維持のため補正
+        // ユーザー指定: 5/4d, 5/1c, 100/1s -> D:0.8, C:0.2, S:0.01
 
-        for (const fish of GAME_DATA.FISH) {
-            let weight = fish.weight * GAME_DATA.RARITY_WEIGHTS[fish.rarity];
+        // C餌: 5/4c, 5/1d, 10/1b -> C:0.8, D:0.2, B:0.1
 
-            // 餌ランクによる出現制限と補正
-            if (bait.rank === 'D') {
-                if (fish.rarity === 'A' || fish.rarity === 'S') continue; // A, Sは釣れない
-                if (fish.rarity === 'D') weight *= 2.0; // Dが釣れやすい
-                if (fish.rarity === 'C') weight *= 0.5; // たまに
-                if (fish.rarity === 'B') weight *= 0.1; // まれに
-            } else {
-                // その他のランクの餌は、自分と同じランクの出現率を大幅に上げる
-                if (fish.rarity === bait.rank) {
-                    weight *= 10.0;
-                }
-            }
+        // B餌: 5/4c [70%], 5/1b [17%], 10/1d [9%](称号UP), 20/1a [4%]
+        // -> C:0.8, B:0.2, D:0.1, A:0.05
 
-            // スキルボーナス
-            if (skillRareBonus > 0 && fish.rarity !== 'D') {
-                weight *= (1 + skillRareBonus);
-            }
+        // A餌: 5/3a [48%], 5/2b [32%], 5/1c [16%](称号UP), 20/1s [4%]
+        // -> A:0.6, B:0.4, C:0.2, S:0.05
 
-            // 大物狙いボーナス
-            if ((fish.rarity === 'A' || fish.rarity === 'S') && GameState.getBigGameBonus() > 1) {
-                weight *= GameState.getBigGameBonus();
-            }
+        // S餌: 5/3a [58%], 5/1s [19%], 5/1b [19%](称号UP), 30/1ss [3%]
+        // -> A:0.6, S:0.2, B:0.2, SS:0.033
 
-            // 重みに応じてプールに追加
-            const count = Math.max(1, Math.floor(weight * 10));
-            for (let i = 0; i < count; i++) {
-                fishPool.push(fish);
+        const spawnWeights = {
+            'D': { D: 0.8, C: 0.2, S: 0.01 },
+            'C': { C: 0.8, D: 0.2, B: 0.1 },
+            'B': { C: 0.8, B: 0.2, D: 0.1, A: 0.05 },
+            'A': { A: 0.6, B: 0.4, C: 0.2, S: 0.05 },
+            'S': { A: 0.6, S: 0.2, B: 0.2, SS: 0.033 }
+        };
+
+        const currentWeights = spawnWeights[bait.rank] || spawnWeights['D'];
+
+        // 重みに基づいてランクを抽選
+        let totalWeight = 0;
+        for (const r in currentWeights) {
+            totalWeight += currentWeights[r];
+        }
+
+        let random = Math.random() * totalWeight;
+        let selectedRarity = 'D'; // デフォルト
+
+        for (const r in currentWeights) {
+            random -= currentWeights[r];
+            if (random < 0) {
+                selectedRarity = r;
+                break;
             }
         }
 
-        // ランダムに抽選
-        const index = Math.floor(Math.random() * fishPool.length);
-        const selectedFish = { ...fishPool[index] };
+        console.log(`🎲 ランク抽選: 餌=${bait.rank} -> 結果=${selectedRarity} (Weights: ${JSON.stringify(currentWeights)})`);
+
+        // 選択されたランクの魚プールを作成
+        const fishPool = GAME_DATA.FISH.filter(f => f.rarity === selectedRarity);
+
+        // 万が一プールが空ならDランクから再抽選 (フェイルセーフ)
+        if (fishPool.length === 0) {
+            console.warn(`⚠ ランク ${selectedRarity} の魚が見つかりませんでした。Dランクから抽選します。`);
+            return GAME_DATA.FISH[0];
+        }
+
+        // 同ランク内での抽選 (個別のweightを考慮)
+        let poolTotalWeight = 0;
+        fishPool.forEach(f => poolTotalWeight += f.weight);
+
+        random = Math.random() * poolTotalWeight;
+        let selectedFish = fishPool[0];
+
+        for (const fish of fishPool) {
+            random -= fish.weight;
+            if (random < 0) {
+                selectedFish = { ...fish }; // コピーを作成
+                break;
+            }
+        }
 
         // 称号付きの抽選
-        const titleChanceMult = GameState.getTitleChanceMultiplier();
+        let titleChanceMult = GameState.getTitleChanceMultiplier();
+
+        // ユーザー要望の「特定条件下での称号確率アップ」
+        // B餌でDランク -> 称号UP
+        // A餌でCランク -> 称号UP
+        // S餌でBランク -> 称号UP
+        if ((bait.rank === 'B' && selectedRarity === 'D') ||
+            (bait.rank === 'A' && selectedRarity === 'C') ||
+            (bait.rank === 'S' && selectedRarity === 'B')) {
+            console.log('✨ 特定条件ボーナス: 称号確率アップ適用！');
+            titleChanceMult *= 3.0; // 3倍に設定（調整可能）
+        }
+
         if (Math.random() < GAME_DATA.TITLE_CONFIG.chance * titleChanceMult) {
             selectedFish.hasTitle = true;
             selectedFish.name = `${selectedFish.specialTitle}${selectedFish.name}`;
             selectedFish.price = Math.floor(selectedFish.price * GAME_DATA.TITLE_CONFIG.priceMultiplier);
+            // 称号説明文があれば追加
+            if (selectedFish.titleDescription) {
+                selectedFish.originalDescription = selectedFish.description;
+                // selectedFish.description = selectedFish.titleDescription; // 必要なら説明文も置き換え
+            }
             console.log(`✨ 称号付き出現！: ${selectedFish.name} (倍率: ${titleChanceMult})`);
         }
 

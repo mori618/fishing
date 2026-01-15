@@ -140,7 +140,7 @@ const GameState = {
     // スキルスロット数（＝星の数）
     // ========================================
     getSkillSlots() {
-        return this.rodStars;
+        return this.rodStars + 1;
     },
 
     // ========================================

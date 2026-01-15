@@ -245,6 +245,18 @@ const FISH = [
         id: 'fish_s5', name: '伝説の海龍', power: 200, price: 30000, rarity: 'S', weight: 0.1, specialTitle: '天を統べし', icon: 'token',
         description: 'あらゆる海洋生物の頂点に立つ龍。その姿を見た者はいないとされる。',
         titleDescription: '海だけでなく天候さえも操る、神話の世界から現れた絶対的な存在。'
+    },
+
+    // SSランク (2種)
+    {
+        id: 'fish_ss1', name: '伝説のクラーケン', power: 250, price: 50000, rarity: 'SS', weight: 0.05, specialTitle: '深海よりの厄災', icon: 'storm',
+        description: '船を襲い海に引きずり込むと言われる伝説の巨大生物。複数の触手を持つ。',
+        titleDescription: '全ての船乗りに恐れられ、海そのものの怒りを具現化したかのような厄災。'
+    },
+    {
+        id: 'fish_ss2', name: 'リヴァイアサン', power: 300, price: 80000, rarity: 'SS', weight: 0.02, specialTitle: '世界を飲み込む', icon: 'all_inclusive',
+        description: '旧約聖書にも記される巨大な海獣。その鱗はあらゆる武器を弾くという。',
+        titleDescription: '世界の終わりに現れ、海すらも飲み干すと言われる究極の海獣。'
     }
 ];
 
@@ -654,7 +666,8 @@ const RARITY_WEIGHTS = {
     C: 0.3,
     B: 0.1,
     A: 0.03,
-    S: 0.01
+    S: 0.01,
+    SS: 0.005
 };
 
 // ========================================
