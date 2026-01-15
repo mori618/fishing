@@ -48,7 +48,7 @@ const RODS = [
         basePower: 122,
         starPowerBonus: 20,
         price: 30000,
-        upgradeCosts: [50000, 120000, 300000, 600000, 1500000],
+        upgradeCosts: [50000, 120000, 300000, 600000, 800000],
         description: '古より伝わる伝説の釣竿'
     }
 ];
@@ -726,7 +726,7 @@ const FISHING_CONFIG = {
         C: 600,
         B: 500,
         A: 400,
-        S: 300
+        S: 350
     },
 
     // ヒットを逃した場合のペナルティ時間（ミリ秒）
