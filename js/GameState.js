@@ -331,6 +331,48 @@ const GameState = {
     },
 
     // ========================================
+    // 宝箱出現確率のスキル補正を取得 (加算)
+    // ========================================
+    getTreasureChanceBonus() {
+        let bonus = 0;
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'treasure_boost') {
+                bonus += skill.effect.value;
+            }
+        }
+        return bonus;
+    },
+
+    // ========================================
+    // 宝箱報酬量の倍率を取得 (1.0 + ボーナス)
+    // ========================================
+    getTreasureQuantityMultiplier() {
+        let multiplier = 1.0;
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'treasure_quantity') {
+                multiplier += skill.effect.value;
+            }
+        }
+        return multiplier;
+    },
+
+    // ========================================
+    // 宝箱報酬質の倍率を取得 (乗算)
+    // ========================================
+    getTreasureQualityMultiplier() {
+        let multiplier = 1.0;
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'treasure_quality') {
+                multiplier *= skill.effect.value;
+            }
+        }
+        return multiplier;
+    },
+
+    // ========================================
     // 魚をインベントリに追加
     // ========================================
     addFish(fish) {

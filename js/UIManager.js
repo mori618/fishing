@@ -439,6 +439,74 @@ const UIManager = {
     },
 
     // ========================================
+    // 宝箱結果表示
+    // ========================================
+    showTreasureResult(chest, results, onClose) {
+        const fishingArea = document.getElementById('fishing-area');
+        if (!fishingArea) return;
+
+        // 結果リストのHTML生成
+        const itemsHtml = results.map(item => {
+            let icon = 'help';
+            let className = 'common';
+
+            if (item.type === 'money') {
+                icon = 'payments';
+                className = 'money';
+            } else if (item.type === 'bait') {
+                icon = 'set_meal';
+                className = 'item';
+            } else if (item.type === 'skill') {
+                icon = 'school';
+                className = 'skill';
+            } else if (item.type === 'refund') {
+                icon = 'currency_exchange';
+                className = 'refund';
+            }
+
+            return `
+                <div class="loot-item ${className}">
+                    <div class="loot-icon">
+                        <span class="material-icons">${icon}</span>
+                    </div>
+                    <div class="loot-info">
+                        <div class="loot-name">${item.name}</div>
+                        ${item.count ? `<div class="loot-count">x${item.count}</div>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        fishingArea.innerHTML = `
+            <div class="result-overlay treasure-result" id="result-overlay">
+                <div class="result-card rarity-${chest.treasureType}">
+                    <div class="card-header">TREASURE!</div>
+                    
+                    <div class="result-animation">
+                        <div class="icon-circle rarity-${chest.treasureType}">
+                            <span class="material-icons result-icon">${chest.icon}</span>
+                            <span class="material-icons sparkle-icon">auto_awesome</span>
+                            <div class="rarity-glow"></div>
+                        </div>
+                    </div>
+
+                    <div class="result-content">
+                        <h2 class="chest-name">${chest.name}</h2>
+                        <div class="loot-list">
+                            ${itemsHtml}
+                        </div>
+                    </div>
+                    
+                    <div class="tap-hint">TAP TO CLOSE</div>
+                </div>
+            </div>
+        `;
+
+        this.setupResultOverlayClose(onClose);
+        this.updateStatus();
+    },
+
+    // ========================================
     // ミス表示
     // ========================================
     showMissed(message) {

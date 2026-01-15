@@ -61,6 +61,43 @@ const FishingGame = {
             };
         }
 
+        // ========================================
+        // 宝箱の抽選
+        // ========================================
+        const treasureChance = GAME_DATA.TREASURE_CONFIG.baseChance + GameState.getTreasureChanceBonus();
+        console.log(`🎁 宝箱チャンス: ${(treasureChance * 100).toFixed(1)}% (Base: ${GAME_DATA.TREASURE_CONFIG.baseChance}, Bonus: ${GameState.getTreasureChanceBonus()})`);
+
+        if (Math.random() < treasureChance) {
+            console.log('🎁 宝箱が出現！');
+            const weights = GAME_DATA.TREASURE_CONFIG.rarityWeights;
+            let random = Math.random();
+            let selectedType = 'WOOD';
+
+            // 重みに基づいてタイプ抽選
+            if (random < weights.WOOD) {
+                selectedType = 'WOOD';
+            } else if (random < weights.WOOD + weights.SILVER) {
+                selectedType = 'SILVER';
+            } else {
+                selectedType = 'GOLD';
+            }
+
+            const chestData = GAME_DATA.TREASURE_CONFIG.chestData[selectedType];
+
+            // 魚オブジェクトの形式に合わせる
+            return {
+                id: `treasure_${selectedType.toLowerCase()}`,
+                name: chestData.name,
+                rarity: chestData.rarity,
+                power: chestData.power,
+                price: 0, // 売れない
+                icon: chestData.icon,
+                description: chestData.description,
+                isTreasure: true,
+                treasureType: selectedType
+            };
+        }
+
         const bait = GAME_DATA.BAITS.find(b => b.id === GameState.baitType) || GAME_DATA.BAITS[0]; // デフォルトD
 
         // 餌ごとのランク出現重み設定 (ユーザー要望に基づく)
@@ -480,6 +517,18 @@ const FishingGame = {
             return;
         }
 
+        // 宝箱の場合
+        if (this.currentFish.isTreasure) {
+            // 餌を消費
+            if (GameState.baitType) {
+                GameState.useBait(true);
+                UIManager.updateBaitInfo();
+            }
+
+            this.processTreasureChest(this.currentFish);
+            return;
+        }
+
         // インベントリに追加
         GameState.addFish(this.currentFish);
 
@@ -574,6 +623,120 @@ const FishingGame = {
     // ========================================
     // 釣りを中断（ショップ画面に移動など）
     // ========================================
+    // ========================================
+    // 宝箱の中身決定と処理
+    // ========================================
+    processTreasureChest(chest) {
+        const type = chest.treasureType;
+        const lootTable = GAME_DATA.TREASURE_CONFIG.lootTables[type];
+        const results = [];
+
+        // スキル効果を取得
+        const quantityMult = GameState.getTreasureQuantityMultiplier();
+        const qualityMult = GameState.getTreasureQualityMultiplier();
+
+        console.log(`🎁 宝箱開封: ${type}, Quantity x${quantityMult.toFixed(2)}, Quality x${qualityMult.toFixed(2)}`);
+
+        // 1. お金 (量と質の両方が乗る)
+        const baseMoney = lootTable.money.min + Math.floor(Math.random() * (lootTable.money.max - lootTable.money.min + 1));
+        const finalMoney = Math.floor(baseMoney * quantityMult * qualityMult);
+
+        GameState.addMoney(finalMoney);
+        results.push({ type: 'money', value: finalMoney, name: `${finalMoney.toLocaleString()} G` });
+
+        // 2. 餌
+        // 2. 餌
+        if (lootTable.baits && lootTable.baits.length > 0) {
+            let selectedBaitConfig = null;
+
+            // 重み計算 (質の高い餌の重みを qualityMult で増やす)
+            // 簡易的に、リストの後半(インデックスが大きい)の weight を qualityMult 倍する
+            const weightedBaits = lootTable.baits.map((b, index) => {
+                let w = b.weight;
+                // インデックスが大きい(=恐らくリストの下の方にある良い餌)ほどブースト
+                if (index > 0) w *= qualityMult;
+                return { ...b, effectiveWeight: w };
+            });
+
+            let accumulatedWeight = 0;
+            weightedBaits.forEach(b => accumulatedWeight += b.effectiveWeight);
+
+            let randomVal = Math.random() * accumulatedWeight;
+
+            for (const b of weightedBaits) {
+                randomVal -= b.effectiveWeight;
+                if (randomVal < 0) {
+                    selectedBaitConfig = b;
+                    break;
+                }
+            }
+            if (!selectedBaitConfig) selectedBaitConfig = weightedBaits[0];
+
+            // 個数 (量ボーナス)
+            const baseCount = selectedBaitConfig.min + Math.floor(Math.random() * (selectedBaitConfig.max - selectedBaitConfig.min + 1));
+            const finalCount = Math.max(1, Math.floor(baseCount * quantityMult)); // 最低1個
+
+            const baitData = GAME_DATA.BAITS.find(b => b.id === selectedBaitConfig.id);
+
+            if (baitData && finalCount > 0) {
+                GameState.addBait(selectedBaitConfig.id, finalCount);
+                results.push({ type: 'bait', id: selectedBaitConfig.id, count: finalCount, name: baitData.name });
+            }
+        }
+
+        // 3. スキル (確率)
+        if (lootTable.skills && lootTable.skills.length > 0) {
+            // 抽選回数 (量ボーナス)
+            // quantityMult が 1.5 なら、1回確定 + 50%で2回目
+            // ベースは1回抽選
+            const baseRolls = 1;
+            const effectiveRolls = baseRolls * quantityMult;
+            const guaranteedRolls = Math.floor(effectiveRolls);
+            const extraChance = effectiveRolls - guaranteedRolls;
+
+            let totalRolls = guaranteedRolls;
+            if (Math.random() < extraChance) {
+                totalRolls++;
+            }
+
+            console.log(`🎁 スキル抽選回数: ${totalRolls}`);
+
+            for (let i = 0; i < totalRolls; i++) {
+                // 各ロールごとに独立して抽選
+                for (const skillConfig of lootTable.skills) {
+                    // 確率 (質ボーナス)
+                    const effectiveChance = skillConfig.chance * qualityMult;
+
+                    if (Math.random() < effectiveChance) {
+                        // 指定Tierのスキルからランダムに1つ
+                        const availableSkills = GAME_DATA.SKILLS.filter(s => s.tier === skillConfig.tier);
+                        if (availableSkills.length > 0) {
+                            const newSkill = availableSkills[Math.floor(Math.random() * availableSkills.length)];
+
+                            // 既に持っているかチェック
+                            if (GameState.hasSkill(newSkill.id)) {
+                                const refund = Math.floor(newSkill.price / 2);
+                                GameState.addMoney(refund);
+                                results.push({ type: 'refund', value: refund, name: `${newSkill.name} (重複)` });
+                            } else {
+                                GameState.addSkill(newSkill.id);
+                                results.push({ type: 'skill', id: newSkill.id, name: newSkill.name });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        console.log('🎁 宝箱の中身:', results);
+
+        // UI表示
+        UIManager.showTreasureResult(chest, results, () => {
+            this.state = 'idle';
+            UIManager.showIdle();
+        });
+    },
+
     abort() {
         this.cleanupTimers();
         this.state = 'idle';

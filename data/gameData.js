@@ -552,6 +552,84 @@ const SKILLS = [
         effect: { type: 'big_game_boost', value: 5.0 },
         price: 12000,
         tier: 3
+    },
+
+    // トレジャーハンター (Treasure Hunter)
+    {
+        id: 'treasure_hunter_1',
+        name: 'トレジャーハンター I',
+        description: '宝箱出現率+2%',
+        effect: { type: 'treasure_boost', value: 0.02 },
+        price: 1500,
+        tier: 1
+    },
+    {
+        id: 'treasure_hunter_2',
+        name: 'トレジャーハンター II',
+        description: '宝箱出現率+5%',
+        effect: { type: 'treasure_boost', value: 0.05 },
+        price: 5000,
+        tier: 2
+    },
+    {
+        id: 'treasure_hunter_3',
+        name: 'トレジャーハンター III',
+        description: '宝箱出現率+10%',
+        effect: { type: 'treasure_boost', value: 0.1 },
+        price: 15000,
+        tier: 3
+    },
+
+    // フォーチュンハンター (Fortune Hunter) - 量
+    {
+        id: 'fortune_hunter_1',
+        name: 'フォーチュンハンター I',
+        description: '宝箱の報酬量(金・餌・スキル数)+20%',
+        effect: { type: 'treasure_quantity', value: 0.2 },
+        price: 3000,
+        tier: 1
+    },
+    {
+        id: 'fortune_hunter_2',
+        name: 'フォーチュンハンター II',
+        description: '宝箱の報酬量(金・餌・スキル数)+50%',
+        effect: { type: 'treasure_quantity', value: 0.5 },
+        price: 10000,
+        tier: 2
+    },
+    {
+        id: 'fortune_hunter_3',
+        name: 'フォーチュンハンター III',
+        description: '宝箱の報酬量(金・餌・スキル数)+100%',
+        effect: { type: 'treasure_quantity', value: 1.0 },
+        price: 30000,
+        tier: 3
+    },
+
+    // ラグジュアリーハンター (Luxury Hunter) - 質
+    {
+        id: 'luxury_hunter_1',
+        name: 'ラグジュアリーハンター I',
+        description: '宝箱の報酬質(金・餌ランク・スキルレア度)小アップ',
+        effect: { type: 'treasure_quality', value: 1.2 },
+        price: 5000,
+        tier: 1
+    },
+    {
+        id: 'luxury_hunter_2',
+        name: 'ラグジュアリーハンター II',
+        description: '宝箱の報酬質(金・餌ランク・スキルレア度)中アップ',
+        effect: { type: 'treasure_quality', value: 1.5 },
+        price: 20000,
+        tier: 2
+    },
+    {
+        id: 'luxury_hunter_3',
+        name: 'ラグジュアリーハンター III',
+        description: '宝箱の報酬質(金・餌ランク・スキルレア度)大アップ',
+        effect: { type: 'treasure_quality', value: 2.0 },
+        price: 50000,
+        tier: 3
     }
 ];
 
@@ -689,6 +767,56 @@ const RECYCLE_RATES = {
     tier4: 1 // 実質Tier 3 (special)
 };
 
+// ========================================
+// 宝箱設定
+// ========================================
+const TREASURE_CONFIG = {
+    baseChance: 0.05, // 5%の確率で出現
+    rarityWeights: {
+        WOOD: 0.7,   // 木: 70% (D相当)
+        SILVER: 0.25, // 銀: 25% (B相当)
+        GOLD: 0.05    // 金: 5% (S相当)
+    },
+    chestData: {
+        WOOD: { name: '木の宝箱', power: 30, rarity: 'D', icon: 'inventory_2', description: '古びた木製の宝箱。中身は...' },
+        SILVER: { name: '銀の宝箱', power: 80, rarity: 'B', icon: 'lock', description: '装飾が施された銀色の宝箱。期待できそう。' },
+        GOLD: { name: '金の宝箱', power: 150, rarity: 'S', icon: 'diamond', description: '眩い輝きを放つ純金の宝箱。最高のお宝が入っているかも！' }
+    },
+    lootTables: {
+        WOOD: {
+            money: { min: 100, max: 500 },
+            baits: [
+                { id: 'bait_c', min: 1, max: 3, weight: 0.8 },
+                { id: 'bait_b', min: 1, max: 1, weight: 0.2 }
+            ],
+            skills: [
+                { tier: 1, chance: 0.15 } // 15%でTier1スキル
+            ]
+        },
+        SILVER: {
+            money: { min: 1000, max: 3000 },
+            baits: [
+                { id: 'bait_b', min: 2, max: 5, weight: 0.6 },
+                { id: 'bait_a', min: 1, max: 2, weight: 0.4 }
+            ],
+            skills: [
+                { tier: 1, chance: 0.2 }, // 20%でTier1スキル
+                { tier: 2, chance: 0.15 } // 15%でTier2スキル
+            ]
+        },
+        GOLD: {
+            money: { min: 5000, max: 15000 },
+            baits: [
+                { id: 'bait_s', min: 1, max: 3, weight: 1.0 }
+            ],
+            skills: [
+                { tier: 2, chance: 0.4 }, // 40%でTier2スキル
+                { tier: 3, chance: 0.2 }  // 20%でTier3スキル
+            ]
+        }
+    }
+};
+
 // エクスポート用（グローバル変数として使用）
 if (typeof window !== 'undefined') {
     window.GAME_DATA = {
@@ -701,6 +829,7 @@ if (typeof window !== 'undefined') {
         RARITY_WEIGHTS,
         TITLE_CONFIG,
         GACHA_CONFIG,
-        RECYCLE_RATES
+        RECYCLE_RATES,
+        TREASURE_CONFIG
     };
 }
