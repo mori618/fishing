@@ -54,6 +54,34 @@ const UIManager = {
                 continueBtn.classList.add('hidden');
             }
         }
+
+        // デバックボタン追加 (100万円)
+        const startScreen = document.getElementById('start-screen');
+        if (startScreen && !document.getElementById('debug-money-btn')) {
+            const debugBtn = document.createElement('button');
+            debugBtn.id = 'debug-money-btn';
+            debugBtn.className = 'btn secondary-btn';
+            debugBtn.textContent = 'デバック: +100万円';
+            debugBtn.style.position = 'absolute';
+            debugBtn.style.top = '10px';
+            debugBtn.style.left = '10px';
+            debugBtn.style.zIndex = '1000';
+            debugBtn.style.fontSize = '12px';
+            debugBtn.style.padding = '5px 10px';
+
+            debugBtn.addEventListener('click', () => {
+                GameState.addMoney(1000000);
+                alert('100万円を追加しました！');
+                // 画面更新が必要な場合はここで更新
+                if (document.getElementById('money-display')) {
+                    document.getElementById('money-display').textContent = `${GameState.money.toLocaleString()} G`;
+                }
+                SaveManager.saveGame();
+            });
+
+            startScreen.appendChild(debugBtn);
+        }
+        // デバックボタン追加 (100万円)ここまで
     },
 
     // ========================================
