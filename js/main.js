@@ -45,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('fishing-screen').addEventListener('pointerdown', (e) => {
         // ボタンまたはその子要素（アイコンなど）のクリックは無視
         if (e.target.closest('button')) return;
+
         FishingGame.onClick();
     });
 

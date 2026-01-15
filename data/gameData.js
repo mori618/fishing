@@ -792,7 +792,7 @@ const BAITS = [
         rank: 'S',
         description: 'Sランクが釣れやすい。釣れなくても消費される。',
         price: 3000,
-        quantity: 3
+        quantity: 5
     }
 ];
 

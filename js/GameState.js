@@ -59,6 +59,8 @@ const GameState = {
             // 互換性チェック: 古いデータの場合は移行
             if (saveData.player.baitInventory) {
                 this.baitInventory = { ...saveData.player.baitInventory };
+                // 強制的にDランクは無限(-1)にする（バグ修正・保護）
+                this.baitInventory['bait_d'] = -1;
             } else {
                 // 旧データからの移行: 持っていた餌を現在の餌タイプに追加
                 this.baitInventory = {
@@ -123,6 +125,12 @@ const GameState = {
     // ========================================
     // 現在の釣り竿データを取得
     // ========================================
+    // お金操作
+    addMoney(amount) {
+        this.money += amount;
+        this.totalMoneyEarned += amount;
+    },
+
     getCurrentRod() {
         return GAME_DATA.RODS[this.rodRankIndex];
     },
@@ -548,6 +556,21 @@ const GameState = {
     },
 
     // ========================================
+    // スキルの追加
+    // ========================================
+    addSkill(skillId) {
+        this.skillInventory[skillId] = (this.skillInventory[skillId] || 0) + 1;
+        SaveManager.save(this);
+    },
+
+    // ========================================
+    // スキル所持判定
+    // ========================================
+    hasSkill(skillId) {
+        return (this.skillInventory[skillId] || 0) > 0;
+    },
+
+    // ========================================
     // 現在のスキルの所持数を取得
     // ========================================
     getSkillCount(skillId) {
@@ -644,6 +667,23 @@ const GameState = {
     },
 
     // ========================================
+    // 餌の追加（宝箱などから）
+    // ========================================
+    addBait(baitId, amount) {
+        if (!amount || amount <= 0) return;
+
+        // 餌を追加
+        if (this.baitInventory[baitId] === -1) {
+            // 無限の場合は増えない
+        } else {
+            this.baitInventory[baitId] = (this.baitInventory[baitId] || 0) + amount;
+        }
+
+        // オートセーブ
+        SaveManager.save(this);
+    },
+
+    // ========================================
     // フィーバー蓄積ボーナス取得 (加算)
     // ========================================
     getFeverChargeBonus() {
@@ -691,7 +731,8 @@ const GameState = {
     // ========================================
     getCurrentBaitCount() {
         if (!this.baitType) return 0;
-        return this.baitInventory[this.baitType];
+        // 未定義の場合は0を返す
+        return this.baitInventory[this.baitType] ?? 0;
     },
 
     // ========================================
@@ -754,6 +795,92 @@ const GameState = {
         // オートセーブ
         SaveManager.save(this);
         return true;
+    },
+
+    // ========================================
+    // 達人の針（赤ゾーン確定）所持判定
+    // ========================================
+    hasPerfectMaster() {
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'perfect_catch') {
+                return true;
+            }
+        }
+        return false;
+    },
+
+    // ========================================
+    // フィーバーの進行
+    // ========================================
+    progressFever(isGuaranteed = false) {
+        // ========================================
+        // フィーバー中の処理 (Lv6〜)
+        // ========================================
+        if (this.fever.isActive) {
+            // 変動確率の抽選 (0〜100)
+            const roll = Math.random() * 100;
+
+            // 確率調整: 早く終わらせるが、リセットもありにする
+            // 進行: 75%
+            // 維持: 10%
+            // 後退: 10%
+            // リセット: 5%
+
+            // 確定フラグがある場合は進行 (レベルアップ)
+            if (isGuaranteed) {
+                this.fever.value++;
+            } else if (roll < 75) {
+                // 進行 (75%)
+                this.fever.value++;
+            } else if (roll < 85) {
+                // 維持 (10%)
+                // ±0
+            } else if (roll < 95) {
+                // 後退 (10%)
+                this.fever.value--;
+                if (this.fever.value < 6) this.fever.value = 6; // Lv6未満にはならない
+            } else {
+                // リセット (5%)
+                this.fever.value = 6; // スタート位置に戻る
+                return { message: 'reset' }; // 大当たり演出用
+            }
+
+            // 終了判定 (Lv12を超えたら終了)
+            if (this.fever.value > 12) {
+                this.fever.isActive = false;
+                this.fever.value = 0;
+                this.fever.type = null;
+                return { message: 'end' };
+            }
+            return { message: 'active' };
+        }
+
+        // ========================================
+        // ゲージ蓄積中の処理 (〜Lv6)
+        // ========================================
+        else {
+            // 20%の確率で蓄積 (または確定フラグがあれば100%)
+            if (isGuaranteed || Math.random() < 0.2) {
+                this.fever.value++;
+
+                // 初めて溜まった(Lv1)タイミングでタイプを決定
+                if (this.fever.value === 1) {
+                    // 50%で太陽か月
+                    this.fever.type = Math.random() < 0.5 ? 'sun' : 'moon';
+                }
+
+                // 発動判定 (Lv6到達)
+                if (this.fever.value >= 6) {
+                    this.fever.isActive = true;
+                    this.fever.value = 6;
+                    return { message: 'start', type: this.fever.type };
+                }
+                return { message: 'charging' };
+            }
+            // 蓄積しなかった
+            return { message: 'none' };
+        }
     }
 };
 

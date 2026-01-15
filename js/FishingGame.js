@@ -367,14 +367,25 @@ const FishingGame = {
         console.log(`⏱ ヒット窓口: レア度ベース ${rarityBase}ms × 倍率 ${multiplier} = ${finalHitWindow}ms`);
 
         this.hitTimer = setTimeout(() => {
+            console.log('⏰ ヒット窓口終了: 反応が遅かった');
             // 時間切れで逃げられた
             this.state = 'idle';
             UIManager.showMissed('反応が遅かった！魚に逃げられた...');
 
             // 餌を消費（ヒットを逃した＝失敗）
+            // 餌を消費（ヒットを逃した＝失敗）
             if (GameState.baitType) {
                 GameState.useBait(false);
                 UIManager.updateBaitInfo();
+            }
+
+            // フィーバー中は失敗でもゲージが溜まる
+            if (GameState.fever.isActive) {
+                const feverResult = GameState.progressFever(true);
+                UIManager.updateFeverVisuals();
+                if (feverResult.message === 'end') {
+                    UIManager.showMessage('💨 フィーバー終了...', 3000);
+                }
             }
         }, finalHitWindow);
     },
@@ -407,7 +418,10 @@ const FishingGame = {
 
             case 'hit':
                 // ヒット成功
-                clearTimeout(this.hitTimer);
+                if (this.hitTimer) {
+                    clearTimeout(this.hitTimer);
+                    this.hitTimer = null;
+                }
                 this.checkPower();
                 break;
 
@@ -428,9 +442,16 @@ const FishingGame = {
         }
 
         const playerPower = GameState.getTotalPower();
-        const fishPower = this.currentFish.power;
+        const fishPower = this.currentFish ? this.currentFish.power : 0;
 
-        console.log(`⚡ パワー判定: プレイヤー ${playerPower} vs 魚 ${fishPower}`);
+        if (!this.currentFish) {
+            console.error('❌ currentFish is null in checkPower!');
+            this.state = 'idle';
+            UIManager.showIdle();
+            return;
+        }
+
+        console.log(`⚡ パワー判定: プレイヤー ${playerPower} vs 魚 ${fishPower} (${this.currentFish.name})`);
 
         if (playerPower >= fishPower) {
             // 即座に釣り上げ成功
@@ -528,7 +549,7 @@ const FishingGame = {
             Math.random() * (config.catchRate.max - config.catchRate.min);
 
         // 達人の針スキル: 赤ゾーンなら確定 (100%)
-        if (zone === 'red' && GameState.hasPerfectMaster()) {
+        if (zone === 'red' && GameState.hasPerfectMaster && GameState.hasPerfectMaster()) {
             catchRate = 1.0;
             console.log('✨ 達人の針発動！赤ゾーン確定');
         }
@@ -566,12 +587,31 @@ const FishingGame = {
             return;
         }
 
+        if (!this.currentFish) {
+            console.error('❌ currentFish is null in catchSuccess!');
+            this.state = 'idle';
+            UIManager.showIdle();
+            return;
+        }
+
         // 宝箱の場合
         if (this.currentFish.isTreasure) {
             // 餌を消費
             if (GameState.baitType) {
                 GameState.useBait(true);
                 UIManager.updateBaitInfo();
+            }
+
+            // ========================================
+            // フィーバー進行判定
+            // ========================================
+            const feverResult = GameState.progressFever();
+            UIManager.updateFeverVisuals();
+
+            if (feverResult.message === 'start') {
+                UIManager.showMessage(`🔥 ${feverResult.type === 'sun' ? 'おたから' : 'おさかな'}フィーバー開始！`, 3000);
+            } else if (feverResult.message === 'end') {
+                UIManager.showMessage('💨 フィーバー終了...', 3000);
             }
 
             this.processTreasureChest(this.currentFish);
@@ -620,6 +660,15 @@ const FishingGame = {
             UIManager.updateBaitInfo();
         }
 
+        // フィーバー中は失敗でもゲージが溜まる
+        if (GameState.fever.isActive) {
+            const feverResult = GameState.progressFever(true);
+            UIManager.updateFeverVisuals();
+            if (feverResult.message === 'end') {
+                UIManager.showMessage('💨 フィーバー終了...', 3000);
+            }
+        }
+
         // UI表示（簡易メッセージ）
         UIManager.showMissed('タイミングが早すぎた！');
 
@@ -646,6 +695,14 @@ const FishingGame = {
         if (GameState.baitType) {
             GameState.useBait(false);
             UIManager.updateBaitInfo();
+        }
+
+        // 失敗時は確定でフィーバーゲージ+1
+        const feverResult = GameState.progressFever(true);
+        UIManager.updateFeverVisuals();
+
+        if (feverResult.message === 'start') {
+            UIManager.showMessage(`🔥 ${feverResult.type === 'sun' ? 'おたから' : 'おさかな'}フィーバー開始！`, 3000);
         }
 
         // UI表示（ユーザーが閉じたらidleに戻る）

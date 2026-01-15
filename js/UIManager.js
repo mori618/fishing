@@ -43,6 +43,9 @@ const UIManager = {
     // ========================================
     // スタート画面
     // ========================================
+    // ========================================
+    // スタート画面
+    // ========================================
     initStartScreen() {
         const hasSave = SaveManager.hasSaveData();
         const continueBtn = document.getElementById('continue-btn');
@@ -55,33 +58,80 @@ const UIManager = {
             }
         }
 
-        // デバックボタン追加 (100万円)
-        const startScreen = document.getElementById('start-screen');
-        if (startScreen && !document.getElementById('debug-money-btn')) {
-            const debugBtn = document.createElement('button');
-            debugBtn.id = 'debug-money-btn';
-            debugBtn.className = 'btn secondary-btn';
-            debugBtn.textContent = 'デバック: +100万円';
-            debugBtn.style.position = 'absolute';
-            debugBtn.style.top = '10px';
-            debugBtn.style.left = '10px';
-            debugBtn.style.zIndex = '1000';
-            debugBtn.style.fontSize = '12px';
-            debugBtn.style.padding = '5px 10px';
+        // デバッグツールバー作成
+        // 既存ボタン/ツールバーがあれば削除
+        const existingBtn = document.getElementById('debug-money-btn');
+        if (existingBtn) existingBtn.remove();
+        const existingToolbar = document.getElementById('debug-toolbar');
+        if (existingToolbar) existingToolbar.remove();
 
-            debugBtn.addEventListener('click', () => {
-                GameState.addMoney(1000000);
-                alert('100万円を追加しました！');
-                // 画面更新が必要な場合はここで更新
-                if (document.getElementById('money-display')) {
-                    document.getElementById('money-display').textContent = `${GameState.money.toLocaleString()} G`;
-                }
+        const toolbar = document.createElement('div');
+        toolbar.id = 'debug-toolbar';
+        toolbar.style.position = 'fixed';
+        toolbar.style.top = '10px';
+        toolbar.style.left = '10px';
+        toolbar.style.zIndex = '2147483647';
+        toolbar.style.display = 'flex';
+        toolbar.style.flexDirection = 'column';
+        toolbar.style.gap = '8px';
+        toolbar.style.pointerEvents = 'none'; // コンテナ自体はクリック透過
+
+        const createDebugBtn = (text, onClick, color = 'rgba(255, 0, 0, 0.8)') => {
+            const btn = document.createElement('button');
+            btn.textContent = text;
+            btn.style.fontSize = '12px';
+            btn.style.padding = '6px 10px';
+            btn.style.backgroundColor = color;
+            btn.style.color = 'white';
+            btn.style.border = '1px solid white';
+            btn.style.borderRadius = '4px';
+            btn.style.cursor = 'pointer';
+            btn.style.pointerEvents = 'auto'; // ボタンはクリック有効
+            btn.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
+
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onClick();
+                // 共通更新処理
                 SaveManager.saveGame();
+                if (typeof this.updateMoney === 'function') this.updateMoney();
+                if (typeof this.updateFeverVisuals === 'function') this.updateFeverVisuals();
             });
+            return btn;
+        };
 
-            startScreen.appendChild(debugBtn);
-        }
-        // デバックボタン追加 (100万円)ここまで
+        // 1. お金追加ボタン
+        toolbar.appendChild(createDebugBtn('💰 +100万', () => {
+            GameState.addMoney(1000000);
+            this.showMessage('所持金 +1,000,000 G');
+        }));
+
+        // 2. フィーバー +1
+        toolbar.appendChild(createDebugBtn('🔥 Fever +1', () => {
+            if (!GameState.fever) GameState.fever = { value: 0, isActive: false, type: 'sun' };
+            GameState.fever.value = (GameState.fever.value + 1);
+            if (GameState.fever.value > 12) GameState.fever.value = 0; // ループ
+            if (!GameState.fever.type) GameState.fever.type = 'sun';
+            this.showMessage(`Fever Lv: ${GameState.fever.value} (${GameState.fever.type})`);
+        }, 'rgba(255, 100, 0, 0.8)'));
+
+        // 3. フィーバー -1
+        toolbar.appendChild(createDebugBtn('❄️ Fever -1', () => {
+            if (!GameState.fever) GameState.fever = { value: 0, isActive: false, type: 'sun' };
+            GameState.fever.value = Math.max(0, GameState.fever.value - 1);
+            if (!GameState.fever.type) GameState.fever.type = 'sun';
+            this.showMessage(`Fever Lv: ${GameState.fever.value} (${GameState.fever.type})`);
+        }, 'rgba(0, 100, 255, 0.8)'));
+
+        // 4. タイプ切り替え
+        toolbar.appendChild(createDebugBtn('🌞/🌚 Type', () => {
+            if (!GameState.fever) GameState.fever = { value: 0, isActive: false, type: 'sun' };
+            GameState.fever.type = GameState.fever.type === 'sun' ? 'moon' : 'sun';
+            this.showMessage(`Type: ${GameState.fever.type}`);
+        }, 'rgba(100, 0, 200, 0.8)'));
+
+        document.body.appendChild(toolbar);
     },
 
     // ========================================
@@ -644,7 +694,7 @@ const UIManager = {
 
         // Dランク（無限）は購入不可
         if (bait.rank === 'D') {
-            this.showMessage('この餌は無限に使えます');
+            // 無限なので何もしない
             return;
         }
 
@@ -711,13 +761,15 @@ const UIManager = {
                 container = document.createElement('div');
                 container.className = 'fever-container';
                 container.innerHTML = `
+                <div class="fever-sky-area">
                     <div class="celestial-body sun">
                         <span class="material-icons">wb_sunny</span>
                     </div>
                     <div class="celestial-body moon">
                         <span class="material-icons">nightlight</span>
                     </div>
-                `;
+                </div>
+            `;
                 // 背景の手前、UIの後ろ
                 fishingScreen.insertBefore(container, fishingScreen.firstChild);
             }
@@ -731,9 +783,7 @@ const UIManager = {
 
         // クラスをリセット
         container.className = 'fever-container';
-        if (fever.value > 0) {
-            container.classList.add(`fever-lv-${fever.value}`);
-        }
+        container.classList.add(`fever-lv-${fever.value}`);
 
         // タイプ別表示
         if (fever.type === 'sun') {

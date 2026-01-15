@@ -2477,7 +2477,395 @@ body {
 .no-skills {
     grid-column: 1 / -1;
     text-align: center;
-    padding: var(--spacing-lg);
-    color: var(--text-secondary);
     font-size: 12px;
+}
+
+/* ========================================
+   フィーバー/太陽・月 アニメーション
+   ======================================== */
+.fever-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 5;
+    /* 背景(0)より上、UIよりは下(適宜調整) */
+    overflow: hidden;
+    transition: background 1s ease;
+}
+
+/* 太陽モード背景 */
+.fever-container.type-sun {
+    background: linear-gradient(180deg, rgba(56, 189, 248, 0.1) 0%, rgba(56, 189, 248, 0) 100%);
+}
+
+.fever-container.type-sun.fever-active {
+    background: linear-gradient(180deg, rgba(249, 115, 22, 0.3) 0%, rgba(249, 115, 22, 0.1) 100%);
+}
+
+/* 月モード背景 */
+.fever-container.type-moon {
+    background: linear-gradient(180deg, rgba(124, 58, 237, 0.1) 0%, rgba(124, 58, 237, 0) 100%);
+}
+
+.fever-container.type-moon.fever-active {
+    background: linear-gradient(180deg, rgba(139, 92, 246, 0.3) 0%, rgba(139, 92, 246, 0.1) 100%);
+}
+
+.celestial-body {
+    position: absolute;
+    bottom: -150px;
+    /* 初期位置：画面外 */
+    right: 30%;
+    width: 100px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    opacity: 0;
+    transform-origin: center center;
+}
+
+.celestial-body .material-icons {
+    font-size: 100px;
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+}
+
+.celestial-body.sun .material-icons {
+    color: #fbbf24;
+    /* Amber */
+    text-shadow: 0 0 30px #f59e0b;
+}
+
+.celestial-body.moon .material-icons {
+    color: #fcd34d;
+    /* Amber Light */
+    text-shadow: 0 0 30px #fbbf24;
+}
+
+/* レベルに応じた上昇（CSSセレクタのワイルドカード活用） */
+/* 注意: class="fever-lv-X" を想定 */
+
+/* 天体表示エリア (画面上部30%) */
+.fever-sky-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 30%;
+    overflow: hidden;
+    /* このエリア外にはみ出た部分は隠れる */
+    pointer-events: none;
+}
+
+/* --- 太陽 (Sun) --- */
+
+/* Lv0: 上空へ飛び去る */
+.fever-container.type-sun[class~="fever-lv-0"] .sun {
+    bottom: 150%;
+    opacity: 0;
+}
+
+/* Lv1: Horizon下へリセット (透明) */
+.fever-container.type-sun[class~="fever-lv-1"] .sun {
+    bottom: -150px;
+    opacity: 0;
+    transition: none;
+}
+
+/* Lv2: 待機 */
+.fever-container.type-sun[class~="fever-lv-2"] .sun {
+    bottom: -150px;
+    opacity: 0;
+    transition: all 0.5s;
+}
+
+/* Lv3: ほんの少し頭出し (Horizon下からチラ見せ) */
+.fever-container.type-sun[class~="fever-lv-3"] .sun {
+    bottom: -80px;
+    opacity: 1;
+    transform: scale(0.5);
+}
+
+/* Lv4: 頭出し (Horizon上へ10px程度) */
+.fever-container.type-sun[class~="fever-lv-4"] .sun {
+    bottom: -70px;
+    opacity: 1;
+    transform: scale(0.6);
+}
+
+/* --- 月 (Moon) --- */
+
+/* Lv0 */
+.fever-container.type-moon[class~="fever-lv-0"] .moon {
+    bottom: 150%;
+    opacity: 0;
+}
+
+/* Lv1 */
+.fever-container.type-moon[class~="fever-lv-1"] .moon {
+    bottom: -150px;
+    opacity: 0;
+    transition: none;
+}
+
+/* Lv2 */
+.fever-container.type-moon[class~="fever-lv-2"] .moon {
+    bottom: -150px;
+    opacity: 0;
+    transition: all 0.5s;
+}
+
+/* Lv3 */
+.fever-container.type-moon[class~="fever-lv-3"] .moon {
+    bottom: -80px;
+    opacity: 1;
+    transform: scale(0.5);
+}
+
+/* Lv4 */
+.fever-container.type-moon[class~="fever-lv-4"] .moon {
+    bottom: -70px;
+    opacity: 1;
+    transform: scale(0.6);
+}
+
+/* Lv5: Horizonに半分 (bottom: -50px) */
+/* ラッパーにより下半分はマスクされる */
+.fever-container.type-sun[class~="fever-lv-5"] .sun,
+.fever-container.type-moon[class~="fever-lv-5"] .moon {
+    bottom: -50px;
+    opacity: 1;
+    transform: scale(0.7);
+}
+
+/* Lv6: 上昇開始 */
+.fever-container.type-sun[class~="fever-lv-6"] .sun,
+.fever-container.type-moon[class~="fever-lv-6"] .moon {
+    bottom: 10%;
+    opacity: 1;
+    transform: scale(0.75);
+}
+
+/* Lv7 */
+.fever-container.type-sun[class~="fever-lv-7"] .sun,
+.fever-container.type-moon[class~="fever-lv-7"] .moon {
+    bottom: 20%;
+    opacity: 1;
+    transform: scale(0.8);
+}
+
+/* Lv8 */
+.fever-container.type-sun[class~="fever-lv-8"] .sun,
+.fever-container.type-moon[class~="fever-lv-8"] .moon {
+    bottom: 30%;
+    opacity: 1;
+    transform: scale(0.85);
+}
+
+/* Lv9 */
+.fever-container.type-sun[class~="fever-lv-9"] .sun,
+.fever-container.type-moon[class~="fever-lv-9"] .moon {
+    bottom: 40%;
+    opacity: 1;
+    transform: scale(0.9);
+}
+
+/* Lv10 */
+.fever-container.type-sun[class~="fever-lv-10"] .sun,
+.fever-container.type-moon[class~="fever-lv-10"] .moon {
+    bottom: 50%;
+    opacity: 1;
+    transform: scale(0.95);
+}
+
+/* Lv11 */
+.fever-container.type-sun[class~="fever-lv-11"] .sun,
+.fever-container.type-moon[class~="fever-lv-11"] .moon {
+    bottom: 60%;
+    opacity: 1;
+    transform: scale(1.0);
+}
+
+/* Lv12: 頂点付近 (Sky Area上の80%) */
+.fever-container.type-sun[class~="fever-lv-12"] .sun,
+.fever-container.type-moon[class~="fever-lv-12"] .moon {
+    bottom: 80%;
+    opacity: 1;
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 20px currentColor);
+}
+
+/* フィーバー発動中 (fever-active) */
+.fever-container.fever-active .sun,
+.fever-container.fever-active .moon {
+    /* 位置固定を削除し、レベルごとの位置に従う */
+    /* bottom: 60%; right: 50%; ... は削除 */
+
+    /* 発光・脈動エフェクトを強化 */
+    filter: drop-shadow(0 0 30px currentColor);
+    animation: celestial-pulse 1s infinite alternate;
+}
+
+.fever-container.fever-active.type-sun .sun .material-icons {
+    color: #ef4444;
+    /* 真っ赤な太陽 */
+    text-shadow: 0 0 50px #ef4444, 0 0 100px #f59e0b;
+}
+
+.fever-container.fever-active.type-moon .moon .material-icons {
+    color: #fbbf24;
+    /* 輝く月 */
+    text-shadow: 0 0 50px #fbbf24, 0 0 100px #f59e0b;
+}
+
+@keyframes celestial-pulse {
+    0% {
+        transform: translateX(50%) scale(1.5);
+        filter: drop-shadow(0 0 20px currentColor);
+    }
+
+    100% {
+        transform: translateX(50%) scale(1.7);
+        filter: drop-shadow(0 0 60px currentColor);
+    }
+}
+
+/* ========================================
+   宝箱リザルト表示
+   ======================================== */
+.loot-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 16px;
+    width: 100%;
+}
+
+.loot-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    animation: slideInRight 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+}
+
+.loot-item:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.loot-item:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.loot-item:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.loot-item.money {
+    border-color: #fbbf24;
+    background: rgba(251, 191, 36, 0.1);
+}
+
+.loot-item.item {
+    border-color: #38bdf8;
+    background: rgba(56, 189, 248, 0.1);
+}
+
+.loot-item.skill {
+    border-color: #a78bfa;
+    background: rgba(167, 139, 250, 0.1);
+}
+
+.loot-item.refund {
+    border-color: #94a3b8;
+    background: rgba(148, 163, 184, 0.1);
+}
+
+.loot-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+}
+
+.loot-icon .material-icons {
+    font-size: 20px;
+}
+
+.loot-item.money .loot-icon {
+    color: #fbbf24;
+}
+
+.loot-item.item .loot-icon {
+    color: #38bdf8;
+}
+
+.loot-item.skill .loot-icon {
+    color: #a78bfa;
+}
+
+.loot-item.refund .loot-icon {
+    color: #94a3b8;
+}
+
+.loot-info {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.loot-name {
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
+}
+
+.loot-count {
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--accent-color);
+}
+
+.result-card.treasure-result {
+    max-width: 360px;
+}
+
+/* 宝箱リザルトはダークテーマにする (文字が白いため) */
+.treasure-result .result-card {
+    background: #1e293b;
+    /* ダーク背景 */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+}
+
+
+.chest-name {
+    color: var(--primary-light);
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }

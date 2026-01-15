@@ -25,7 +25,7 @@ const SaveManager = {
             inventory: [],          // 持っている魚の配列
             unlocked: {
                 rods: [0],          // アンロック済み釣り竿のインデックス
-                skills: []          // 購入済みスキルID配列
+                skillInventory: {}  // IDごとの所持数 { "power_up_1": 3 }
             },
             encyclopedia: {},       // 図鑑データ { fishId: { count: 0, hasSpecial: false } }
             statistics: {
@@ -47,6 +47,9 @@ const SaveManager = {
                 player: {
                     money: gameState.money,
                     baitCount: gameState.baitCount,
+                    // baitTypeなど他のプロパティも必要に応じて保存
+                    // baitInventoryも保存した方が安全
+                    baitInventory: { ...gameState.baitInventory },
                     baitType: gameState.baitType
                 },
                 rod: {
@@ -57,13 +60,15 @@ const SaveManager = {
                 inventory: [...gameState.inventory],
                 unlocked: {
                     rods: [...gameState.unlockedRods],
-                    skills: [...gameState.unlockedSkills]
+                    skillInventory: { ...gameState.skillInventory }
                 },
                 encyclopedia: { ...gameState.encyclopedia },
                 statistics: {
                     totalFishCaught: gameState.totalFishCaught,
                     totalMoneyEarned: gameState.totalMoneyEarned,
-                    biggestFish: gameState.biggestFish
+                    biggestFish: gameState.biggestFish,
+                    // フィーバー状態も保存
+                    fever: { ...gameState.fever }
                 }
             };
 
@@ -74,6 +79,14 @@ const SaveManager = {
             console.error('❌ セーブに失敗しました:', error);
             return false;
         }
+    },
+
+    // saveGameは予備の名前として追加（UIManagerからの呼び出し対応）
+    saveGame() {
+        // GameStateが渡されていない場合はグローバルなGameStateを使用
+        // ※実際にはsaveメソッドに引数が必要だが、ここでの呼び出し元（UIManager）は引数を渡していない可能性がある
+        // そのため、GameState変数を参照してsaveを呼ぶ
+        return this.save(GameState);
     },
 
     // ========================================
