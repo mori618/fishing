@@ -700,6 +700,55 @@ const UIManager = {
     },
 
     // ========================================
+    // フィーバー演出の更新
+    // ========================================
+    updateFeverVisuals() {
+        // フィーバーコンテナがなければ作成
+        let container = document.querySelector('.fever-container');
+        if (!container) {
+            const fishingScreen = document.getElementById('fishing-screen');
+            if (fishingScreen) {
+                container = document.createElement('div');
+                container.className = 'fever-container';
+                container.innerHTML = `
+                    <div class="celestial-body sun">
+                        <span class="material-icons">wb_sunny</span>
+                    </div>
+                    <div class="celestial-body moon">
+                        <span class="material-icons">nightlight</span>
+                    </div>
+                `;
+                // 背景の手前、UIの後ろ
+                fishingScreen.insertBefore(container, fishingScreen.firstChild);
+            }
+        }
+
+        if (!container) return;
+
+        const fever = GameState.fever;
+        const sun = container.querySelector('.sun');
+        const moon = container.querySelector('.moon');
+
+        // クラスをリセット
+        container.className = 'fever-container';
+        if (fever.value > 0) {
+            container.classList.add(`fever-lv-${fever.value}`);
+        }
+
+        // タイプ別表示
+        if (fever.type === 'sun') {
+            container.classList.add('type-sun');
+        } else if (fever.type === 'moon') {
+            container.classList.add('type-moon');
+        }
+
+        // フィーバー中は背景変化などのエフェクト
+        if (fever.isActive) {
+            container.classList.add('fever-active');
+        }
+    },
+
+    // ========================================
     // 一時メッセージ表示
     // ========================================
     showMessage(message, duration = 2000) {

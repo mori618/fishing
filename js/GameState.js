@@ -41,6 +41,15 @@ const GameState = {
     biggestFish: null,
 
     // ========================================
+    // フィーバー状態
+    // ========================================
+    fever: {
+        isActive: false,   // フィーバー中かどうか (gauge >= 6)
+        value: 0,          // 現在のゲージ値 (0-12)
+        type: null         // 'sun' (太陽) or 'moon' (月)
+    },
+
+    // ========================================
     // 初期化
     // ========================================
     init(saveData = null) {
@@ -632,6 +641,49 @@ const GameState = {
         SaveManager.save(this);
 
         return true;
+    },
+
+    // ========================================
+    // フィーバー蓄積ボーナス取得 (加算)
+    // ========================================
+    getFeverChargeBonus() {
+        let bonus = 0;
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'fever_charge') {
+                bonus += skill.effect.value;
+            }
+        }
+        return bonus;
+    },
+
+    // ========================================
+    // フィーバー延長ボーナス取得 (進行確率現象)
+    // ========================================
+    getFeverLongBonus() {
+        let bonus = 0;
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'fever_long') {
+                bonus += skill.effect.value;
+            }
+        }
+        return bonus;
+    },
+
+    // ========================================
+    // フィーバータイプ偏りボーナス取得
+    // ========================================
+    getFeverBiasBonus(type) {
+        let bonus = 0;
+        const targetType = type === 'sun' ? 'fever_bias_sun' : 'fever_bias_moon';
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === targetType) {
+                bonus += skill.effect.value;
+            }
+        }
+        return bonus;
     },
 
     // ========================================

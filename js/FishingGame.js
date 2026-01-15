@@ -62,18 +62,18 @@ const FishingGame = {
         }
 
         // ========================================
-        // 宝箱の抽選
+        // フィーバーモード (太陽) の場合: 宝箱確定
         // ========================================
-        const treasureChance = GAME_DATA.TREASURE_CONFIG.baseChance + GameState.getTreasureChanceBonus();
-        console.log(`🎁 宝箱チャンス: ${(treasureChance * 100).toFixed(1)}% (Base: ${GAME_DATA.TREASURE_CONFIG.baseChance}, Bonus: ${GameState.getTreasureChanceBonus()})`);
+        if (GameState.fever.isActive && GameState.fever.type === 'sun') {
+            console.log('🔥 太陽フィーバー: 宝箱確定！');
+            // 宝箱ロジックを再利用するが、100%出現させる
+            // ただし、タイプ抽選は通常通り行う
+            // 必要あればフィーバー用ボーナスを加算しても良い
 
-        if (Math.random() < treasureChance) {
-            console.log('🎁 宝箱が出現！');
             const weights = GAME_DATA.TREASURE_CONFIG.rarityWeights;
             let random = Math.random();
             let selectedType = 'WOOD';
 
-            // 重みに基づいてタイプ抽選
             if (random < weights.WOOD) {
                 selectedType = 'WOOD';
             } else if (random < weights.WOOD + weights.SILVER) {
@@ -84,13 +84,47 @@ const FishingGame = {
 
             const chestData = GAME_DATA.TREASURE_CONFIG.chestData[selectedType];
 
-            // 魚オブジェクトの形式に合わせる
             return {
                 id: `treasure_${selectedType.toLowerCase()}`,
                 name: chestData.name,
                 rarity: chestData.rarity,
                 power: chestData.power,
-                price: 0, // 売れない
+                price: 0,
+                icon: chestData.icon,
+                description: chestData.description,
+                isTreasure: true,
+                treasureType: selectedType
+            };
+        }
+
+        // ========================================
+        // 宝箱の抽選 (通常)
+        // ========================================
+        const treasureChance = GAME_DATA.TREASURE_CONFIG.baseChance + GameState.getTreasureChanceBonus();
+        // ... (既存の宝箱ログ削除)
+
+        if (Math.random() < treasureChance) {
+            // ... (既存の宝箱処理と同じ)
+            const weights = GAME_DATA.TREASURE_CONFIG.rarityWeights;
+            let random = Math.random();
+            let selectedType = 'WOOD';
+
+            if (random < weights.WOOD) {
+                selectedType = 'WOOD';
+            } else if (random < weights.WOOD + weights.SILVER) {
+                selectedType = 'SILVER';
+            } else {
+                selectedType = 'GOLD';
+            }
+
+            const chestData = GAME_DATA.TREASURE_CONFIG.chestData[selectedType];
+
+            return {
+                id: `treasure_${selectedType.toLowerCase()}`,
+                name: chestData.name,
+                rarity: chestData.rarity,
+                power: chestData.power,
+                price: 0,
                 icon: chestData.icon,
                 description: chestData.description,
                 isTreasure: true,
@@ -101,19 +135,7 @@ const FishingGame = {
         const bait = GAME_DATA.BAITS.find(b => b.id === GameState.baitType) || GAME_DATA.BAITS[0]; // デフォルトD
 
         // 餌ごとのランク出現重み設定 (ユーザー要望に基づく)
-        // D餌: D(80%), C(20%), S(1%) -> 重み: D:4, C:1, S:0.05 (合計5.05) ※比率維持のため補正
-        // ユーザー指定: 5/4d, 5/1c, 100/1s -> D:0.8, C:0.2, S:0.01
-
-        // C餌: 5/4c, 5/1d, 10/1b -> C:0.8, D:0.2, B:0.1
-
-        // B餌: 5/4c [70%], 5/1b [17%], 10/1d [9%](称号UP), 20/1a [4%]
-        // -> C:0.8, B:0.2, D:0.1, A:0.05
-
-        // A餌: 5/3a [48%], 5/2b [32%], 5/1c [16%](称号UP), 20/1s [4%]
-        // -> A:0.6, B:0.4, C:0.2, S:0.05
-
-        // S餌: 5/3a [58%], 5/1s [19%], 5/1b [19%](称号UP), 30/1ss [3%]
-        // -> A:0.6, S:0.2, B:0.2, SS:0.033
+        // ... (既存コメント)
 
         const spawnWeights = {
             'D': { D: 0.8, C: 0.2, S: 0.01 },
@@ -123,7 +145,23 @@ const FishingGame = {
             'S': { A: 0.6, S: 0.2, B: 0.2, SS: 0.033 }
         };
 
-        const currentWeights = spawnWeights[bait.rank] || spawnWeights['D'];
+        let currentWeights = spawnWeights[bait.rank] || spawnWeights['D'];
+
+        // ========================================
+        // フィーバーモード (月) の場合: 高ランク魚出現率アップ
+        // ========================================
+        if (GameState.fever.isActive && GameState.fever.type === 'moon') {
+            console.log('🔥 月フィーバー: 高ランク魚出現率アップ！');
+            // 簡易的に上位ランクの重みを増やす調整
+            // 例: Aランク以上の重みを2倍にする
+            // ディープコピーしてから変更
+            currentWeights = JSON.parse(JSON.stringify(currentWeights));
+
+            if (currentWeights.S) currentWeights.S *= 3;
+            if (currentWeights.SS) currentWeights.SS *= 3;
+            if (currentWeights.A) currentWeights.A *= 2;
+            if (currentWeights.B) currentWeights.B *= 1.5;
+        }
 
         // 重みに基づいてランクを抽選
         let totalWeight = 0;
@@ -172,14 +210,19 @@ const FishingGame = {
         let titleChanceMult = GameState.getTitleChanceMultiplier();
 
         // ユーザー要望の「特定条件下での称号確率アップ」
-        // B餌でDランク -> 称号UP
-        // A餌でCランク -> 称号UP
-        // S餌でBランク -> 称号UP
         if ((bait.rank === 'B' && selectedRarity === 'D') ||
             (bait.rank === 'A' && selectedRarity === 'C') ||
             (bait.rank === 'S' && selectedRarity === 'B')) {
             console.log('✨ 特定条件ボーナス: 称号確率アップ適用！');
             titleChanceMult *= 3.0; // 3倍に設定（調整可能）
+        }
+
+        // ========================================
+        // フィーバーモード (月) の場合: 称号出現率超アップ
+        // ========================================
+        if (GameState.fever.isActive && GameState.fever.type === 'moon') {
+            console.log('🔥 月フィーバー: 称号出現率超アップ！');
+            titleChanceMult *= 5.0; // さらに5倍 (合計最大15倍以上)
         }
 
         if (Math.random() < GAME_DATA.TITLE_CONFIG.chance * titleChanceMult) {
@@ -536,6 +579,18 @@ const FishingGame = {
         if (GameState.baitType) {
             GameState.useBait(true);
             UIManager.updateBaitInfo();
+        }
+
+        // ========================================
+        // フィーバー進行判定
+        // ========================================
+        const feverResult = GameState.progressFever();
+        UIManager.updateFeverVisuals();
+
+        if (feverResult.message === 'start') {
+            UIManager.showMessage(`🔥 ${feverResult.type === 'sun' ? 'おたから' : 'おさかな'}フィーバー開始！`, 3000);
+        } else if (feverResult.message === 'end') {
+            UIManager.showMessage('💨 フィーバー終了...', 3000);
         }
 
         // UI表示（ユーザーが閉じたらidleに戻る）

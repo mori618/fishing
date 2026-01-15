@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
         GameState.init(null);  // 新規データで初期化
         FishingGame.init();
         UIManager.showScreen('fishing');
+        UIManager.updateFeverVisuals(); // フィーバー表示初期化
         console.log('🆕 新規ゲームを開始しました');
     });
 
@@ -30,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 GameState.init(saveData);
                 FishingGame.init();
                 UIManager.showScreen('fishing');
+                UIManager.updateFeverVisuals(); // フィーバー表示復元
                 console.log('📂 セーブデータから再開しました');
             }
         });

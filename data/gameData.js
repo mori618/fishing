@@ -630,6 +630,110 @@ const SKILLS = [
         effect: { type: 'treasure_quality', value: 2.0 },
         price: 50000,
         tier: 3
+    },
+
+    // 情熱 (Passion) - ゲージ蓄積
+    {
+        id: 'passion_1',
+        name: '情熱 I',
+        description: 'フィーバーゲージ蓄積率 +5%',
+        effect: { type: 'fever_charge', value: 0.05 },
+        price: 2000,
+        tier: 1
+    },
+    {
+        id: 'passion_2',
+        name: '情熱 II',
+        description: 'フィーバーゲージ蓄積率 +10%',
+        effect: { type: 'fever_charge', value: 0.10 },
+        price: 8000,
+        tier: 2
+    },
+    {
+        id: 'passion_3',
+        name: '情熱 III',
+        description: 'フィーバーゲージ蓄積率 +15%',
+        effect: { type: 'fever_charge', value: 0.15 },
+        price: 25000,
+        tier: 3
+    },
+
+    // 熱狂 (Mania) - フィーバー延長
+    {
+        id: 'mania_1',
+        name: '熱狂 I',
+        description: 'フィーバー進行(終了)確率 -10%',
+        effect: { type: 'fever_long', value: 0.10 },
+        price: 3000,
+        tier: 1
+    },
+    {
+        id: 'mania_2',
+        name: '熱狂 II',
+        description: 'フィーバー進行(終了)確率 -20%',
+        effect: { type: 'fever_long', value: 0.20 },
+        price: 12000,
+        tier: 2
+    },
+    {
+        id: 'mania_3',
+        name: '熱狂 III',
+        description: 'フィーバー進行(終了)確率 -30%',
+        effect: { type: 'fever_long', value: 0.30 },
+        price: 40000,
+        tier: 3
+    },
+
+    // 太陽の加護 (Sun's Blessing)
+    {
+        id: 'sun_blessing_1',
+        name: '太陽の加護 I',
+        description: 'おたからフィーバー確率 +15%',
+        effect: { type: 'fever_bias_sun', value: 0.15 },
+        price: 4000,
+        tier: 1
+    },
+    {
+        id: 'sun_blessing_2',
+        name: '太陽の加護 II',
+        description: 'おたからフィーバー確率 +30%',
+        effect: { type: 'fever_bias_sun', value: 0.30 },
+        price: 15000,
+        tier: 2
+    },
+    {
+        id: 'sun_blessing_3',
+        name: '太陽の加護 III',
+        description: 'おたからフィーバー確率 +45%',
+        effect: { type: 'fever_bias_sun', value: 0.45 },
+        price: 50000,
+        tier: 3
+    },
+
+    // 月の加護 (Moon's Blessing)
+    {
+        id: 'moon_blessing_1',
+        name: '月の加護 I',
+        description: 'おさかなフィーバー確率 +15%',
+        effect: { type: 'fever_bias_moon', value: 0.15 },
+        price: 4000,
+        tier: 1
+    },
+    {
+        id: 'moon_blessing_2',
+        name: '月の加護 II',
+        description: 'おさかなフィーバー確率 +30%',
+        effect: { type: 'fever_bias_moon', value: 0.30 },
+        price: 15000,
+        tier: 2
+    },
+    {
+        id: 'moon_blessing_3',
+        name: '月の加護 III',
+        description: 'おさかなフィーバー確率 +45%',
+        effect: { type: 'fever_bias_moon', value: 0.45 },
+        price: 50000,
+        tier: 3
     }
 ];
 
