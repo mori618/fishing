@@ -12,7 +12,7 @@ const RODS = [
         basePower: 10,
         starPowerBonus: 3,  // 星1つあたりのパワー上昇
         price: 0,           // 初期装備
-        upgradeBaseCost: 100, // 星1つあたりの強化コスト基準
+        upgradeCosts: [100, 250, 500, 1000, 2500], // 星1〜5への強化費用
         description: '初心者向けの木製釣竿'
     },
     {
@@ -21,7 +21,7 @@ const RODS = [
         basePower: 22,
         starPowerBonus: 5,
         price: 500,
-        upgradeBaseCost: 250,
+        upgradeCosts: [500, 1200, 2500, 5000, 10000],
         description: 'しなやかで扱いやすい竹製釣竿'
     },
     {
@@ -30,7 +30,7 @@ const RODS = [
         basePower: 42,
         starPowerBonus: 8,
         price: 2000,
-        upgradeBaseCost: 600,
+        upgradeCosts: [2500, 6000, 12000, 25000, 50000],
         description: '軽量で強度に優れたカーボン製'
     },
     {
@@ -39,7 +39,7 @@ const RODS = [
         basePower: 74,
         starPowerBonus: 12,
         price: 8000,
-        upgradeBaseCost: 1500,
+        upgradeCosts: [10000, 25000, 50000, 100000, 200000],
         description: '最高級のチタン合金製釣竿'
     },
     {
@@ -48,7 +48,7 @@ const RODS = [
         basePower: 122,
         starPowerBonus: 20,
         price: 30000,
-        upgradeBaseCost: 5000,
+        upgradeCosts: [50000, 120000, 300000, 600000, 1500000],
         description: '古より伝わる伝説の釣竿'
     }
 ];
@@ -266,21 +266,24 @@ const SKILLS = [
         name: 'パワーUP I',
         description: '釣りパワー+5',
         effect: { type: 'power_boost', value: 5 },
-        price: 200
+        price: 200,
+        tier: 1
     },
     {
         id: 'power_up_2',
         name: 'パワーUP II',
         description: '釣りパワー+15',
         effect: { type: 'power_boost', value: 15 },
-        price: 800
+        price: 800,
+        tier: 2
     },
     {
         id: 'power_up_3',
         name: 'パワーUP III',
         description: '釣りパワー+30',
         effect: { type: 'power_boost', value: 30 },
-        price: 2500
+        price: 2500,
+        tier: 3
     },
 
     // ゲージ減速系
@@ -289,14 +292,16 @@ const SKILLS = [
         name: 'ゲージ減速 I',
         description: 'ゲージ速度-10%',
         effect: { type: 'gauge_slow', value: 0.1 },
-        price: 300
+        price: 300,
+        tier: 1
     },
     {
         id: 'gauge_slow_2',
         name: 'ゲージ減速 II',
         description: 'ゲージ速度-20%',
         effect: { type: 'gauge_slow', value: 0.2 },
-        price: 1000
+        price: 1000,
+        tier: 2
     },
 
     // 価格アップ系
@@ -305,14 +310,16 @@ const SKILLS = [
         name: '売値UP I',
         description: '魚の売却価格+10%',
         effect: { type: 'price_boost', value: 0.1 },
-        price: 400
+        price: 400,
+        tier: 1
     },
     {
         id: 'price_up_2',
         name: '売値UP II',
         description: '魚の売却価格+25%',
         effect: { type: 'price_boost', value: 0.25 },
-        price: 1500
+        price: 1500,
+        tier: 2
     },
 
     // 成功率アップ系
@@ -321,14 +328,16 @@ const SKILLS = [
         name: 'キャッチ率UP I',
         description: '捕獲確率+5%',
         effect: { type: 'catch_boost', value: 0.05 },
-        price: 500
+        price: 500,
+        tier: 1
     },
     {
         id: 'catch_rate_2',
         name: 'キャッチ率UP II',
         description: '捕獲確率+15%',
         effect: { type: 'catch_boost', value: 0.15 },
-        price: 2000
+        price: 2000,
+        tier: 2
     },
 
     // レア度アップ系
@@ -337,7 +346,8 @@ const SKILLS = [
         name: 'レア魚UP I',
         description: 'レア魚出現率+20%',
         effect: { type: 'rare_boost', value: 0.2 },
-        price: 600
+        price: 600,
+        tier: 1
     },
 
     // 予兆察知系
@@ -346,7 +356,8 @@ const SKILLS = [
         name: '予兆察知',
         description: 'ウキの揺れが常に2回になる',
         effect: { type: 'nibble_fix', value: 2 },
-        price: 1200
+        price: 1200,
+        tier: 2
     },
 
     // 集中力 (Concentration)
@@ -355,21 +366,24 @@ const SKILLS = [
         name: '集中力 I',
         description: 'HIT受付時間をベースの1.5倍に延長',
         effect: { type: 'hit_window_mult', value: 1.5 },
-        price: 300
+        price: 300,
+        tier: 1
     },
     {
         id: 'concentration_2',
         name: '集中力 II',
         description: 'HIT受付時間をベースの2倍に延長',
         effect: { type: 'hit_window_mult', value: 2 },
-        price: 1200
+        price: 1200,
+        tier: 2
     },
     {
         id: 'concentration_3',
         name: '集中力 III',
         description: 'HIT受付時間をベースの3倍に延長',
         effect: { type: 'hit_window_mult', value: 3 },
-        price: 5000
+        price: 5000,
+        tier: 3
     },
 
     // 忍耐力 (Patience)
@@ -378,21 +392,24 @@ const SKILLS = [
         name: '忍耐力 I',
         description: '待ち時間を10%短縮',
         effect: { type: 'wait_time_reduction', value: 0.1 },
-        price: 400
+        price: 400,
+        tier: 1
     },
     {
         id: 'patience_2',
         name: '忍耐力 II',
         description: '待ち時間を25%短縮',
         effect: { type: 'wait_time_reduction', value: 0.25 },
-        price: 1500
+        price: 1500,
+        tier: 2
     },
     {
         id: 'patience_3',
         name: '忍耐力 III',
         description: '待ち時間を40%短縮',
         effect: { type: 'wait_time_reduction', value: 0.4 },
-        price: 4000
+        price: 4000,
+        tier: 3
     },
 
     // 餌の達人 (Bait Master)
@@ -401,21 +418,24 @@ const SKILLS = [
         name: '餌の達人 I',
         description: '釣り成功時、15%の確率で餌を消費しない',
         effect: { type: 'bait_save', value: 0.15 },
-        price: 500
+        price: 500,
+        tier: 1
     },
     {
         id: 'bait_master_2',
         name: '餌の達人 II',
         description: '釣り成功時、30%の確率で餌を消費しない',
         effect: { type: 'bait_save', value: 0.3 },
-        price: 2000
+        price: 2000,
+        tier: 2
     },
     {
         id: 'bait_master_3',
         name: '餌の達人 III',
         description: '釣り成功時、50%の確率で餌を消費しない',
         effect: { type: 'bait_save', value: 0.5 },
-        price: 6000
+        price: 6000,
+        tier: 3
     },
 
     // テクニシャン (Technician)
@@ -424,21 +444,24 @@ const SKILLS = [
         name: 'テクニシャン I',
         description: '赤ゾーンの幅が20%拡大',
         effect: { type: 'red_zone_boost', value: 0.2 },
-        price: 600
+        price: 600,
+        tier: 1
     },
     {
         id: 'technician_2',
         name: 'テクニシャン II',
         description: '赤ゾーンの幅が40%拡大',
         effect: { type: 'red_zone_boost', value: 0.4 },
-        price: 2500
+        price: 2500,
+        tier: 2
     },
     {
         id: 'technician_3',
         name: 'テクニシャン III',
         description: '赤ゾーンの幅が60%拡大',
         effect: { type: 'red_zone_boost', value: 0.6 },
-        price: 7000
+        price: 7000,
+        tier: 3
     },
 
     // 起死回生 (Second Chance)
@@ -447,21 +470,24 @@ const SKILLS = [
         name: '起死回生 I',
         description: '白ゾーンでの失敗時、10%で成功扱いになる',
         effect: { type: 'second_chance', value: 0.1 },
-        price: 800
+        price: 800,
+        tier: 1
     },
     {
         id: 'second_chance_2',
         name: '起死回生 II',
         description: '白ゾーンでの失敗時、20%で成功扱いになる',
         effect: { type: 'second_chance', value: 0.2 },
-        price: 3000
+        price: 3000,
+        tier: 2
     },
     {
         id: 'second_chance_3',
         name: '起死回生 III',
         description: '白ゾーンでの失敗時、35%で成功扱いになる',
         effect: { type: 'second_chance', value: 0.35 },
-        price: 8000
+        price: 8000,
+        tier: 3
     },
 
     // 鑑定眼 (Appraisal)
@@ -470,21 +496,24 @@ const SKILLS = [
         name: '鑑定眼 I',
         description: '称号付きの出現確率が2倍',
         effect: { type: 'title_boost', value: 2 },
-        price: 1000
+        price: 1000,
+        tier: 1
     },
     {
         id: 'appraisal_2',
         name: '鑑定眼 II',
         description: '称号付きの出現確率が3倍',
         effect: { type: 'title_boost', value: 3 },
-        price: 3500
+        price: 3500,
+        tier: 2
     },
     {
         id: 'appraisal_3',
         name: '鑑定眼 III',
         description: '称号付きの出現確率が4倍',
         effect: { type: 'title_boost', value: 4 },
-        price: 9000
+        price: 9000,
+        tier: 3
     },
 
     // 大物狙い (Big Game Hunter)
@@ -493,21 +522,24 @@ const SKILLS = [
         name: '大物狙い I',
         description: '上位ランクの出現率が少しアップ',
         effect: { type: 'big_game_boost', value: 1.5 },
-        price: 1200
+        price: 1200,
+        tier: 1
     },
     {
         id: 'big_game_hunter_2',
         name: '大物狙い II',
         description: '上位ランクの出現率がアップ',
         effect: { type: 'big_game_boost', value: 2.5 },
-        price: 4500
+        price: 4500,
+        tier: 2
     },
     {
         id: 'big_game_hunter_3',
         name: '大物狙い III',
         description: '上位ランクの出現率が大幅アップ',
         effect: { type: 'big_game_boost', value: 5.0 },
-        price: 12000
+        price: 12000,
+        tier: 3
     }
 ];
 
@@ -625,6 +657,25 @@ const RARITY_WEIGHTS = {
     S: 0.01
 };
 
+// ========================================
+// ガチャ設定
+// ========================================
+const GACHA_CONFIG = {
+    BRONZE: { single: 1000, ten: 9000, rates: { tier1: 85, tier2: 14, tier3: 1, special: 0 } },
+    SILVER: { single: 8000, ten: 72000, rates: { tier1: 15, tier2: 75, tier3: 10, special: 0.1 } },
+    GOLD: { single: 50000, ten: 450000, rates: { tier1: 0, tier2: 20, tier3: 75, special: 5 } }
+};
+
+// ========================================
+// リサイクルガチャ（エコ・ボックス）出現率
+// ========================================
+const RECYCLE_RATES = {
+    tier1: 40,
+    tier2: 50,
+    tier3: 9,
+    tier4: 1 // 実質Tier 3 (special)
+};
+
 // エクスポート用（グローバル変数として使用）
 if (typeof window !== 'undefined') {
     window.GAME_DATA = {
@@ -635,6 +686,8 @@ if (typeof window !== 'undefined') {
         GAUGE_CONFIG,
         FISHING_CONFIG,
         RARITY_WEIGHTS,
-        TITLE_CONFIG
+        TITLE_CONFIG,
+        GACHA_CONFIG,
+        RECYCLE_RATES
     };
 }

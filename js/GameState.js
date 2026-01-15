@@ -30,7 +30,8 @@ const GameState = {
     // アンロック状態
     // ========================================
     unlockedRods: [0],
-    unlockedSkills: [],
+    skillInventory: {}, // IDごとの所持数 { "power_up_1": 3 }
+    // unlockedSkills: [], // 廃止予定 (移行用コードで処理)
 
     // ========================================
     // 統計情報
@@ -71,7 +72,19 @@ const GameState = {
             this.inventory = [...saveData.inventory];
 
             this.unlockedRods = [...saveData.unlocked.rods];
-            this.unlockedSkills = [...saveData.unlocked.skills];
+
+            // スキルデータの移行
+            if (saveData.unlocked.skillInventory) {
+                this.skillInventory = { ...saveData.unlocked.skillInventory };
+            } else if (saveData.unlocked.skills) {
+                // 旧データからの移行: 持っていたスキルを各1個所持として登録
+                this.skillInventory = {};
+                saveData.unlocked.skills.forEach(skillId => {
+                    this.skillInventory[skillId] = 1;
+                });
+            } else {
+                this.skillInventory = {};
+            }
 
             this.totalFishCaught = saveData.statistics.totalFishCaught;
             this.totalMoneyEarned = saveData.statistics.totalMoneyEarned;
@@ -219,14 +232,15 @@ const GameState = {
     // HIT受付時間のスキル補正（倍率）を取得
     // ========================================
     getHitWindowMultiplier() {
-        let maxMult = 1;
+        let totalMultiplier = 1.0;
         for (const skillId of this.equippedSkills) {
             const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
             if (skill && skill.effect.type === 'hit_window_mult') {
-                maxMult = Math.max(maxMult, skill.effect.value);
+                // 加算方式: 1.5倍なら+0.5を加算
+                totalMultiplier += (skill.effect.value - 1.0);
             }
         }
-        return maxMult;
+        return totalMultiplier;
     },
 
     // ========================================
@@ -240,7 +254,8 @@ const GameState = {
                 reduction += skill.effect.value;
             }
         }
-        return reduction;
+        // 最大100%カット（念のためキャップ）
+        return Math.min(reduction, 1.0);
     },
 
     // ========================================
@@ -254,7 +269,7 @@ const GameState = {
                 chance += skill.effect.value;
             }
         }
-        return chance;
+        return Math.min(chance, 1.0); // 最大100%
     },
 
     // ========================================
@@ -282,37 +297,37 @@ const GameState = {
                 rate += skill.effect.value;
             }
         }
-        return rate;
+        return Math.min(rate, 1.0);
     },
 
     // ========================================
     // 称号出現率の倍率を取得
     // ========================================
     getTitleChanceMultiplier() {
-        let multiplier = 1;
+        let totalMultiplier = 1.0;
         for (const skillId of this.equippedSkills) {
             const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
             if (skill && skill.effect.type === 'title_boost') {
-                // 重複した場合は加算ではなく乗算、あるいは最大のものを採用
-                // ここでは分かりやすく最大の倍率を採用する
-                multiplier = Math.max(multiplier, skill.effect.value);
+                // 加算方式
+                totalMultiplier += (skill.effect.value - 1.0);
             }
         }
-        return multiplier;
+        return totalMultiplier;
     },
 
     // ========================================
     // 大物出現率のスキル補正を取得
     // ========================================
     getBigGameBonus() {
-        let bonus = 1;
+        let totalBonus = 1.0;
         for (const skillId of this.equippedSkills) {
             const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
             if (skill && skill.effect.type === 'big_game_boost') {
-                bonus = Math.max(bonus, skill.effect.value);
+                // 加算方式
+                totalBonus += (skill.effect.value - 1.0);
             }
         }
-        return bonus;
+        return totalBonus;
     },
 
     // ========================================
@@ -350,6 +365,14 @@ const GameState = {
         }
 
         // オートセーブ
+        SaveManager.save(this);
+    },
+
+    // ========================================
+    // ガチャ結果の受け取り（コスト消費なしでスキル追加）
+    // ========================================
+    gainGachaResult(skillId) {
+        this.skillInventory[skillId] = (this.skillInventory[skillId] || 0) + 1;
         SaveManager.save(this);
     },
 
@@ -429,7 +452,7 @@ const GameState = {
         }
 
         const rod = this.getCurrentRod();
-        const cost = rod.upgradeBaseCost * (this.rodStars + 1);
+        const cost = rod.upgradeCosts[this.rodStars];
 
         if (this.money < cost) {
             return { success: false, message: 'お金が足りません' };
@@ -450,7 +473,7 @@ const GameState = {
     getUpgradeCost() {
         if (this.rodStars >= 5) return null;
         const rod = this.getCurrentRod();
-        return rod.upgradeBaseCost * (this.rodStars + 1);
+        return rod.upgradeCosts[this.rodStars];
     },
 
     // ========================================
@@ -462,12 +485,10 @@ const GameState = {
             return false;
         }
 
-        if (this.unlockedSkills.includes(skillId)) {
-            return false;
-        }
-
         this.money -= skill.price;
-        this.unlockedSkills.push(skillId);
+
+        // 所持数を加算
+        this.skillInventory[skillId] = (this.skillInventory[skillId] || 0) + 1;
 
         // オートセーブ
         SaveManager.save(this);
@@ -476,17 +497,32 @@ const GameState = {
     },
 
     // ========================================
+    // 現在のスキルの所持数を取得
+    // ========================================
+    getSkillCount(skillId) {
+        return this.skillInventory[skillId] || 0;
+    },
+
+    // ========================================
+    // 現在装備中の特定スキルの数を取得
+    // ========================================
+    getEquippedSkillCount(skillId) {
+        return this.equippedSkills.filter(id => id === skillId).length;
+    },
+
+    // ========================================
     // スキルの装着
     // ========================================
     equipSkill(skillId) {
-        if (!this.unlockedSkills.includes(skillId)) {
+        // 所持数チェック
+        const ownedCount = this.getSkillCount(skillId);
+        const equippedCount = this.getEquippedSkillCount(skillId);
+
+        if (equippedCount >= ownedCount) {
             return false;
         }
 
-        if (this.equippedSkills.includes(skillId)) {
-            return false;
-        }
-
+        // スロット空きチェック
         if (this.equippedSkills.length >= this.getSkillSlots()) {
             return false;
         }

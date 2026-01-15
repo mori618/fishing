@@ -392,6 +392,50 @@ const UIManager = {
     },
 
     // ========================================
+    // ガチャ結果表示
+    // ========================================
+    showGachaResult(items, onClose) {
+        const fishingArea = document.getElementById('fishing-area');
+        if (!fishingArea) return;
+
+        // 結果リストのHTML生成
+        const itemsHtml = items.map(item => `
+            <div class="gacha-result-item rarity-${item.tier === 3 ? 'S' : item.tier === 2 ? 'B' : 'D'}">
+                <div class="gacha-item-icon">
+                    <span class="material-icons">auto_awesome</span>
+                </div>
+                <div class="gacha-item-info">
+                    <div class="gacha-item-name">${item.name}</div>
+                    <div class="gacha-item-tier">Tier ${item.tier}</div>
+                </div>
+                ${item.isNew ? '<span class="new-badge">NEW!</span>' : ''}
+            </div>
+        `).join('');
+
+        // インベントリに加算
+        items.forEach(item => {
+            GameState.gainGachaResult(item.id);
+        });
+
+        fishingArea.innerHTML = `
+            <div class="result-overlay gacha-result" id="result-overlay">
+                <div class="result-card gacha-card">
+                    <div class="card-header">GACHA RESULT</div>
+                    
+                    <div class="gacha-items-grid">
+                        ${itemsHtml}
+                    </div>
+
+                    <div class="tap-hint">TAP TO CLOSE</div>
+                </div>
+            </div>
+        `;
+
+        this.setupResultOverlayClose(onClose);
+        this.updateStatus();
+    },
+
+    // ========================================
     // ミス表示
     // ========================================
     showMissed(message) {

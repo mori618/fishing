@@ -14,6 +14,8 @@ const FishingGame = {
     waitTimer: null,
     nibbleTimer: null,
     hitTimer: null,
+    isGachaMode: false,
+    gachaResults: [],
 
     // ========================================
     // 初期化
@@ -21,13 +23,44 @@ const FishingGame = {
     init() {
         this.state = 'idle';
         this.currentFish = null;
+        this.isGachaMode = false;
         console.log('🎣 釣りゲームを初期化しました');
+    },
+
+    // ========================================
+    // ガチャ開始
+    // ========================================
+    startGacha(results) {
+        this.isGachaMode = true;
+        this.gachaResults = results;
+        UIManager.showScreen('fishing');
+
+        // ガチャ用の初期化
+        this.state = 'idle';
+        this.currentFish = null;
+
+        // 少し待ってから自動キャスト
+        setTimeout(() => {
+            this.cast();
+        }, 500);
     },
 
     // ========================================
     // 魚の抽選
     // ========================================
     selectFish() {
+        if (this.isGachaMode) {
+            // ガチャモード時はダミーの「宝箱」のような魚データを返す
+            return {
+                id: 'gacha_chest',
+                name: '謎の宝箱',
+                rarity: 'S', // 演出用
+                power: 100,
+                price: 0,
+                icon: 'inventory_2' // 宝箱アイコン
+            };
+        }
+
         const bait = GAME_DATA.BAITS.find(b => b.id === GameState.baitType) || GAME_DATA.BAITS[0]; // デフォルトD
         const fishPool = [];
 
@@ -92,36 +125,49 @@ const FishingGame = {
     cast() {
         if (this.state !== 'idle') return false;
 
-        // 餌のチェック
-        const currentBaitCount = GameState.getCurrentBaitCount();
-        if (currentBaitCount === 0) {
-            UIManager.showBaitPurchaseDialog(GameState.baitType);
-            return false;
+        // 餌のチェック (ガチャモードは無視)
+        if (!this.isGachaMode) {
+            const currentBaitCount = GameState.getCurrentBaitCount();
+            if (currentBaitCount === 0) {
+                UIManager.showBaitPurchaseDialog(GameState.baitType);
+                return false;
+            }
         }
 
         this.state = 'casting';
         UIManager.showCasting();
 
+        // ガチャモードならメッセージ上書き
+        if (this.isGachaMode) {
+            const area = document.getElementById('fishing-area');
+            if (area) area.querySelector('.instruction').textContent = 'ガチャ実行中...';
+        }
+
         // 魚を抽選
         this.currentFish = this.selectFish();
         console.log('🐟 抽選された魚:', this.currentFish.name);
 
-        // 餌を使用している場合は時間短縮
-        let waitTimeReduction = 0;
-        if (GameState.baitType) {
-            const bait = GAME_DATA.BAITS.find(b => b.id === GameState.baitType);
-            if (bait && bait.hitTimeReduction) {
-                waitTimeReduction = bait.hitTimeReduction;
-            }
-        }
-
         // 待機時間を計算
-        const baseWaitTime = GAME_DATA.FISHING_CONFIG.waitTimeMin +
-            Math.random() * (GAME_DATA.FISHING_CONFIG.waitTimeMax - GAME_DATA.FISHING_CONFIG.waitTimeMin);
+        let waitTime;
+        if (this.isGachaMode) {
+            waitTime = 1500; // ガチャは短め
+        } else {
+            // 餌を使用している場合は時間短縮
+            let waitTimeReduction = 0;
+            if (GameState.baitType) {
+                const bait = GAME_DATA.BAITS.find(b => b.id === GameState.baitType);
+                if (bait && bait.hitTimeReduction) {
+                    waitTimeReduction = bait.hitTimeReduction;
+                }
+            }
 
-        // 忍耐力スキルの反映
-        const patienceReduction = GameState.getWaitTimeReduction();
-        const waitTime = baseWaitTime * (1 - waitTimeReduction) * (1 - patienceReduction);
+            const baseWaitTime = GAME_DATA.FISHING_CONFIG.waitTimeMin +
+                Math.random() * (GAME_DATA.FISHING_CONFIG.waitTimeMax - GAME_DATA.FISHING_CONFIG.waitTimeMin);
+
+            // 忍耐力スキルの反映
+            const patienceReduction = GameState.getWaitTimeReduction();
+            waitTime = baseWaitTime * (1 - waitTimeReduction) * (1 - patienceReduction);
+        }
 
         // キャストアニメーション後に待機状態へ
         setTimeout(() => {
@@ -145,11 +191,16 @@ const FishingGame = {
             this.state = 'nibble';
             UIManager.showNibble();
 
-            // 揺れ回数を決定（スキルで固定 or 設定範囲内でランダム）
-            const fixedCount = GameState.getNibbleFixCount();
-            targetCount = fixedCount !== null ? fixedCount :
-                GAME_DATA.FISHING_CONFIG.nibbleCountMin +
-                Math.floor(Math.random() * (GAME_DATA.FISHING_CONFIG.nibbleCountMax - GAME_DATA.FISHING_CONFIG.nibbleCountMin + 1));
+            if (this.isGachaMode) {
+                // ガチャは2回固定
+                targetCount = 2;
+            } else {
+                // 揺れ回数を決定
+                const fixedCount = GameState.getNibbleFixCount();
+                targetCount = fixedCount !== null ? fixedCount :
+                    GAME_DATA.FISHING_CONFIG.nibbleCountMin +
+                    Math.floor(Math.random() * (GAME_DATA.FISHING_CONFIG.nibbleCountMax - GAME_DATA.FISHING_CONFIG.nibbleCountMin + 1));
+            }
 
             console.log(`🎣 予兆開始: 合計 ${targetCount} 回揺れます`);
         }
@@ -158,8 +209,8 @@ const FishingGame = {
             // ウキを1回揺らす
             UIManager.triggerBobberShake(GAME_DATA.FISHING_CONFIG.nibbleShakeDuration);
 
-            // 次の揺れ（またはヒット）までの間隔をランダムに決定（500〜1000ms）
-            const interval = GAME_DATA.FISHING_CONFIG.nibbleIntervalMin +
+            // ガチャなら間隔短め
+            const interval = this.isGachaMode ? 400 : GAME_DATA.FISHING_CONFIG.nibbleIntervalMin +
                 Math.floor(Math.random() * (GAME_DATA.FISHING_CONFIG.nibbleIntervalMax - GAME_DATA.FISHING_CONFIG.nibbleIntervalMin));
 
             this.nibbleTimer = setTimeout(() => {
@@ -177,6 +228,14 @@ const FishingGame = {
     hit() {
         this.state = 'hit';
         UIManager.showHit();
+
+        if (this.isGachaMode) {
+            // ガチャは即座に成功
+            setTimeout(() => {
+                this.catchSuccess();
+            }, 500);
+            return;
+        }
 
         // ヒット判定可能時間を設定 (レア度とスキルによる倍率を反映)
         const config = GAME_DATA.FISHING_CONFIG;
@@ -204,6 +263,8 @@ const FishingGame = {
     // ========================================
     onClick() {
         if (this.isProcessing) return;
+        // ガチャ中はクリック無効
+        if (this.isGachaMode) return;
 
         switch (this.state) {
             case 'idle':
@@ -240,6 +301,11 @@ const FishingGame = {
     // パワー判定
     // ========================================
     checkPower() {
+        if (this.isGachaMode) {
+            this.catchSuccess();
+            return;
+        }
+
         const playerPower = GameState.getTotalPower();
         const fishPower = this.currentFish.power;
 
@@ -363,6 +429,16 @@ const FishingGame = {
     catchSuccess() {
         this.state = 'result';
 
+        if (this.isGachaMode) {
+            // ガチャ結果表示へ
+            UIManager.showGachaResult(this.gachaResults, () => {
+                this.isGachaMode = false;
+                this.state = 'idle';
+                UIManager.showScreen('shop'); // ショップへ戻る
+            });
+            return;
+        }
+
         // インベントリに追加
         GameState.addFish(this.currentFish);
 
@@ -461,6 +537,7 @@ const FishingGame = {
         this.cleanupTimers();
         this.state = 'idle';
         this.currentFish = null;
+        this.isGachaMode = false; // ガチャモードも解除
     }
 };
 
