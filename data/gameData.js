@@ -734,6 +734,16 @@ const SKILLS = [
         effect: { type: 'fever_bias_moon', value: 0.45 },
         price: 50000,
         tier: 3
+    },
+
+    // 達人の針 (Perfect Master) - 赤ゾーン確定
+    {
+        id: 'perfect_master_1',
+        name: '達人の針 I',
+        description: 'ゲージバトルで赤ゾーン停止時、捕獲率が100%になる',
+        effect: { type: 'perfect_catch', value: 1.0 },
+        price: 100000,
+        tier: 3
     }
 ];
 

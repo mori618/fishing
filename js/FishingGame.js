@@ -527,6 +527,12 @@ const FishingGame = {
         let catchRate = config.catchRate.min +
             Math.random() * (config.catchRate.max - config.catchRate.min);
 
+        // 達人の針スキル: 赤ゾーンなら確定 (100%)
+        if (zone === 'red' && GameState.hasPerfectMaster()) {
+            catchRate = 1.0;
+            console.log('✨ 達人の針発動！赤ゾーン確定');
+        }
+
         // スキルボーナス
         catchRate += GameState.getCatchBonus();
         catchRate = Math.min(1, catchRate);  // 100%が上限
