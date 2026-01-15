@@ -1284,7 +1284,7 @@ body {
     background: #fbbf24;
     box-shadow: 0 0 15px rgba(251, 191, 36, 1), 0 0 30px rgba(251, 191, 36, 0.5);
     transform: translateX(-50%);
-    transition: none;
+    transition: none !important;
     border-radius: 3px;
 }
 

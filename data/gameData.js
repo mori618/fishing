@@ -64,185 +64,185 @@ const RODS = [
 const FISH = [
     // Dランク (9種)
     {
-        id: 'fish_d1', name: 'メダカ', power: 5, price: 10, rarity: 'D', weight: 100, specialTitle: '水たまりの', icon: 'water_drop',
+        id: 'fish_d9', name: 'オタマジャクシ', power: 4, price: 5, rarity: 'D', weight: 20, specialTitle: '明日に夢見る', icon: 'spa',
+        description: 'カエルの子供。もうすぐ足が生えてくるかもしれない。',
+        titleDescription: 'いつか大空を飛ぶことを夢見続けている、ロマンチストなオタマジャクシ。'
+    },
+    {
+        id: 'fish_d1', name: 'メダカ', power: 5, price: 10, rarity: 'D', weight: 15, specialTitle: '水たまりの', icon: 'water_drop',
         description: '小さな淡水魚。群れで泳ぐ姿が可愛らしい。',
         titleDescription: '水たまりの主として君臨する巨大メダカ。'
     },
     {
-        id: 'fish_d2', name: 'フナ', power: 6, price: 15, rarity: 'D', weight: 95, specialTitle: '泥まみれの', icon: 'set_meal',
+        id: 'fish_d2', name: 'フナ', power: 6, price: 15, rarity: 'D', weight: 15, specialTitle: '泥まみれの', icon: 'set_meal',
         description: '日本の河川でよく見られる魚。釣りはフナに始まりフナに終わると言われる。',
         titleDescription: '泥の中を這い回り、たくましく生き抜いた伝説のフナ。'
     },
     {
-        id: 'fish_d3', name: 'クチボソ', power: 7, price: 20, rarity: 'D', weight: 90, specialTitle: '小生意気な', icon: 'water_drop',
+        id: 'fish_d3', name: 'クチボソ', power: 7, price: 20, rarity: 'D', weight: 12, specialTitle: '小生意気な', icon: 'water_drop',
         description: '口が細いことからこの名がついた。すばしっこい。',
         titleDescription: '釣り人を翻弄する、非常に小生意気な性格をしたクチボソ。'
     },
     {
-        id: 'fish_d4', name: 'ヌマエビ', power: 8, price: 25, rarity: 'D', weight: 85, specialTitle: '透き通った', icon: 'pest_control',
+        id: 'fish_d4', name: 'ヌマエビ', power: 8, price: 25, rarity: 'D', weight: 10, specialTitle: '透き通った', icon: 'pest_control',
         description: '水草の間を動き回る小さなエビ。透き通った体が特徴。',
         titleDescription: '驚くべき透明度を誇り、水に溶け込むかのようなヌマエビ。'
     },
     {
-        id: 'fish_d5', name: 'ザリガニ', power: 9, price: 30, rarity: 'D', weight: 80, specialTitle: '真紅の鋏の', icon: 'pest_control',
-        description: '大きなハサミを持つ淡水の甲殻類。後ろ向きに泳ぐのが得意。',
-        titleDescription: '鉄をも断ち切る真紅のハサミを持つ、恐るべきザリガニ。'
-    },
-    {
-        id: 'fish_d6', name: 'ハゼ', power: 10, price: 35, rarity: 'D', weight: 75, specialTitle: '砂底の', icon: 'set_meal',
+        id: 'fish_d6', name: 'ハゼ', power: 10, price: 35, rarity: 'D', weight: 10, specialTitle: '砂底の', icon: 'set_meal',
         description: '砂泥底に生息する愛嬌のある顔をした魚。天ぷらが美味しい。',
         titleDescription: '砂底の支配者として、海底から全てを見通すハゼ。'
     },
     {
-        id: 'fish_d7', name: 'タナゴ', power: 11, price: 40, rarity: 'D', weight: 70, specialTitle: '虹色に輝く', icon: 'palette',
+        id: 'fish_d5', name: 'ザリガニ', power: 9, price: 30, rarity: 'D', weight: 8, specialTitle: '真紅の鋏の', icon: 'pest_control',
+        description: '大きなハサミを持つ淡水の甲殻類。後ろ向きに泳ぐのが得意。',
+        titleDescription: '鉄をも断ち切る真紅のハサミを持つ、恐るべきザリガニ。'
+    },
+    {
+        id: 'fish_d7', name: 'タナゴ', power: 11, price: 40, rarity: 'D', weight: 5, specialTitle: '虹色に輝く', icon: 'palette',
         description: '美しい婚姻色を持つことで知られる淡水魚。',
         titleDescription: '七色に輝く鱗を持ち、見る者を魅了する幻のタナゴ。'
     },
     {
-        id: 'fish_d8', name: 'ドジョウ', power: 12, price: 45, rarity: 'D', weight: 65, specialTitle: 'ぬるぬるした', icon: 'gesture',
+        id: 'fish_d8', name: 'ドジョウ', power: 12, price: 45, rarity: 'D', weight: 5, specialTitle: 'ぬるぬるした', icon: 'gesture',
         description: '細長い体で泥の中を泳ぐ。ひげがチャームポイント。',
         titleDescription: '捕まえようとしても手から滑り落ちる、究極のぬるぬるを持つドジョウ。'
-    },
-    {
-        id: 'fish_d9', name: 'オタマジャクシ', power: 4, price: 5, rarity: 'D', weight: 110, specialTitle: '明日に夢見る', icon: 'spa',
-        description: 'カエルの子供。もうすぐ足が生えてくるかもしれない。',
-        titleDescription: 'いつか大空を飛ぶことを夢見続けている、ロマンチストなオタマジャクシ。'
     },
 
     // Cランク (8種)
     {
-        id: 'fish_c1', name: 'アユ', power: 15, price: 60, rarity: 'C', weight: 50, specialTitle: '清流の', icon: 'waves',
-        description: '清流に住む魚。独特の香気があり、香魚とも呼ばれる。',
-        titleDescription: '最も清らかな水にしか住まない、高貴な香りを放つアユ。'
-    },
-    {
-        id: 'fish_c2', name: 'イワナ', power: 18, price: 75, rarity: 'C', weight: 45, specialTitle: '岩陰の紳士', icon: 'landscape',
-        description: '河川の最上流部に生息する。貪欲な肉食性を持つ。',
-        titleDescription: '岩陰から虎視眈々と獲物を狙う、冷徹な紳士イワナ。'
-    },
-    {
-        id: 'fish_c3', name: 'ヤマメ', power: 20, price: 90, rarity: 'C', weight: 40, specialTitle: '渓流の女王', icon: 'filter_hdr',
-        description: '体のパーマークが美しい、渓流の女王と呼ばれる魚。',
-        titleDescription: 'その美しさで釣り人を惑わす、真の渓流の女王。'
-    },
-    {
-        id: 'fish_c4', name: 'コイ', power: 22, price: 100, rarity: 'C', weight: 35, specialTitle: '大河の主候補', icon: 'set_meal',
-        description: '生命力が非常に強く、長生きする魚。滝を登ると龍になると言われる。',
-        titleDescription: '龍になる直前、強大な力を秘めた大河の主候補。'
-    },
-    {
-        id: 'fish_c5', name: 'ニジマス', power: 25, price: 120, rarity: 'C', weight: 30, specialTitle: '宝石を纏った', icon: 'diamond',
-        description: '体側に虹色の帯があるのが特徴。釣りの対象として人気が高い。',
-        titleDescription: '全身が宝石のように輝き、見る者を魅了するニジマス。'
-    },
-    {
-        id: 'fish_c6', name: 'ブラックバス', power: 28, price: 150, rarity: 'C', weight: 25, specialTitle: '湖の暴君', icon: 'gavel',
-        description: '北米原産の肉食魚。引きが強く、ゲームフィッシングで人気。',
-        titleDescription: '湖の生態系を支配する、圧倒的な力を持った暴君バス。'
-    },
-    {
-        id: 'fish_c7', name: 'ブルーギル', power: 14, price: 50, rarity: 'C', weight: 55, specialTitle: '青い鱗の', icon: 'water',
+        id: 'fish_c7', name: 'ブルーギル', power: 14, price: 50, rarity: 'C', weight: 25, specialTitle: '青い鱗の', icon: 'water',
         description: '青みがかった体色が特徴。繁殖力が強い。',
         titleDescription: '神秘的な青い輝きを放つ、突然変異種のブルーギル。'
     },
     {
-        id: 'fish_c8', name: 'ウグイ', power: 12, price: 40, rarity: 'C', weight: 60, specialTitle: 'どこにでも居る', icon: 'set_meal',
+        id: 'fish_c8', name: 'ウグイ', power: 12, price: 40, rarity: 'C', weight: 20, specialTitle: 'どこにでも居る', icon: 'set_meal',
         description: '酸性水にも強い生命力を持つ魚。婚姻色は鮮やかな朱色になる。',
         titleDescription: '世界中どこへ行っても遭遇する、神出鬼没のウグイ。'
     },
+    {
+        id: 'fish_c4', name: 'コイ', power: 22, price: 100, rarity: 'C', weight: 15, specialTitle: '大河の主候補', icon: 'set_meal',
+        description: '生命力が非常に強く、長生きする魚。滝を登ると龍になると言われる。',
+        titleDescription: '龍になる直前、強大な力を秘めた大河の主候補。'
+    },
+    {
+        id: 'fish_c1', name: 'アユ', power: 15, price: 60, rarity: 'C', weight: 12, specialTitle: '清流の', icon: 'waves',
+        description: '清流に住む魚。独特の香気があり、香魚とも呼ばれる。',
+        titleDescription: '最も清らかな水にしか住まない、高貴な香りを放つアユ。'
+    },
+    {
+        id: 'fish_c5', name: 'ニジマス', power: 25, price: 120, rarity: 'C', weight: 10, specialTitle: '宝石を纏った', icon: 'diamond',
+        description: '体側に虹色の帯があるのが特徴。釣りの対象として人気が高い。',
+        titleDescription: '全身が宝石のように輝き、見る者を魅了するニジマス。'
+    },
+    {
+        id: 'fish_c6', name: 'ブラックバス', power: 28, price: 150, rarity: 'C', weight: 8, specialTitle: '湖の暴君', icon: 'gavel',
+        description: '北米原産の肉食魚。引きが強く、ゲームフィッシングで人気。',
+        titleDescription: '湖の生態系を支配する、圧倒的な力を持った暴君バス。'
+    },
+    {
+        id: 'fish_c2', name: 'イワナ', power: 18, price: 75, rarity: 'C', weight: 5, specialTitle: '岩陰の紳士', icon: 'landscape',
+        description: '河川の最上流部に生息する。貪欲な肉食性を持つ。',
+        titleDescription: '岩陰から虎視眈々と獲物を狙う、冷徹な紳士イワナ。'
+    },
+    {
+        id: 'fish_c3', name: 'ヤマメ', power: 20, price: 90, rarity: 'C', weight: 5, specialTitle: '渓流の女王', icon: 'filter_hdr',
+        description: '体のパーマークが美しい、渓流の女王と呼ばれる魚。',
+        titleDescription: 'その美しさで釣り人を惑わす、真の渓流の女王。'
+    },
 
     // Bランク (7種)
-    {
-        id: 'fish_b1', name: 'タイ', power: 35, price: 250, rarity: 'B', weight: 20, specialTitle: '目出度い', icon: 'celebration',
-        description: '「めでたい」に通じる縁起の良い魚。味も姿も一級品。',
-        titleDescription: '祝いの席には欠かせない、光り輝く最高級のタイ。'
-    },
-    {
-        id: 'fish_b2', name: 'ヒラメ', power: 40, price: 300, rarity: 'B', weight: 18, specialTitle: '砂漠の忍者の', icon: 'visibility_off',
-        description: '海底の砂に隠れて獲物を待つ。高級魚としても知られる。',
-        titleDescription: '砂と完全に同化し、獲物を瞬殺する砂漠の忍者ヒラメ。'
-    },
-    {
-        id: 'fish_b3', name: 'ブリ', power: 45, price: 350, rarity: 'B', weight: 16, specialTitle: '荒波に揉まれた', icon: 'tsunami',
-        description: '成長するにつれて名前が変わる出世魚。冬の味覚。',
-        titleDescription: '幾多の荒波を乗り越え、最強の身体を手に入れたブリ。'
-    },
-    {
-        id: 'fish_b4', name: 'スズキ', power: 50, price: 400, rarity: 'B', weight: 14, specialTitle: '出世を夢見る', icon: 'trending_up',
-        description: '汽水域から海水域まで広く生息する。ルアーフィッシングの好敵手。',
-        titleDescription: '海を支配する野望を持ち、貪欲に成長を続けるスズキ。'
-    },
-    {
-        id: 'fish_b5', name: 'サワラ', power: 55, price: 450, rarity: 'B', weight: 12, specialTitle: '春を告げる', icon: 'local_florist',
-        description: '細長い体が特徴の大型肉食魚。春の訪れを告げる魚。',
-        titleDescription: '春風と共に現れ、全てを置き去りにする疾風のサワラ。'
-    },
-    {
-        id: 'fish_b6', name: 'カツオ', power: 30, price: 200, rarity: 'B', weight: 22, specialTitle: '一本釣りの', icon: 'phishing',
-        description: '高速で泳ぎ続ける回遊魚。たたきが絶品。',
-        titleDescription: '誰にも止められない速度で海を駆け抜ける、弾丸カツオ。'
-    },
     {
         id: 'fish_b7', name: 'ボラ', power: 28, price: 180, rarity: 'B', weight: 25, specialTitle: '海辺の跳躍者', icon: 'flight',
         description: 'よく水面からジャンプする姿が見られる。卵巣はカラスミになる。',
         titleDescription: '大空へ飛び出すことを夢見て、限界まで跳躍するボラ。'
     },
+    {
+        id: 'fish_b6', name: 'カツオ', power: 30, price: 200, rarity: 'B', weight: 20, specialTitle: '一本釣りの', icon: 'phishing',
+        description: '高速で泳ぎ続ける回遊魚。たたきが絶品。',
+        titleDescription: '誰にも止められない速度で海を駆け抜ける、弾丸カツオ。'
+    },
+    {
+        id: 'fish_b5', name: 'サワラ', power: 55, price: 450, rarity: 'B', weight: 15, specialTitle: '春を告げる', icon: 'local_florist',
+        description: '細長い体が特徴の大型肉食魚。春の訪れを告げる魚。',
+        titleDescription: '春風と共に現れ、全てを置き去りにする疾風のサワラ。'
+    },
+    {
+        id: 'fish_b4', name: 'スズキ', power: 50, price: 400, rarity: 'B', weight: 15, specialTitle: '出世を夢見る', icon: 'trending_up',
+        description: '汽水域から海水域まで広く生息する。ルアーフィッシングの好敵手。',
+        titleDescription: '海を支配する野望を持ち、貪欲に成長を続けるスズキ。'
+    },
+    {
+        id: 'fish_b3', name: 'ブリ', power: 45, price: 350, rarity: 'B', weight: 10, specialTitle: '荒波に揉まれた', icon: 'tsunami',
+        description: '成長するにつれて名前が変わる出世魚。冬の味覚。',
+        titleDescription: '幾多の荒波を乗り越え、最強の身体を手に入れたブリ。'
+    },
+    {
+        id: 'fish_b2', name: 'ヒラメ', power: 40, price: 300, rarity: 'B', weight: 8, specialTitle: '砂漠の忍者の', icon: 'visibility_off',
+        description: '海底の砂に隠れて獲物を待つ。高級魚としても知られる。',
+        titleDescription: '砂と完全に同化し、獲物を瞬殺する砂漠の忍者ヒラメ。'
+    },
+    {
+        id: 'fish_b1', name: 'タイ', power: 35, price: 250, rarity: 'B', weight: 7, specialTitle: '目出度い', icon: 'celebration',
+        description: '「めでたい」に通じる縁起の良い魚。味も姿も一級品。',
+        titleDescription: '祝いの席には欠かせない、光り輝く最高級のタイ。'
+    },
 
     // Aランク (6種)
     {
-        id: 'fish_a1', name: 'マグロ', power: 70, price: 800, rarity: 'A', weight: 8, specialTitle: '大海を駆ける', icon: 'speed',
-        description: '海の王様とも呼ばれる大型回遊魚。その巨体は高速で泳ぐための筋肉の塊。',
-        titleDescription: '七つの海を制覇し、止まることを知らない海の帝王マグロ。'
-    },
-    {
-        id: 'fish_a2', name: 'カジキ', power: 85, price: 1200, rarity: 'A', weight: 6, specialTitle: '水中の狙撃手', icon: 'gps_fixed',
-        description: '鋭く尖った吻が特徴。世界最速の魚類の一つ。',
-        titleDescription: '狙った獲物は逃がさない、海のスナイパーとして恐れられるカジキ。'
-    },
-    {
-        id: 'fish_a3', name: 'ウナギ', power: 65, price: 1000, rarity: 'A', weight: 10, specialTitle: '精力のつく', icon: 'bolt',
-        description: '長い旅をして川に戻ってくる神秘的な魚。蒲焼きは日本の伝統食。',
-        titleDescription: '無限のスタミナを秘め、食べた者に活力を与える伝説のウナギ。'
-    },
-    {
-        id: 'fish_a4', name: 'クエ', power: 95, price: 1500, rarity: 'A', weight: 4, specialTitle: '幻の磯の主', icon: 'workspace_premium',
-        description: '磯の王者と呼ばれるハタ科の大型魚。味は絶品だが、釣るのは非常に困難。',
-        titleDescription: '滅多に姿を現さない、幻の中の幻と呼ばれる究極のクエ。'
-    },
-    {
-        id: 'fish_a5', name: 'エイ', power: 60, price: 700, rarity: 'A', weight: 12, specialTitle: '海を舞う', icon: 'paragliding',
+        id: 'fish_a5', name: 'エイ', power: 60, price: 700, rarity: 'A', weight: 30, specialTitle: '海を舞う', icon: 'paragliding',
         description: '平べったい体と長い尾が特徴。優雅に泳ぐ姿は空飛ぶ絨毯のよう。',
         titleDescription: '海中を優雅に舞い、毒針すらも美しい芸術的なエイ。'
     },
     {
-        id: 'fish_a6', name: 'チョウザメ', power: 110, price: 2000, rarity: 'A', weight: 3, specialTitle: 'キャビアを産む', icon: 'egg_alt',
+        id: 'fish_a1', name: 'マグロ', power: 70, price: 800, rarity: 'A', weight: 25, specialTitle: '大海を駆ける', icon: 'speed',
+        description: '海の王様とも呼ばれる大型回遊魚。その巨体は高速で泳ぐための筋肉の塊。',
+        titleDescription: '七つの海を制覇し、止まることを知らない海の帝王マグロ。'
+    },
+    {
+        id: 'fish_a3', name: 'ウナギ', power: 65, price: 1000, rarity: 'A', weight: 15, specialTitle: '精力のつく', icon: 'bolt',
+        description: '長い旅をして川に戻ってくる神秘的な魚。蒲焼きは日本の伝統食。',
+        titleDescription: '無限のスタミナを秘め、食べた者に活力を与える伝説のウナギ。'
+    },
+    {
+        id: 'fish_a2', name: 'カジキ', power: 85, price: 1200, rarity: 'A', weight: 12, specialTitle: '水中の狙撃手', icon: 'gps_fixed',
+        description: '鋭く尖った吻が特徴。世界最速の魚類の一つ。',
+        titleDescription: '狙った獲物は逃がさない、海のスナイパーとして恐れられるカジキ。'
+    },
+    {
+        id: 'fish_a4', name: 'クエ', power: 95, price: 1500, rarity: 'A', weight: 10, specialTitle: '幻の磯の主', icon: 'workspace_premium',
+        description: '磯の王者と呼ばれるハタ科の大型魚。味は絶品だが、釣るのは非常に困難。',
+        titleDescription: '滅多に姿を現さない、幻の中の幻と呼ばれる究極のクエ。'
+    },
+    {
+        id: 'fish_a6', name: 'チョウザメ', power: 110, price: 2000, rarity: 'A', weight: 8, specialTitle: 'キャビアを産む', icon: 'egg_alt',
         description: '古代魚の姿を残す大型魚。世界三大珍味の一つキャビアの親。',
         titleDescription: '黄金のキャビアをその身に宿す、生きた宝石箱チョウザメ。'
     },
 
     // Sランク (5種)
     {
-        id: 'fish_s1', name: 'シーラカンス', power: 130, price: 5000, rarity: 'S', weight: 2, specialTitle: '太古より目覚めし', icon: 'history',
-        description: '数億年前から姿を変えていない「生きた化石」。深海にひっそりと生息する。',
-        titleDescription: '悠久の時を超えて現代に蘇った、歴史の証人たるシーラカンス。'
-    },
-    {
-        id: 'fish_s2', name: 'リュウグウノツカイ', power: 150, price: 8000, rarity: 'S', weight: 1, specialTitle: '深海よりの使者', icon: 'scuba_diving',
-        description: '銀色の長い体と赤い鰭が美しい深海魚。人魚のモデルとも言われる。',
-        titleDescription: '竜宮城からのメッセージを携え、深海から現れた神秘の使者。'
-    },
-    {
-        id: 'fish_s3', name: '大王イカ', power: 120, price: 4000, rarity: 'S', weight: 3, specialTitle: '全てを呑み込む', icon: 'hub',
+        id: 'fish_s3', name: '大王イカ', power: 120, price: 4000, rarity: 'S', weight: 40, specialTitle: '全てを呑み込む', icon: 'hub',
         description: '世界最大級の無脊椎動物。深海の怪物クラーケンの正体とされる。',
         titleDescription: 'その巨大な触手で船さえも沈めると噂される、深海の悪魔。'
     },
     {
-        id: 'fish_s4', name: '黄金のタイ', power: 140, price: 10000, rarity: 'S', weight: 0.5, specialTitle: '伝説の輝きを放つ', icon: 'star',
+        id: 'fish_s1', name: 'シーラカンス', power: 130, price: 5000, rarity: 'S', weight: 25, specialTitle: '太古より目覚めし', icon: 'history',
+        description: '数億年前から姿を変えていない「生きた化石」。深海にひっそりと生息する。',
+        titleDescription: '悠久の時を超えて現代に蘇った、歴史の証人たるシーラカンス。'
+    },
+    {
+        id: 'fish_s2', name: 'リュウグウノツカイ', power: 150, price: 8000, rarity: 'S', weight: 20, specialTitle: '深海よりの使者', icon: 'scuba_diving',
+        description: '銀色の長い体と赤い鰭が美しい深海魚。人魚のモデルとも言われる。',
+        titleDescription: '竜宮城からのメッセージを携え、深海から現れた神秘の使者。'
+    },
+    {
+        id: 'fish_s4', name: '黄金のタイ', power: 140, price: 10000, rarity: 'S', weight: 10, specialTitle: '伝説の輝きを放つ', icon: 'star',
         description: '全身が黄金に輝く伝説のタイ。釣り上げた者に巨万の富をもたらす。',
         titleDescription: '太陽の如き輝きを放ち、見る者全ての運命を変える神の使い。'
     },
     {
-        id: 'fish_s5', name: '伝説の海龍', power: 200, price: 30000, rarity: 'S', weight: 0.1, specialTitle: '天を統べし', icon: 'token',
+        id: 'fish_s5', name: '伝説の海龍', power: 200, price: 30000, rarity: 'S', weight: 5, specialTitle: '天を統べし', icon: 'token',
         description: 'あらゆる海洋生物の頂点に立つ龍。その姿を見た者はいないとされる。',
         titleDescription: '海だけでなく天候さえも操る、神話の世界から現れた絶対的な存在。'
     },
@@ -638,7 +638,7 @@ const FISHING_CONFIG = {
     nibbleCountMin: 3,
     nibbleCountMax: 6,
     nibbleIntervalMin: 500,  // 0.5秒
-    nibbleIntervalMax: 2000, // 2.0秒
+    nibbleIntervalMax: 1500, // 1.5秒
     nibbleShakeDuration: 200, // 1回の揺れにかかる時間（ミリ秒）
 
     // ヒット判定可能時間（ミリ秒）
@@ -676,7 +676,7 @@ const RARITY_WEIGHTS = {
 const GACHA_CONFIG = {
     BRONZE: { single: 1000, ten: 9000, rates: { tier1: 85, tier2: 14, tier3: 1, special: 0 } },
     SILVER: { single: 8000, ten: 72000, rates: { tier1: 15, tier2: 75, tier3: 10, special: 0.1 } },
-    GOLD: { single: 50000, ten: 450000, rates: { tier1: 0, tier2: 20, tier3: 75, special: 5 } }
+    GOLD: { single: 30000, ten: 250000, rates: { tier1: 0, tier2: 20, tier3: 75, special: 5 } }
 };
 
 // ========================================

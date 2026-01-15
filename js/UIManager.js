@@ -379,7 +379,10 @@ const UIManager = {
         };
 
         // クリックで閉じる
-        overlay.addEventListener('click', closeOverlay);
+        overlay.addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeOverlay();
+        });
 
         // スペースキーで閉じる
         const handleKeydown = (e) => {
