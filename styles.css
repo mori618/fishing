@@ -2887,7 +2887,7 @@ body {
 /* ボート */
 .event-boat {
     position: absolute;
-    top: 31%;
+    top: 25%;
     left: -150px;
     font-size: 60px;
     filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.3));
@@ -2991,5 +2991,45 @@ body {
     100% {
         opacity: 0;
         transform: translate(-50%, -20px);
+    }
+}
+
+.game-boat {
+    /* サイズ調整：お好みの大きさに */
+    font-size: 120px !important;
+
+    /* 色：真っ白を指定 */
+    color: #ffffff;
+
+
+    /* ポイント2：エッジを少し滑らかにする */
+    -webkit-font-smoothing: antialiased;
+
+    /* 配置設定 */
+    display: inline-block;
+    user-select: none;
+    pointer-events: none;
+    /* ゲームキャラとして扱うならクリック判定を無効化してもOK */
+
+    /* アニメーション：影がない分、動きで存在感を出します */
+    animation: boat-floating 3.5s ease-in-out infinite;
+}
+
+/* 水面に浮いているような、ゆっくりとした上下・回転の動き */
+@keyframes boat-floating {
+    0% {
+        transform: translateY(0) rotate(0deg);
+    }
+
+    25% {
+        transform: translateY(-5px) rotate(-2deg);
+    }
+
+    75% {
+        transform: translateY(5px) rotate(2deg);
+    }
+
+    100% {
+        transform: translateY(0) rotate(0deg);
     }
 }

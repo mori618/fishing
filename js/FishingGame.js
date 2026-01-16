@@ -777,8 +777,6 @@ const FishingGame = {
             this.state = 'idle';
             this.currentFish = null;
             UIManager.showIdle();
-            // イベント判定
-            this.triggerRandomEvent();
         }, 1500);
     },
 
@@ -810,8 +808,6 @@ const FishingGame = {
             UIManager.showCatchFailed(this.currentFish, () => {
                 this.state = 'idle';
                 UIManager.showIdle();
-                // イベント判定
-                this.triggerRandomEvent();
             });
             console.log(`💔 ${this.currentFish.name}に逃げられた...`);
         } else {
@@ -821,8 +817,6 @@ const FishingGame = {
             setTimeout(() => {
                 this.state = 'idle';
                 UIManager.showIdle();
-                // イベント判定
-                this.triggerRandomEvent();
             }, 1500);
         }
     },
@@ -992,8 +986,23 @@ const FishingGame = {
 
         const rand = Math.random();
 
-        // 5%の確率でボート、5%の確率で鳥、90%で何もなし
-        if (rand < 0.05) {
+        // 基本確率
+        const baseBoatChance = 0.05;
+        const baseBirdChance = 0.05;
+
+        // スキル補正
+        const boatBonus = GameState.getBoatEventBonus();
+        const birdBonus = GameState.getBirdEventBonus();
+
+        // 実際の確率
+        const boatThreshold = baseBoatChance + boatBonus;
+        // 鳥の判定はボートの判定の後に行うため、閾値をずらす
+        const birdThreshold = boatThreshold + baseBirdChance + birdBonus;
+
+        console.log(`🎲 イベント抽選: rand=${rand.toFixed(4)} (Boat < ${boatThreshold.toFixed(4)}, Bird < ${birdThreshold.toFixed(4)})`);
+
+        // 確率判定
+        if (rand < boatThreshold) {
             // ボートイベント
             console.log('🚢 イベント: 漁船通過');
             UIManager.showBoatEvent();
@@ -1002,13 +1011,11 @@ const FishingGame = {
             if (GameState.fever.isActive) {
                 // フィーバー中: 継続確定 (6に戻す)
                 GameState.fever.value = 6;
-                UIManager.showEventMessage('FEVER RESET!', 'refresh');
                 console.log('🔥 漁船効果: フィーバーリセット');
             } else {
                 // 通常時: ゲージ+1
                 const result = GameState.progressFever(true); // 確定進行
                 UIManager.updateFeverVisuals();
-                UIManager.showEventMessage('FEVER CHARGE!', 'bolt');
                 console.log('⚡ 漁船効果: フィーバーチャージ');
 
                 if (result.message === 'start') {
@@ -1016,7 +1023,7 @@ const FishingGame = {
                 }
             }
 
-        } else if (rand < 0.10) {
+        } else if (rand < birdThreshold) {
             // 鳥イベント
             console.log('🦅 イベント: 海鳥飛来');
             UIManager.showBirdEvent();

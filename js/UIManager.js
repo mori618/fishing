@@ -459,30 +459,38 @@ const UIManager = {
         const overlay = document.getElementById('result-overlay');
         if (!overlay) return;
 
+        let handleKeydown;
+
         // クローズ処理
         const closeOverlay = () => {
             overlay.remove();
-            document.removeEventListener('keydown', handleKeydown);
+            if (handleKeydown) {
+                document.removeEventListener('keydown', handleKeydown);
+            }
             // コールバックを実行
             if (typeof onClose === 'function') {
                 onClose();
             }
         };
 
-        // クリックで閉じる
-        overlay.addEventListener('click', (e) => {
-            e.stopPropagation();
-            closeOverlay();
-        });
-
-        // スペースキーで閉じる
-        const handleKeydown = (e) => {
+        handleKeydown = (e) => {
             if (e.code === 'Space' || e.key === ' ') {
                 e.preventDefault();
                 closeOverlay();
             }
         };
-        document.addEventListener('keydown', handleKeydown);
+
+        // 誤操作防止の遅延（500ms）
+        setTimeout(() => {
+            // クリックで閉じる
+            overlay.addEventListener('click', (e) => {
+                e.stopPropagation();
+                closeOverlay();
+            });
+
+            // スペースキーで閉じる
+            document.addEventListener('keydown', handleKeydown);
+        }, 500);
     },
 
     // ========================================
@@ -527,22 +535,34 @@ const UIManager = {
         if (!fishingArea) return;
 
         // 結果リストのHTML生成
-        const itemsHtml = items.map(item => `
+        const itemsHtml = items.map(item => {
+            let icon = 'auto_awesome';
+            let typeLabel = 'Skill';
+
+            if (item.category === 'skin') {
+                icon = 'palette';
+                typeLabel = 'Skin';
+            } else if (item.category === 'sky') {
+                icon = 'cloud';
+                typeLabel = 'Sky';
+            }
+
+            return `
             <div class="gacha-result-item rarity-${item.tier === 3 ? 'S' : item.tier === 2 ? 'B' : 'D'}">
                 <div class="gacha-item-icon">
-                    <span class="material-icons">auto_awesome</span>
+                    <span class="material-icons">${icon}</span>
                 </div>
                 <div class="gacha-item-info">
                     <div class="gacha-item-name">${item.name}</div>
-                    <div class="gacha-item-tier">Tier ${item.tier}</div>
+                    <div class="gacha-item-tier">Tier ${item.tier} (${typeLabel})</div>
                 </div>
-                ${item.isNew ? '<span class="new-badge">NEW!</span>' : ''}
+                ${item.isNew ? '<span class="new-badge">NEW!</span>' : '<span class="status-badge">済み</span>'}
             </div>
-        `).join('');
+        `}).join('');
 
         // インベントリに加算
         items.forEach(item => {
-            GameState.gainGachaResult(item.id);
+            GameState.gainGachaResult(item);
         });
 
         fishingArea.innerHTML = `
@@ -814,7 +834,7 @@ const UIManager = {
         // ボート要素
         const boat = document.createElement('div');
         boat.className = 'event-boat';
-        boat.innerHTML = '<span class="material-icons">sailing</span>';
+        boat.innerHTML = '<span class="material-icons game-boat">sailing</span>';
         container.appendChild(boat);
 
         // クリーンアップ
@@ -839,17 +859,30 @@ const UIManager = {
             fishingArea.insertBefore(container, fishingArea.firstChild);
         }
 
-        // 鳥要素
-        const bird = document.createElement('div');
-        bird.className = 'event-bird';
-        bird.innerHTML = '<span class="material-icons">flutter_dash</span>';
-        container.appendChild(bird);
+        // 鳥要素 (3羽: ▽フォーメーション)
+        const birdsConfig = [
+            { id: 1, delay: 0.0, top: 12 },   // 左上 (先頭)
+            { id: 2, delay: 0.4, top: 12 },   // 右上 (後方)
+            { id: 3, delay: 0.2, top: 16 }    // 下中央
+        ];
 
-        // クリーンアップ
-        setTimeout(() => {
-            bird.remove();
-            if (callback) callback();
-        }, 12000);
+        birdsConfig.forEach((config, index) => {
+            const bird = document.createElement('div');
+            bird.className = 'event-bird';
+            bird.innerHTML = '<span class="material-icons game-bird">keyboard_arrow_down</span>';
+
+            // ずらし
+            bird.style.animationDelay = `${config.delay}s`;
+            bird.style.top = `${config.top}%`;
+
+            container.appendChild(bird);
+
+            // クリーンアップ
+            setTimeout(() => {
+                bird.remove();
+                if (index === 2 && callback) callback();
+            }, 12000 + (config.delay * 1000));
+        });
     },
 
     // ========================================

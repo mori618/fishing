@@ -301,7 +301,7 @@ const ShopManager = {
         const html = `
             <div class="shop-tabs sub-tabs" style="margin-bottom: 20px; border-bottom: none; justify-content: center;">
                 <button class="shop-tab ${isSkill ? 'active' : ''}" onclick="ShopManager.switchTab('skill')">
-                    <span class="material-icons">bolt</span> スキル購入
+                    <span class="material-icons">backpack</span> 所持スキル
                 </button>
                 <button class="shop-tab ${!isSkill ? 'active' : ''}" onclick="ShopManager.switchTab('gacha')">
                     <span class="material-icons">auto_awesome</span> ガチャ
@@ -695,42 +695,45 @@ const ShopManager = {
     // ========================================
     // スキルショップ
     // ========================================
+    // ========================================
+    // スキル一覧（所持スキル）
+    // ========================================
     renderSkillShop() {
         const container = document.getElementById('shop-items');
         container.innerHTML = '';
 
-        GAME_DATA.SKILLS.forEach(skill => {
-            const ownedCount = GameState.getSkillCount(skill.id);
-            const equippedCount = GameState.getEquippedSkillCount(skill.id);
+        // 所持しているスキルのみ抽出して表示
+        const ownedSkills = GAME_DATA.SKILLS.filter(skill => GameState.getSkillCount(skill.id) > 0);
 
-            const canBuy = GameState.money >= skill.price;
-            // 装備可能か: 所持数 > 装備数 かつ スロットに空きがある
-            const canEquip = (ownedCount > equippedCount) &&
-                (GameState.equippedSkills.length < GameState.getSkillSlots());
-            const canUnequip = equippedCount > 0;
-
-            const item = document.createElement('div');
-            item.className = `shop-item ${equippedCount > 0 ? 'equipped' : ''} ${ownedCount === 0 && !canBuy ? 'locked' : ''}`;
-
-            let actionHtml = '';
-
-            // 購入ボタン (常時表示)
-            actionHtml += `
-                <div class="skill-actions">
-                    <button class="btn btn-buy ${canBuy ? '' : 'disabled'}" 
-                        onclick="ShopManager.buySkill('${skill.id}')" ${canBuy ? '' : 'disabled'}>
-                        ¥${skill.price.toLocaleString()}
-                    </button>
+        if (ownedSkills.length === 0) {
+            container.innerHTML = `
+                <div class="no-items-message" style="text-align:center; padding: 40px; color: #888;">
+                    <span class="material-icons" style="font-size: 48px; margin-bottom: 10px;">backpack</span><br>
+                    スキルを所持していません。<br>
+                    ガチャでスキルを獲得しましょう！
+                </div>
             `;
+        } else {
+            ownedSkills.forEach(skill => {
+                const ownedCount = GameState.getSkillCount(skill.id);
+                const equippedCount = GameState.getEquippedSkillCount(skill.id);
 
-            // 装備/解除ボタン
-            if (ownedCount > 0) {
+                // 装備可能か: 所持数 > 装備数 かつ スロットに空きがある
+                const canEquip = (ownedCount > equippedCount) &&
+                    (GameState.equippedSkills.length < GameState.getSkillSlots());
+
+                const item = document.createElement('div');
+                item.className = `shop-item ${equippedCount > 0 ? 'equipped' : ''}`;
+
+                let actionHtml = '';
+
                 // 装備ボタン
                 actionHtml += `
-                    <button class="btn btn-equip ${canEquip ? '' : 'disabled'}" 
-                        onclick="ShopManager.equipSkill('${skill.id}')" ${canEquip ? '' : 'disabled'}>
-                        装備
-                    </button>
+                    <div class="skill-actions">
+                        <button class="btn btn-equip ${canEquip ? '' : 'disabled'}" 
+                            onclick="ShopManager.equipSkill('${skill.id}')" ${canEquip ? '' : 'disabled'}>
+                            装備
+                        </button>
                 `;
 
                 // 解除ボタン
@@ -741,26 +744,27 @@ const ShopManager = {
                         </button>
                     `;
                 }
-            }
 
-            actionHtml += '</div>';
+                actionHtml += '</div>';
 
-            item.innerHTML = `
-                <div class="item-info">
-                    <div class="item-name">
-                        ${skill.name} 
-                        <span class="skill-count">x${ownedCount}</span>
-                        ${equippedCount > 0 ? `<span class="equipped-badge">装備中:${equippedCount}</span>` : ''}
+                item.innerHTML = `
+                    <div class="item-info">
+                        <div class="item-name">
+                            ${skill.name} 
+                            <span class="skill-count">所持: ${ownedCount}</span>
+                            ${equippedCount > 0 ? `<span class="equipped-badge">装備中:${equippedCount}</span>` : ''}
+                        </div>
+                        <div class="item-desc">${skill.description}</div>
+                        <div class="item-tier">Tier ${skill.tier}</div>
                     </div>
-                    <div class="item-desc">${skill.description}</div>
-                </div>
-                <div class="item-action-container">
-                    ${actionHtml}
-                </div>
-            `;
+                    <div class="item-action-container">
+                        ${actionHtml}
+                    </div>
+                `;
 
-            container.appendChild(item);
-        });
+                container.appendChild(item);
+            });
+        }
 
         // スキルスロット情報
         this.renderSkillSlotInfo();

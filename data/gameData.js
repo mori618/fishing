@@ -744,6 +744,58 @@ const SKILLS = [
         effect: { type: 'perfect_catch', value: 1.0 },
         price: 100000,
         tier: 3
+    },
+
+    // 船乗りの勘 (Sailor's Intuition) - 船イベント確率アップ
+    {
+        id: 'sailor_intuition_1',
+        name: '船乗りの勘 I',
+        description: 'ボートイベント出現率 +5%',
+        effect: { type: 'boat_event_boost', value: 0.05 },
+        price: 2000,
+        tier: 1
+    },
+    {
+        id: 'sailor_intuition_2',
+        name: '船乗りの勘 II',
+        description: 'ボートイベント出現率 +10%',
+        effect: { type: 'boat_event_boost', value: 0.10 },
+        price: 8000,
+        tier: 2
+    },
+    {
+        id: 'sailor_intuition_3',
+        name: '船乗りの勘 III',
+        description: 'ボートイベント出現率 +15%',
+        effect: { type: 'boat_event_boost', value: 0.15 },
+        price: 25000,
+        tier: 3
+    },
+
+    // バードウォッチャー (Bird Watcher) - 鳥イベント確率アップ
+    {
+        id: 'bird_watcher_1',
+        name: 'バードウォッチャー I',
+        description: '鳥イベント出現率 +5%',
+        effect: { type: 'bird_event_boost', value: 0.05 },
+        price: 2000,
+        tier: 1
+    },
+    {
+        id: 'bird_watcher_2',
+        name: 'バードウォッチャー II',
+        description: '鳥イベント出現率 +10%',
+        effect: { type: 'bird_event_boost', value: 0.10 },
+        price: 8000,
+        tier: 2
+    },
+    {
+        id: 'bird_watcher_3',
+        name: 'バードウォッチャー III',
+        description: '鳥イベント出現率 +15%',
+        effect: { type: 'bird_event_boost', value: 0.15 },
+        price: 25000,
+        tier: 3
     }
 ];
 
@@ -802,45 +854,89 @@ const BAITS = [
 // スキン（着せ替え）データ
 // ========================================
 const SKINS = [
+    // ロッドアンロック系 (Shop/Unlock)
     {
         id: 'skin_default',
         name: 'ノーマル',
-        rodColor: '#8B4513', // 木の色
-        bobberColor: '#ff0000', // 赤
-        rodId: 'wooden_rod', // 解放条件（初期）
-        description: '標準的な釣竿とウキのセット'
+        rodColor: '#8B4513',
+        bobberColor: '#ff0000',
+        rodId: 'wooden_rod',
+        description: '標準的な釣竿とウキのセット',
+        tier: 1
     },
     {
         id: 'skin_bamboo',
         name: 'バンブー',
-        rodColor: '#6B8E23', // オリーブドラブ
-        bobberColor: '#ADFF2F', // 黄緑
+        rodColor: '#6B8E23',
+        bobberColor: '#ADFF2F',
         rodId: 'bamboo_rod',
-        description: '自然を感じる竹の色合い'
+        description: '自然を感じる竹の色合い',
+        tier: 1
     },
     {
         id: 'skin_carbon',
         name: 'カーボン',
-        rodColor: '#2F4F4F', // ダークスレートグレー
-        bobberColor: '#00CED1', // ダークターコイズ
+        rodColor: '#2F4F4F',
+        bobberColor: '#00CED1',
         rodId: 'carbon_rod',
-        description: 'クールな黒と未来的な青'
+        description: 'クールな黒と未来的な青',
+        tier: 2
     },
     {
         id: 'skin_titanium',
         name: 'チタン',
-        rodColor: '#C0C0C0', // シルバー
-        bobberColor: '#FFD700', // ゴールド
+        rodColor: '#C0C0C0',
+        bobberColor: '#FFD700',
         rodId: 'titanium_rod',
-        description: '高級感あふれる金属光沢'
+        description: '高級感あふれる金属光沢',
+        tier: 3
     },
     {
         id: 'skin_legendary',
         name: 'レジェンド',
-        rodColor: '#800080', // 紫
-        bobberColor: '#FF00FF', // マゼンタ
+        rodColor: '#800080',
+        bobberColor: '#FF00FF',
         rodId: 'legendary_rod',
-        description: '伝説の釣り人に相応しい神秘的な色'
+        description: '伝説の釣り人に相応しい神秘的な色',
+        tier: 3
+    },
+
+    // ガチャ限定スキン
+    {
+        id: 'skin_neon',
+        name: 'ネオンライト',
+        rodColor: '#00ff00',
+        bobberColor: '#ff00ff',
+        description: '夜に輝くネオンカラー',
+        tier: 2,
+        isGachaExclusive: true
+    },
+    {
+        id: 'skin_gold_rush',
+        name: 'ゴールドラッシュ',
+        rodColor: '#FFD700',
+        bobberColor: '#DAA520',
+        description: '全身が黄金に輝く成金仕様',
+        tier: 3,
+        isGachaExclusive: true
+    },
+    {
+        id: 'skin_void',
+        name: 'ヴォイド',
+        rodColor: '#000000',
+        bobberColor: '#4B0082',
+        description: '光を吸収する漆黒のロッド',
+        tier: 3,
+        isGachaExclusive: true
+    },
+    {
+        id: 'skin_cherry',
+        name: '桜まつり',
+        rodColor: '#FFB7C5',
+        bobberColor: '#FF69B4',
+        description: '春を感じさせる桜色',
+        tier: 1,
+        isGachaExclusive: true
     }
 ];
 // ========================================
@@ -991,30 +1087,52 @@ const SKIES = [
     {
         id: 'sky_sunset',
         name: '夕焼け',
-        price: 1500,
-        description: '心落ち着くオレンジ色の空',
-        colors: ['#ea580c', '#fb923c']
+        price: 5000,
+        colors: ['#ff7e5f', '#feb47b'],
+        description: 'ロマンチックな夕暮れ',
+        tier: 2
     },
     {
         id: 'sky_night',
         name: '星空',
-        price: 3000,
-        description: '静寂に包まれた夜の空',
-        colors: ['#0f172a', '#312e81']
-    },
-    {
-        id: 'sky_golden',
-        name: '黄金の空',
-        price: 10000,
-        description: '神々しい輝きを放つ空',
-        colors: ['#ca8a04', '#facc15']
+        price: 15000,
+        colors: ['#0f2027', '#203a43'],
+        description: '静寂に包まれた夜',
+        tier: 2
     },
     {
         id: 'sky_aurora',
         name: 'オーロラ',
-        price: 25000,
+        price: 50000,
+        colors: ['#1e1b4b', '#22d3ee'],
         description: '幻想的な北国の空',
-        colors: ['#1e1b4b', '#22d3ee']
+        tier: 3
+    },
+
+    // ガチャ限定
+    {
+        id: 'sky_galaxy',
+        name: '銀河',
+        colors: ['#2c3e50', '#4ca1af'],
+        description: '宇宙の広がりを感じる',
+        tier: 3,
+        isGachaExclusive: true
+    },
+    {
+        id: 'sky_storm',
+        name: '嵐',
+        colors: ['#373B44', '#4286f4'],
+        description: '荒れ狂う嵐の空',
+        tier: 2,
+        isGachaExclusive: true
+    },
+    {
+        id: 'sky_cherry',
+        name: '桜空',
+        colors: ['#ffe259', '#ffa751'],
+        description: '舞い散る花びら',
+        tier: 1,
+        isGachaExclusive: true
     }
 ];
 

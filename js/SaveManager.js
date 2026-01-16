@@ -61,7 +61,8 @@ const SaveManager = {
                 },
                 rod: {
                     rankIndex: gameState.rodRankIndex,
-                    stars: gameState.rodStars,
+                    rodStarLevels: { ...gameState.rodStarLevels }, // Save per-rod stars
+                    stars: gameState.rodStars, // Backward compatibility
                     equippedSkills: [...gameState.equippedSkills]
                 },
                 inventory: [...gameState.inventory],
