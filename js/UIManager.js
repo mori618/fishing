@@ -58,7 +58,7 @@ const UIManager = {
             }
         }
 
-        // デバッグツールバー作成
+        /* // デバッグツールバー作成
         // 既存ボタン/ツールバーがあれば削除
         const existingBtn = document.getElementById('debug-money-btn');
         if (existingBtn) existingBtn.remove();
@@ -131,7 +131,7 @@ const UIManager = {
             this.showMessage(`Type: ${GameState.fever.type}`);
         }, 'rgba(100, 0, 200, 0.8)'));
 
-        document.body.appendChild(toolbar);
+        document.body.appendChild(toolbar); */
     },
 
     // ========================================

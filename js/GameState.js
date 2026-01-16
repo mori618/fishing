@@ -160,6 +160,15 @@ const GameState = {
             }
         }
 
+        // ========================================
+        // フィーバーボーナス (月: お魚フィーバー)
+        // ========================================
+        if (this.fever.isActive && this.fever.type === 'moon') {
+            const feverBonus = 1.2; // 1.2倍 (20% UP)
+            power = Math.floor(power * feverBonus);
+            console.log(`🔥 お魚フィーバー効果: パワー 1.2倍! -> ${power}`);
+        }
+
         return power;
     },
 
