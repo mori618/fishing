@@ -17,6 +17,11 @@ const GameState = {
     equippedSkills: [],
 
     // ========================================
+    // イベント状態
+    // ========================================
+    highTierGuaranteed: false, // 鳥イベント用：次回上位魚確定フラグ
+
+    // ========================================
     // インベントリ（釣った魚）
     // ========================================
     inventory: [],
@@ -34,6 +39,8 @@ const GameState = {
     selectedSkin: 'skin_default',
     skillInventory: {}, // IDごとの所持数 { "power_up_1": 3 }
     // unlockedSkills: [], // 廃止予定 (移行用コードで処理)
+    unlockedSkies: ['sky_default'],
+    selectedSky: 'sky_default',
 
     // ========================================
     // 統計情報
@@ -58,6 +65,7 @@ const GameState = {
         if (saveData) {
             // セーブデータから復元
             this.money = saveData.player.money;
+            this.highTierGuaranteed = false; // ロード時はリセット
             // 互換性チェック: 古いデータの場合は移行
             if (saveData.player.baitInventory) {
                 this.baitInventory = { ...saveData.player.baitInventory };
@@ -109,6 +117,8 @@ const GameState = {
             // スキン状態の復元
             this.unlockedSkins = saveData.unlocked.skins || ['skin_default'];
             this.selectedSkin = saveData.player.selectedSkin || 'skin_default';
+            this.unlockedSkies = saveData.unlocked.skies || ['sky_default'];
+            this.selectedSky = saveData.player.selectedSky || 'sky_default';
         } else {
             // 新規ゲーム
             const defaultData = SaveManager.getDefaultData();
@@ -126,10 +136,20 @@ const GameState = {
             // 初期スキン
             this.unlockedSkins = ['skin_default'];
             this.selectedSkin = 'skin_default';
+            this.unlockedSkies = ['sky_default'];
+            this.selectedSky = 'sky_default';
         }
 
 
         console.log('🎮 ゲーム状態を初期化しました');
+    },
+
+    // ========================================
+    // 上位魚確定フラグの設定
+    // ========================================
+    setHighTierGuaranteed(value) {
+        this.highTierGuaranteed = value;
+        console.log(`🦅 上位魚確定フラグ: ${value}`);
     },
 
     // ========================================
@@ -499,6 +519,50 @@ const GameState = {
         // オートセーブ
         SaveManager.save(this);
 
+        return true;
+    },
+
+    // ========================================
+    // 現在の空（背景）を取得
+    // ========================================
+    getCurrentSky() {
+        if (!this.selectedSky) return GAME_DATA.SKIES[0];
+        return GAME_DATA.SKIES.find(s => s.id === this.selectedSky) || GAME_DATA.SKIES[0];
+    },
+
+    // ========================================
+    // 空（背景）の購入
+    // ========================================
+    buySky(skyId) {
+        const sky = GAME_DATA.SKIES.find(s => s.id === skyId);
+        if (!sky || this.money < sky.price) {
+            return false;
+        }
+
+        // 既にアンロック済みならスキップ
+        if (this.unlockedSkies.includes(skyId)) {
+            return false;
+        }
+
+        this.money -= sky.price;
+        this.unlockedSkies.push(skyId);
+
+        // オートセーブ
+        SaveManager.save(this);
+
+        return true;
+    },
+
+    // ========================================
+    // 空（背景）の装備
+    // ========================================
+    equipSky(skyId) {
+        if (!this.unlockedSkies.includes(skyId)) {
+            return false;
+        }
+
+        this.selectedSky = skyId;
+        SaveManager.save(this);
         return true;
     },
 

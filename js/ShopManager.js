@@ -7,6 +7,7 @@ const ShopManager = {
     // ========================================
     currentCategory: 'rods',  // rods, skills, baits
     currentTab: 'skill',      // skill, gacha
+    currentStyleTab: 'gear',  // gear, sky
     recycleSelectedSkills: [], // リサイクル用に選択されたスキルのIDリスト
 
     // ========================================
@@ -22,6 +23,14 @@ const ShopManager = {
     // ========================================
     switchTab(tab) {
         this.currentTab = tab;
+        this.renderShop();
+    },
+
+    // ========================================
+    // スタイルタブ切り替え (Gear / Sky)
+    // ========================================
+    switchStyleTab(tab) {
+        this.currentStyleTab = tab;
         this.renderShop();
     },
 
@@ -56,7 +65,13 @@ const ShopManager = {
                 this.renderBaitShop();
                 break;
             case 'skins':
-                this.renderSkinShop();
+                if (this.currentStyleTab === 'sky') {
+                    this.renderSkyShop(container);
+                } else {
+                    this.renderSkinShop(container);
+                }
+                // サブタブを描画（最上部に挿入）
+                this.renderStyleTabs(container);
                 break;
         }
     },
@@ -64,8 +79,8 @@ const ShopManager = {
     // ========================================
     // スキン（着せ替え）ショップ
     // ========================================
-    renderSkinShop() {
-        const container = document.getElementById('shop-items');
+    renderSkinShop(container) {
+        container = container || document.getElementById('shop-items');
         container.innerHTML = '';
 
         GAME_DATA.SKINS.forEach(skin => {
@@ -148,6 +163,102 @@ const ShopManager = {
         `;
     },
 
+    // ========================================
+    // 空（背景）ショップ
+    // ========================================
+    renderSkyShop(container) {
+        container = container || document.getElementById('shop-items');
+        container.innerHTML = '';
+
+        GAME_DATA.SKIES.forEach(sky => {
+            const isUnlocked = GameState.unlockedSkies.includes(sky.id);
+            const isEquipped = GameState.selectedSky === sky.id;
+            const canBuy = GameState.money >= sky.price;
+
+            const item = document.createElement('div');
+            item.className = `shop-item ${isEquipped ? 'equipped' : ''} ${!isUnlocked && !canBuy ? 'locked' : ''}`;
+
+            // 背景プレビュー用のスタイル
+            const gradient = `linear-gradient(180deg, ${sky.colors[0]} 0%, ${sky.colors[1]} 100%)`;
+
+            let actionHtml = '';
+
+            if (isUnlocked) {
+                if (isEquipped) {
+                    actionHtml = '<span class="status equipped">装備中</span>';
+                } else {
+                    actionHtml = `
+                        <button class="btn btn-equip" onclick="ShopManager.equipSky('${sky.id}')">
+                            装備
+                        </button>
+                    `;
+                }
+            } else {
+                actionHtml = `
+                    <button class="btn btn-buy ${canBuy ? '' : 'disabled'}" 
+                        onclick="ShopManager.buySky('${sky.id}')" ${canBuy ? '' : 'disabled'}>
+                        ¥${sky.price.toLocaleString()}
+                    </button>
+                `;
+            }
+
+            item.innerHTML = `
+                <div class="item-info">
+                    <div class="item-name">${sky.name}</div>
+                    <div class="item-desc">${sky.description}</div>
+                    <div class="sky-preview" style="margin-top: 8px; width: 100%; height: 40px; background: ${gradient}; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2);"></div>
+                </div>
+                <div class="item-action">
+                    ${actionHtml}
+                </div>
+            `;
+
+            container.appendChild(item);
+        });
+
+        // プレビュー情報（現在の空）
+        this.renderSkyInfo();
+    },
+
+    // 現在の空情報
+    renderSkyInfo() {
+        const container = document.getElementById('upgrade-section');
+        if (!container) return;
+
+        const currentSky = GameState.getCurrentSky();
+        const gradient = `linear-gradient(180deg, ${currentSky.colors[0]} 0%, ${currentSky.colors[1]} 100%)`;
+
+        container.innerHTML = `
+            <h3>現在の空</h3>
+            <div class="sky-preview" style="margin: 10px auto; width: 80%; height: 60px; background: ${gradient}; border-radius: 12px; border: 2px solid rgba(255,255,255,0.3); box-shadow: 0 4px 12px rgba(0,0,0,0.3);"></div>
+            <div class="item-desc" style="text-align:center;">
+                ${currentSky.name}: ${currentSky.description}
+            </div>
+        `;
+    },
+
+    // 空購入
+    buySky(skyId) {
+        const sky = GAME_DATA.SKIES.find(s => s.id === skyId);
+        if (GameState.buySky(skyId)) {
+            UIManager.showMessage(`${sky.name}を購入しました！`);
+            this.renderShop(); // 再描画
+            UIManager.updateMoney();
+        } else {
+            UIManager.showMessage('お金が足りません！');
+        }
+    },
+
+    // 空装備
+    equipSky(skyId) {
+        const sky = GAME_DATA.SKIES.find(s => s.id === skyId);
+        if (GameState.equipSky(skyId)) {
+            UIManager.showMessage(`${sky.name}に変更しました！`);
+            this.renderShop();
+            UIManager.updateSkyVisuals(); // 背景即時更新
+        }
+    },
+
     // スキン装備
     equipSkin(skinId) {
         if (GameState.equipSkin(skinId)) {
@@ -160,6 +271,26 @@ const ShopManager = {
                 UIManager.updateRodView('idle');
             }
         }
+    },
+
+    // ========================================
+    // スタイルタブ描画 helper
+    // ========================================
+    renderStyleTabs(container) {
+        const isGear = this.currentStyleTab === 'gear';
+        // タブHTMLを生成
+        const html = `
+            <div class="shop-tabs sub-tabs" style="margin-bottom: 20px; border-bottom: none; justify-content: center;">
+                <button class="shop-tab ${isGear ? 'active' : ''}" onclick="ShopManager.switchStyleTab('gear')">
+                    <span class="material-icons">fishing</span> 道具
+                </button>
+                <button class="shop-tab ${!isGear ? 'active' : ''}" onclick="ShopManager.switchStyleTab('sky')">
+                    <span class="material-icons">cloud</span> 空
+                </button>
+            </div>
+        `;
+        // containerの先頭に挿入
+        container.innerHTML = html + container.innerHTML;
     },
 
     // ========================================

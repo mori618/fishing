@@ -33,6 +33,7 @@ const UIManager = {
         if (screenId === 'fishing') {
             this.showIdle();
             this.updateStatus();
+            this.updateSkyVisuals();
         } else if (screenId === 'shop') {
             ShopManager.renderShop();
         } else if (screenId === 'encyclopedia') {
@@ -40,9 +41,6 @@ const UIManager = {
         }
     },
 
-    // ========================================
-    // スタート画面
-    // ========================================
     // ========================================
     // スタート画面
     // ========================================
@@ -488,6 +486,40 @@ const UIManager = {
     },
 
     // ========================================
+    // 空のビジュアルを更新
+    // ========================================
+    updateSkyVisuals() {
+        const fishingScreen = document.getElementById('fishing-screen');
+        if (!fishingScreen) return;
+
+        const currentSky = GameState.getCurrentSky();
+        if (!currentSky) return;
+
+        // Colors are top, bottom of the sky part.
+        // The sky part is roughly 0% to 35% of the screen.
+        // The original CSS was: linear-gradient(180deg, #87CEEB 0%, #3b82f6 30%, #1e3a8a 100%)
+        // We want to replace the top part (0-30%) with our sky gradient, and keep the ocean part (30-100%).
+
+        // Ocean colors (fixed for now, matching original or close to it)
+        // Original: #3b82f6 at 30%, #1e3a8a at 100%
+        // We will construct a multi-stop gradient.
+
+        const skyTop = currentSky.colors[0];
+        const skyBottom = currentSky.colors[1];
+
+        // Construct the new gradient
+        // 0% -> skyTop
+        // 30% -> skyBottom (Horizon)
+        // 30% -> #3b82f6 (Ocean Surface) - slightly hard transition or smooth? 
+        // Original was #87CEEB 0%, #3b82f6 30%. It was a smooth transition from sky to light blue ocean.
+        // To keep the sky distinct but connected:
+
+        const newGradient = `linear-gradient(180deg, ${skyTop} 0%, ${skyBottom} 30%, #1e3a8a 100%)`;
+
+        fishingScreen.style.background = newGradient;
+    },
+
+    // ========================================
     // ガチャ結果表示
     // ========================================
     showGachaResult(items, onClose) {
@@ -762,6 +794,82 @@ const UIManager = {
                 }
             });
         });
+    },
+
+    // ========================================
+    // ボート通過イベント表示
+    // ========================================
+    showBoatEvent(callback) {
+        const fishingArea = document.getElementById('fishing-screen');
+        if (!fishingArea) return;
+
+        // コンテナ取得または作成
+        let container = fishingArea.querySelector('.event-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'event-container';
+            fishingArea.insertBefore(container, fishingArea.firstChild); // 背景の手前
+        }
+
+        // ボート要素
+        const boat = document.createElement('div');
+        boat.className = 'event-boat';
+        boat.innerHTML = '<span class="material-icons">sailing</span>';
+        container.appendChild(boat);
+
+        // クリーンアップ
+        setTimeout(() => {
+            boat.remove();
+            if (callback) callback();
+        }, 20000); // アニメーション時間に合わせて削除
+    },
+
+    // ========================================
+    // 鳥通過イベント表示
+    // ========================================
+    showBirdEvent(callback) {
+        const fishingArea = document.getElementById('fishing-screen');
+        if (!fishingArea) return;
+
+        // コンテナ取得または作成
+        let container = fishingArea.querySelector('.event-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'event-container';
+            fishingArea.insertBefore(container, fishingArea.firstChild);
+        }
+
+        // 鳥要素
+        const bird = document.createElement('div');
+        bird.className = 'event-bird';
+        bird.innerHTML = '<span class="material-icons">flutter_dash</span>';
+        container.appendChild(bird);
+
+        // クリーンアップ
+        setTimeout(() => {
+            bird.remove();
+            if (callback) callback();
+        }, 12000);
+    },
+
+    // ========================================
+    // イベントメッセージ表示
+    // ========================================
+    showEventMessage(text, icon = 'info') {
+        const fishingArea = document.getElementById('fishing-screen');
+        if (!fishingArea) return;
+
+        const msg = document.createElement('div');
+        msg.className = 'event-message';
+        msg.innerHTML = `
+            <span class="material-icons">${icon}</span>
+            <span>${text}</span>
+        `;
+        fishingArea.appendChild(msg);
+
+        setTimeout(() => {
+            msg.remove();
+        }, 4000);
     },
 
     // ========================================

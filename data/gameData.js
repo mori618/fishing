@@ -976,6 +976,48 @@ const TREASURE_CONFIG = {
     }
 };
 
+
+// ========================================
+// 空（背景）データ
+// ========================================
+const SKIES = [
+    {
+        id: 'sky_default',
+        name: '青空',
+        price: 0,
+        description: 'いつもの爽やかな青空',
+        colors: ['#87CEEB', '#7dd3fc']
+    },
+    {
+        id: 'sky_sunset',
+        name: '夕焼け',
+        price: 1500,
+        description: '心落ち着くオレンジ色の空',
+        colors: ['#ea580c', '#fb923c']
+    },
+    {
+        id: 'sky_night',
+        name: '星空',
+        price: 3000,
+        description: '静寂に包まれた夜の空',
+        colors: ['#0f172a', '#312e81']
+    },
+    {
+        id: 'sky_golden',
+        name: '黄金の空',
+        price: 10000,
+        description: '神々しい輝きを放つ空',
+        colors: ['#ca8a04', '#facc15']
+    },
+    {
+        id: 'sky_aurora',
+        name: 'オーロラ',
+        price: 25000,
+        description: '幻想的な北国の空',
+        colors: ['#1e1b4b', '#22d3ee']
+    }
+];
+
 // エクスポート用（グローバル変数として使用）
 if (typeof window !== 'undefined') {
     window.GAME_DATA = {
@@ -990,6 +1032,7 @@ if (typeof window !== 'undefined') {
         GACHA_CONFIG,
         RECYCLE_RATES,
         TREASURE_CONFIG,
-        SKINS
+        SKINS,
+        SKIES
     };
 }
