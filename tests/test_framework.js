@@ -57,6 +57,28 @@ function expect(actual) {
             if (actual <= number) {
                 throw new Error(`Expected ${actual} to be greater than ${number}`);
             }
+        },
+        toBeDefined() {
+            if (actual === undefined) {
+                throw new Error(`Expected value to be defined`);
+            }
+        },
+        get not() {
+            return {
+                toContain(item) {
+                    if (!Array.isArray(actual)) {
+                        throw new Error(`Expected array but got ${typeof actual}`);
+                    }
+                    if (actual.includes(item)) {
+                        throw new Error(`Expected array NOT to contain ${item}`);
+                    }
+                },
+                toBe(expected) {
+                    if (actual === expected) {
+                        throw new Error(`Expected ${actual} NOT to be ${expected}`);
+                    }
+                }
+            };
         }
     };
 }
@@ -74,12 +96,12 @@ async function run() {
             // but here we are flattening the list for simplicity. 
             // NOTE: A recursive structure would be better for nested describes, 
             // but for this simple implementation, we assume top-level describes only.
-            
+
             // However, to support 'describe' wrapping 'it', we need to run the fn immediately
             // to populate the 'it's. But here 'describe' is just a label in the list?
             // Wait, standard 'describe' runs the callback to register 'it's.
             // Let's refactor slightly to be more standard.
-        } 
+        }
     }
 }
 
@@ -94,7 +116,7 @@ const framework = {
         fn(); // Execute function to register tests
         currentSuite = null;
     },
-    
+
     it: (name, fn) => {
         if (currentSuite) {
             currentSuite.tests.push({ name, fn });
@@ -103,9 +125,9 @@ const framework = {
             globalTests.push({ name: 'Root', tests: [{ name, fn }] });
         }
     },
-    
+
     expect,
-    
+
     runAll: async () => {
         console.log(`${colors.bold}${colors.blue}=== Running Tests ===${colors.reset}\n`);
         let totalPass = 0;
@@ -113,7 +135,7 @@ const framework = {
 
         for (const suite of globalTests) {
             console.log(`${colors.bold}# ${suite.name}${colors.reset}`);
-            
+
             for (const test of suite.tests) {
                 try {
                     await test.fn();
@@ -129,7 +151,7 @@ const framework = {
         }
 
         console.log(`${colors.bold}Result:${colors.reset} ${colors.green}${totalPass} Passed${colors.reset}, ${colors.red}${totalFail} Failed${colors.reset}`);
-        
+
         if (totalFail > 0) process.exit(1);
     }
 };

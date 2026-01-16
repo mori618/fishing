@@ -28,7 +28,8 @@ const SaveManager = {
             unlocked: {
                 rods: [0],          // アンロック済み釣り竿のインデックス
                 skillInventory: {},  // IDごとの所持数 { "power_up_1": 3 }
-                skins: ['skin_default']
+                skins: ['skin_default'],
+                skies: ['sky_default']
             },
             encyclopedia: {},       // 図鑑データ { fishId: { count: 0, hasSpecial: false } }
             statistics: {
@@ -55,7 +56,8 @@ const SaveManager = {
                     baitInventory: { ...gameState.baitInventory },
                     baitInventory: { ...gameState.baitInventory },
                     baitType: gameState.baitType,
-                    selectedSkin: gameState.selectedSkin
+                    selectedSkin: gameState.selectedSkin,
+                    selectedSky: gameState.selectedSky
                 },
                 rod: {
                     rankIndex: gameState.rodRankIndex,
@@ -66,7 +68,8 @@ const SaveManager = {
                 unlocked: {
                     rods: [...gameState.unlockedRods],
                     skillInventory: { ...gameState.skillInventory },
-                    skins: [...gameState.unlockedSkins]
+                    skins: [...gameState.unlockedSkins],
+                    skies: [...gameState.unlockedSkies]
                 },
                 encyclopedia: { ...gameState.encyclopedia },
                 statistics: {
