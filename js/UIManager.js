@@ -163,6 +163,15 @@ const UIManager = {
         if (state) {
             rodView.classList.add(state);
         }
+
+        // スキル色を適用
+        const skin = GameState.getCurrentSkin();
+        const rodShaft = rodView.querySelector('.rod-shaft');
+        if (rodShaft) {
+            rodShaft.style.backgroundColor = skin.rodColor;
+            // 枠線の色も少し暗くして調整（簡易的）
+            rodShaft.style.borderColor = skin.rodColor;
+        }
     },
 
     // ========================================
@@ -188,12 +197,14 @@ const UIManager = {
         const fishingArea = document.getElementById('fishing-area');
         if (!fishingArea) return;
 
+        const skin = GameState.getCurrentSkin();
+
         fishingArea.innerHTML = `
             <div class="waiting-state">
                 <div class="water-surface">
                     <div class="bobber waiting">
                         <div class="bobber-stick"></div>
-                        <div class="bobber-body"></div>
+                        <div class="bobber-body" style="background-color: ${skin.bobberColor}"></div>
                     </div>
                     <div class="ripple"></div>
                 </div>
@@ -210,12 +221,14 @@ const UIManager = {
         const fishingArea = document.getElementById('fishing-area');
         if (!fishingArea) return;
 
+        const skin = GameState.getCurrentSkin();
+
         fishingArea.innerHTML = `
             <div class="nibble-state">
                 <div class="water-surface">
                     <div class="bobber">
                         <div class="bobber-stick"></div>
-                        <div class="bobber-body"></div>
+                        <div class="bobber-body" style="background-color: ${skin.bobberColor}"></div>
                     </div>
                     <div class="ripple active"></div>
                 </div>
@@ -248,12 +261,14 @@ const UIManager = {
         const fishingArea = document.getElementById('fishing-area');
         if (!fishingArea) return;
 
+        const skin = GameState.getCurrentSkin();
+
         fishingArea.innerHTML = `
             <div class="hit-state">
                 <div class="water-surface">
                     <div class="bobber sinking">
                         <div class="bobber-stick"></div>
-                        <div class="bobber-body"></div>
+                        <div class="bobber-body" style="background-color: ${skin.bobberColor}"></div>
                     </div>
                     <div class="splash"></div>
                 </div>

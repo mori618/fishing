@@ -796,8 +796,53 @@ const BAITS = [
     }
 ];
 
+
+
 // ========================================
-// ゲージバトル設定
+// スキン（着せ替え）データ
+// ========================================
+const SKINS = [
+    {
+        id: 'skin_default',
+        name: 'ノーマル',
+        rodColor: '#8B4513', // 木の色
+        bobberColor: '#ff0000', // 赤
+        rodId: 'wooden_rod', // 解放条件（初期）
+        description: '標準的な釣竿とウキのセット'
+    },
+    {
+        id: 'skin_bamboo',
+        name: 'バンブー',
+        rodColor: '#6B8E23', // オリーブドラブ
+        bobberColor: '#ADFF2F', // 黄緑
+        rodId: 'bamboo_rod',
+        description: '自然を感じる竹の色合い'
+    },
+    {
+        id: 'skin_carbon',
+        name: 'カーボン',
+        rodColor: '#2F4F4F', // ダークスレートグレー
+        bobberColor: '#00CED1', // ダークターコイズ
+        rodId: 'carbon_rod',
+        description: 'クールな黒と未来的な青'
+    },
+    {
+        id: 'skin_titanium',
+        name: 'チタン',
+        rodColor: '#C0C0C0', // シルバー
+        bobberColor: '#FFD700', // ゴールド
+        rodId: 'titanium_rod',
+        description: '高級感あふれる金属光沢'
+    },
+    {
+        id: 'skin_legendary',
+        name: 'レジェンド',
+        rodColor: '#800080', // 紫
+        bobberColor: '#FF00FF', // マゼンタ
+        rodId: 'legendary_rod',
+        description: '伝説の釣り人に相応しい神秘的な色'
+    }
+];
 // ========================================
 const GAUGE_CONFIG = {
     // ゲージの基本速度（ピクセル/フレーム）
@@ -944,6 +989,7 @@ if (typeof window !== 'undefined') {
         TITLE_CONFIG,
         GACHA_CONFIG,
         RECYCLE_RATES,
-        TREASURE_CONFIG
+        TREASURE_CONFIG,
+        SKINS
     };
 }

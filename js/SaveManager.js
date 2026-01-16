@@ -15,7 +15,9 @@ const SaveManager = {
             player: {
                 money: 0,
                 baitCount: 0,
-                baitType: null
+                baitCount: 0,
+                baitType: null,
+                selectedSkin: 'skin_default'
             },
             rod: {
                 rankIndex: 0,       // 現在の釣り竿のインデックス
@@ -25,7 +27,8 @@ const SaveManager = {
             inventory: [],          // 持っている魚の配列
             unlocked: {
                 rods: [0],          // アンロック済み釣り竿のインデックス
-                skillInventory: {}  // IDごとの所持数 { "power_up_1": 3 }
+                skillInventory: {},  // IDごとの所持数 { "power_up_1": 3 }
+                skins: ['skin_default']
             },
             encyclopedia: {},       // 図鑑データ { fishId: { count: 0, hasSpecial: false } }
             statistics: {
@@ -50,7 +53,9 @@ const SaveManager = {
                     // baitTypeなど他のプロパティも必要に応じて保存
                     // baitInventoryも保存した方が安全
                     baitInventory: { ...gameState.baitInventory },
-                    baitType: gameState.baitType
+                    baitInventory: { ...gameState.baitInventory },
+                    baitType: gameState.baitType,
+                    selectedSkin: gameState.selectedSkin
                 },
                 rod: {
                     rankIndex: gameState.rodRankIndex,
@@ -60,7 +65,8 @@ const SaveManager = {
                 inventory: [...gameState.inventory],
                 unlocked: {
                     rods: [...gameState.unlockedRods],
-                    skillInventory: { ...gameState.skillInventory }
+                    skillInventory: { ...gameState.skillInventory },
+                    skins: [...gameState.unlockedSkins]
                 },
                 encyclopedia: { ...gameState.encyclopedia },
                 statistics: {

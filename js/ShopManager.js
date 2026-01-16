@@ -55,6 +55,110 @@ const ShopManager = {
             case 'baits':
                 this.renderBaitShop();
                 break;
+            case 'skins':
+                this.renderSkinShop();
+                break;
+        }
+    },
+
+    // ========================================
+    // スキン（着せ替え）ショップ
+    // ========================================
+    renderSkinShop() {
+        const container = document.getElementById('shop-items');
+        container.innerHTML = '';
+
+        GAME_DATA.SKINS.forEach(skin => {
+            const isUnlocked = GameState.unlockedSkins.includes(skin.id);
+            const isEquipped = GameState.selectedSkin === skin.id;
+
+            const item = document.createElement('div');
+            item.className = `shop-item ${isEquipped ? 'equipped' : ''} ${!isUnlocked ? 'locked' : ''}`;
+
+            let actionHtml = '';
+
+            if (isUnlocked) {
+                if (isEquipped) {
+                    actionHtml = '<span class="status equipped">装備中</span>';
+                } else {
+                    actionHtml = `
+                        <button class="btn btn-equip" onclick="ShopManager.equipSkin('${skin.id}')">
+                            装備
+                        </button>
+                    `;
+                }
+            } else {
+                // ロック中（解放条件を表示）
+                // ロッド名を取得
+                // rodIdからロッド名を探す
+                const rod = GAME_DATA.RODS.find(r => r.id === skin.rodId);
+                const rodName = rod ? rod.name : 'Unknown Rod';
+                actionHtml = `<span class="status locked-reason"><span class="material-icons" style="font-size:14px;vertical-align:middle;">lock</span> ${rodName}で解放</span>`;
+            }
+
+            item.innerHTML = `
+                <div class="item-info">
+                    <div class="item-name">${skin.name}</div>
+                    <div class="item-desc">${skin.description}</div>
+                    <div class="item-stats" style="display:flex; gap:10px; align-items:center; margin-top:5px;">
+                        <div style="display:flex; align-items:center; gap:4px;">
+                            <span style="font-size:10px; color:#aaa;">ROD</span>
+                            <span style="display:inline-block; width:16px; height:16px; background-color:${skin.rodColor}; border-radius:4px; border:1px solid #555;"></span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:4px;">
+                            <span style="font-size:10px; color:#aaa;">BOBBER</span>
+                            <span style="display:inline-block; width:12px; height:12px; background-color:${skin.bobberColor}; border-radius:50%; border:1px solid #555;"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="item-action">
+                    ${actionHtml}
+                </div>
+            `;
+
+            container.appendChild(item);
+        });
+
+        // プレビュー情報（アップグレードセクションを再利用して現在の装備を表示）
+        this.renderSkinInfo();
+    },
+
+    // 現在のスキン情報
+    renderSkinInfo() {
+        const container = document.getElementById('upgrade-section');
+        if (!container) return;
+
+        const currentSkin = GameState.getCurrentSkin();
+
+        container.innerHTML = `
+            <h3>現在のスタイル</h3>
+            <div class="skin-preview" style="display:flex; gap:20px; align-items:center; justify-content:center; padding:10px;">
+                <div style="text-align:center;">
+                    <div style="width:8px; height:60px; background-color:${currentSkin.rodColor}; margin:0 auto; border:1px solid rgba(255,255,255,0.3);"></div>
+                    <span style="font-size:10px; display:block; margin-top:4px;">ROD</span>
+                </div>
+                <div style="text-align:center;">
+                    <div style="width:20px; height:20px; background-color:${currentSkin.bobberColor}; border-radius:50%; margin:0 auto; border:2px solid white;"></div>
+                    <span style="font-size:10px; display:block; margin-top:4px;">BOBBER</span>
+                </div>
+            </div>
+            <div class="item-desc" style="text-align:center; margin-top:10px;">
+                ${currentSkin.name}: ${currentSkin.description}
+            </div>
+        `;
+    },
+
+    // スキン装備
+    equipSkin(skinId) {
+        if (GameState.equipSkin(skinId)) {
+            const skin = GAME_DATA.SKINS.find(s => s.id === skinId);
+            UIManager.showMessage(`${skin.name}に着せ替えました！`);
+            this.renderShop();
+
+            // 待機画面のロッドも更新が必要（アイドル状態なら）
+            if (UIManager.currentScreen === 'fishing') {
+                UIManager.updateRodView('idle');
+            }
         }
     },
 

@@ -30,6 +30,8 @@ const GameState = {
     // アンロック状態
     // ========================================
     unlockedRods: [0],
+    unlockedSkins: ['skin_default'],
+    selectedSkin: 'skin_default',
     skillInventory: {}, // IDごとの所持数 { "power_up_1": 3 }
     // unlockedSkills: [], // 廃止予定 (移行用コードで処理)
 
@@ -103,6 +105,10 @@ const GameState = {
 
             // 図鑑データを復元
             this.encyclopedia = saveData.encyclopedia ? { ...saveData.encyclopedia } : {};
+
+            // スキン状態の復元
+            this.unlockedSkins = saveData.unlocked.skins || ['skin_default'];
+            this.selectedSkin = saveData.player.selectedSkin || 'skin_default';
         } else {
             // 新規ゲーム
             const defaultData = SaveManager.getDefaultData();
@@ -117,7 +123,11 @@ const GameState = {
                 'bait_s': 0
             };
             this.baitType = 'bait_d';
+            // 初期スキン
+            this.unlockedSkins = ['skin_default'];
+            this.selectedSkin = 'skin_default';
         }
+
 
         console.log('🎮 ゲーム状態を初期化しました');
     },
@@ -474,6 +484,9 @@ const GameState = {
         this.money -= rod.price;
         this.unlockedRods.push(rodIndex);
 
+        // スキンをアンロック
+        this.unlockSkinByRodId(rod.id);
+
         // オートセーブ
         SaveManager.save(this);
 
@@ -795,6 +808,36 @@ const GameState = {
         // オートセーブ
         SaveManager.save(this);
         return true;
+    },
+
+    // ========================================
+    // スキン関連
+    // ========================================
+
+    // 現在のスキン情報を取得
+    getCurrentSkin() {
+        return GAME_DATA.SKINS.find(s => s.id === this.selectedSkin) || GAME_DATA.SKINS[0];
+    },
+
+    // スキンを装備
+    equipSkin(skinId) {
+        if (!this.unlockedSkins.includes(skinId)) {
+            return false;
+        }
+        this.selectedSkin = skinId;
+        SaveManager.save(this);
+        return true;
+    },
+
+    // ロッドIDに関連するスキンをアンロック
+    unlockSkinByRodId(rodId) {
+        const skin = GAME_DATA.SKINS.find(s => s.rodId === rodId);
+        if (skin && !this.unlockedSkins.includes(skin.id)) {
+            this.unlockedSkins.push(skin.id);
+            console.log(`✨ スキン解放: ${skin.name}`);
+            return true;
+        }
+        return false;
     },
 
     // ========================================

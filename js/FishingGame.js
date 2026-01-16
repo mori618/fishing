@@ -24,6 +24,7 @@ const FishingGame = {
         this.state = 'idle';
         this.currentFish = null;
         this.isGachaMode = false;
+        this.battlePhase = 1; // 1 or 2
         console.log('🎣 釣りゲームを初期化しました');
     },
 
@@ -453,11 +454,15 @@ const FishingGame = {
 
         console.log(`⚡ パワー判定: プレイヤー ${playerPower} vs 魚 ${fishPower} (${this.currentFish.name})`);
 
-        if (playerPower >= fishPower) {
+        // Aランク以上は強制的にバトル発生
+        const isForcedBattle = ['A', 'S', 'SS'].includes(this.currentFish.rarity);
+
+        if (playerPower >= fishPower && !isForcedBattle) {
             // 即座に釣り上げ成功
             this.catchSuccess();
         } else {
             // ゲージバトルへ移行
+            this.battlePhase = 1;
             this.startGaugeBattle(playerPower, fishPower);
         }
     },
@@ -469,7 +474,9 @@ const FishingGame = {
         this.state = 'gaugeBattle';
 
         // パワー差に基づいてゲージ設定を計算
-        const powerRatio = playerPower / fishPower;  // 0〜1未満
+        // 強制バトルの場合、プレイヤーの方が強い(1.0以上)可能性があるため、最大1.0に制限
+        const rawRatio = playerPower / fishPower;
+        const powerRatio = Math.min(0.99, rawRatio);
 
         // 速度：パワー差が小さいほど遅い
         const config = GAME_DATA.GAUGE_CONFIG;
@@ -558,13 +565,34 @@ const FishingGame = {
         catchRate += GameState.getCatchBonus();
         catchRate = Math.min(1, catchRate);  // 100%が上限
 
+        // SSランクは赤ゲージ必須（それ以外は0%）
+        if (this.currentFish.rarity === 'SS' && zone !== 'red') {
+            console.log('⛔ SSランク制約: 赤ゲージ以外は失敗');
+            catchRate = 0;
+        }
+
         console.log(`🎯 ゾーン: ${zone}, 捕獲率: ${(catchRate * 100).toFixed(1)}%`);
 
         // 少し停止して見せてから結果を表示
         setTimeout(() => {
             this.isProcessing = false;
-            if (Math.random() < catchRate) {
-                this.catchSuccess();
+
+            const isSuccess = Math.random() < catchRate;
+
+            if (isSuccess) {
+                // S, SSランクは2連戦
+                if (['S', 'SS'].includes(this.currentFish.rarity) && this.battlePhase === 1) {
+                    console.log('⚔️ 連戦発生！ Round 2 Start');
+                    this.battlePhase = 2;
+                    UIManager.showMessage('まだまだ！', 1000);
+
+                    // 少し間を置いて2回戦開始
+                    setTimeout(() => {
+                        this.startGaugeBattle(GameState.getTotalPower(), this.currentFish.power);
+                    }, 1000);
+                } else {
+                    this.catchSuccess();
+                }
             } else {
                 this.catchFailed();
             }
