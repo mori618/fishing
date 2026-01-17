@@ -1,13 +1,13 @@
 /* ========================================
-   フィッシング・エボリューション
-   メインスタイルシート
+   繝輔ぅ繝�す繝ｳ繧ｰ繝ｻ繧ｨ繝懊Μ繝･繝ｼ繧ｷ繝ｧ繝ｳ
+   繝｡繧､繝ｳ繧ｹ繧ｿ繧､繝ｫ繧ｷ繝ｼ繝�
    ======================================== */
 
 /* ----------------------------------------
-   CSS変数（テーマ設定）
+   CSS螟画焚�医ユ繝ｼ繝櫁ｨｭ螳夲ｼ�
    ---------------------------------------- */
 :root {
-    /* カラーパレット */
+    /* 繧ｫ繝ｩ繝ｼ繝代Ξ繝�ヨ */
     --primary-color: #0ea5e9;
     --primary-dark: #0284c7;
     --primary-light: #38bdf8;
@@ -16,58 +16,70 @@
     --accent-color: #f59e0b;
     --danger-color: #ef4444;
 
-    /* 海のグラデーション */
+    /* 豬ｷ縺ｮ繧ｰ繝ｩ繝��繧ｷ繝ｧ繝ｳ */
     --ocean-dark: #0c4a6e;
     --ocean-mid: #0369a1;
     --ocean-light: #0ea5e9;
     --ocean-surface: #7dd3fc;
 
-    /* UI色 */
+    /* UI濶ｲ */
     --bg-dark: #0f172a;
     --bg-card: rgba(15, 23, 42, 0.85);
     --text-primary: #f8fafc;
     --text-secondary: #94a3b8;
     --border-color: rgba(148, 163, 184, 0.2);
 
-    /* ランクカラー (新仕様) */
+    /* 繝ｩ繝ｳ繧ｯ繧ｫ繝ｩ繝ｼ (譁ｰ莉墓ｧ�) */
     --rarity-D: #94a3b8;
     --rarity-C: #22c55e;
     --rarity-B: #3b82f6;
     --rarity-A: #a855f7;
     --rarity-S: #f59e0b;
 
-    /* レア度カラー (互換用) */
+    /* 繝ｬ繧｢蠎ｦ繧ｫ繝ｩ繝ｼ (莠呈鋤逕ｨ) */
     --rarity-common: var(--rarity-D);
     --rarity-uncommon: var(--rarity-C);
     --rarity-rare: var(--rarity-B);
     --rarity-epic: var(--rarity-A);
     --rarity-legendary: var(--rarity-S);
 
-    /* フォント */
+    /* 繝輔か繝ｳ繝� */
     --font-main: 'Noto Sans JP', sans-serif;
 
-    /* スペーシング */
+    /* 繧ｹ繝壹�繧ｷ繝ｳ繧ｰ */
     --spacing-xs: 4px;
     --spacing-sm: 8px;
     --spacing-md: 16px;
     --spacing-lg: 24px;
     --spacing-xl: 32px;
 
-    /* ボーダー */
+    /* 繝懊�繝繝ｼ */
     --radius-sm: 8px;
     --radius-md: 12px;
     --radius-lg: 20px;
     --radius-full: 9999px;
 
-    /* シャドウ */
+    /* 繧ｷ繝｣繝峨え */
     --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
     --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
     --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
     --shadow-glow: 0 0 20px rgba(14, 165, 233, 0.5);
+
+    /* 温かみのあるカラーパレット (New UI) */
+    --wood-dark: #5d4037;
+    --wood-medium: #8d6e63;
+    --wood-light: #d7ccc8;
+    --accent-orange: #ffab40;
+    --accent-yellow: #ffd54f;
+    --text-main: #3e2723;
+    --text-light: #efebe9;
+    --bg-glass: rgba(255, 255, 255, 0.15);
+    --shadow-soft: 0 8px 16px rgba(0, 0, 0, 0.3);
+    --border-style: 3px solid #4e342e;
 }
 
 /* ----------------------------------------
-   リセット・ベース
+   繝ｪ繧ｻ繝�ヨ繝ｻ繝吶�繧ｹ
    ---------------------------------------- */
 *,
 *::before,
@@ -91,7 +103,7 @@ body {
 }
 
 /* ----------------------------------------
-   Material Icons スタイル
+   Material Icons 繧ｹ繧ｿ繧､繝ｫ
    ---------------------------------------- */
 .material-icons {
     font-size: inherit;
@@ -108,7 +120,7 @@ body {
     font-size: 48px;
 }
 
-/* 星のスタイル */
+/* 譏溘�繧ｹ繧ｿ繧､繝ｫ */
 .star-filled,
 .rod-stars .material-icons[class*="star"]:not(.star-empty) {
     color: #fbbf24;
@@ -129,10 +141,10 @@ body {
 }
 
 /* ========================================
-   釣り結果オーバーレイ（カードUI）
+   驥｣繧顔ｵ先棡繧ｪ繝ｼ繝舌�繝ｬ繧､�医き繝ｼ繝蔚I��
    ======================================== */
 
-/* オーバーレイを「クリック可能」な見た目にする */
+/* 繧ｪ繝ｼ繝舌�繝ｬ繧､繧偵後け繝ｪ繝�け蜿ｯ閭ｽ縲阪↑隕九◆逶ｮ縺ｫ縺吶ｋ */
 .result-overlay {
     position: absolute;
     top: 0;
@@ -159,7 +171,7 @@ body {
     }
 }
 
-/* カード自体のスタイル */
+/* 繧ｫ繝ｼ繝芽�菴薙�繧ｹ繧ｿ繧､繝ｫ */
 .result-card {
     background: white;
     border-radius: 28px;
@@ -188,7 +200,7 @@ body {
     }
 }
 
-/* カードヘッダー */
+/* 繧ｫ繝ｼ繝峨�繝�ム繝ｼ */
 .card-header {
     font-size: 0.75rem;
     font-weight: bold;
@@ -197,7 +209,7 @@ body {
     margin-bottom: 16px;
 }
 
-/* 結果表示アニメーション */
+/* 邨先棡陦ｨ遉ｺ繧｢繝九Γ繝ｼ繧ｷ繝ｧ繝ｳ */
 .result-animation {
     position: relative;
     display: flex;
@@ -206,7 +218,7 @@ body {
     margin-bottom: 20px;
 }
 
-/* アイコンサークル */
+/* 繧｢繧､繧ｳ繝ｳ繧ｵ繝ｼ繧ｯ繝ｫ */
 .icon-circle {
     position: relative;
     width: 120px;
@@ -220,7 +232,7 @@ body {
     animation: iconPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* レア度別アイコンサークル背景色 */
+/* 繝ｬ繧｢蠎ｦ蛻･繧｢繧､繧ｳ繝ｳ繧ｵ繝ｼ繧ｯ繝ｫ閭梧勹濶ｲ */
 .icon-circle.rarity-D {
     background: linear-gradient(145deg, var(--rarity-D), #64748b);
     box-shadow: 0 10px 40px rgba(148, 163, 184, 0.4);
@@ -276,7 +288,7 @@ body {
     }
 }
 
-/* 結果アイコン */
+/* 邨先棡繧｢繧､繧ｳ繝ｳ */
 .result-icon {
     font-size: 64px;
     color: white;
@@ -286,7 +298,7 @@ body {
     opacity: 0.7;
 }
 
-/* スパークルアイコン */
+/* 繧ｹ繝代�繧ｯ繝ｫ繧｢繧､繧ｳ繝ｳ */
 .sparkle-icon {
     font-size: 32px;
     color: #fbbf24;
@@ -309,7 +321,7 @@ body {
     }
 }
 
-/* 逃げ雲アイコン */
+/* 騾�￡髮ｲ繧｢繧､繧ｳ繝ｳ */
 .escape-cloud {
     font-size: 28px;
     color: rgba(255, 255, 255, 0.5);
@@ -333,7 +345,7 @@ body {
     }
 }
 
-/* レア度グロー効果 */
+/* 繝ｬ繧｢蠎ｦ繧ｰ繝ｭ繝ｼ蜉ｹ譫� */
 .rarity-glow {
     position: absolute;
     width: 100%;
@@ -345,12 +357,12 @@ body {
     z-index: -1;
 }
 
-/* 結果コンテンツ */
+/* 邨先棡繧ｳ繝ｳ繝�Φ繝� */
 .result-content {
     margin-bottom: 16px;
 }
 
-/* レア度バッジ */
+/* 繝ｬ繧｢蠎ｦ繝舌ャ繧ｸ */
 .rarity-badge {
     display: inline-block;
     padding: 4px 16px;
@@ -383,7 +395,7 @@ body {
     background: var(--rarity-S);
 }
 
-/* 魚の名前 */
+/* 鬲壹�蜷榊燕 */
 .result-card .fish-name {
     font-size: 1.5rem;
     font-weight: bold;
@@ -396,7 +408,7 @@ body {
     color: #475569;
 }
 
-/* 統計グリッド */
+/* 邨ｱ險医げ繝ｪ繝�ラ */
 .stats-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -425,19 +437,19 @@ body {
     color: #1e293b;
 }
 
-/* 失敗メッセージ */
+/* 螟ｱ謨励Γ繝�そ繝ｼ繧ｸ */
 .fail-message {
     font-size: 0.95rem;
     color: #64748b;
     line-height: 1.6;
 }
 
-/* 閉じるヒント */
+/* 髢峨§繧九ヲ繝ｳ繝� */
 .tap-hint {
     margin-top: 20px;
     font-size: 0.7rem;
     font-weight: bold;
-    color: #94a3b8;
+    color: #ffffff;
     letter-spacing: 0.1em;
     animation: hintPulse 2s infinite;
 }
@@ -457,7 +469,7 @@ body {
 
 
 /* ----------------------------------------
-   画面ベース
+   逕ｻ髱｢繝吶�繧ｹ
    ---------------------------------------- */
 .screen {
     position: fixed;
@@ -474,7 +486,7 @@ body {
 }
 
 /* ----------------------------------------
-   スタート画面
+   繧ｹ繧ｿ繝ｼ繝育判髱｢
    ---------------------------------------- */
 #start-screen {
     justify-content: center;
@@ -581,7 +593,7 @@ body {
 }
 
 /* ----------------------------------------
-   ボタンスタイル
+   繝懊ち繝ｳ繧ｹ繧ｿ繧､繝ｫ
    ---------------------------------------- */
 .btn-main {
     display: flex;
@@ -654,28 +666,28 @@ body {
 }
 
 /* ----------------------------------------
-   釣り画面
+   驥｣繧顔判髱｢
    ---------------------------------------- */
 #fishing-screen {
     position: relative;
     background: linear-gradient(180deg,
             #87CEEB 0%,
-            /* 空 */
+            /* 遨ｺ */
             #7dd3fc 20%,
-            /* 明るい空 */
+            /* 譏弱ｋ縺ｩｺ */
             #38bdf8 30%,
-            /* 水平線付近 */
+            /* 豌ｴ蟷ｳ邱壻ｻ倩ｿ */
             #0284c7 35%,
-            /* 水面 */
+            /* 豌ｴ髱｢ */
             #0369a1 50%,
-            /* 水中上層 */
+            /* 豌ｴ荳ｭ荳雁ｱ､ */
             #0c4a6e 100%
-            /* 水中深層 */
+            /* 豌ｴ荳ｭ豺ｱ螻､ */
         );
     overflow: hidden;
 }
 
-/* 水面の反射効果 */
+/* 豌ｴ髱｢縺ｮ蜿榊ｰ柑譫 */
 #fishing-screen::before {
     content: '';
     position: absolute;
@@ -690,9 +702,10 @@ body {
             rgba(255, 255, 255, 0.4) 80%,
             transparent 100%);
     z-index: 5;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
 }
 
-/* 水中のパーティクル効果 */
+/* 豌ｴ荳ｭ縺ｮ繝代繝ぅ繧ｯ繝ｫ蜉ｹ譫/* 水中のパーティクル効果 */
 #fishing-screen::after {
     content: '';
     position: absolute;
@@ -706,8 +719,20 @@ body {
     z-index: 1;
 }
 
+/* ゲーム画面風フレーム（新規追加） */
+.fishing-area-frame {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    border-radius: 20px;
+    pointer-events: none;
+    z-index: 90;
+}
+
 /* ----------------------------------------
-   フローティングステータス
+   繝輔Ο繝ｼ繝ぅ繝ｳ繧ｰ繧ｹ繝繧ｿ繧ｹ
    ---------------------------------------- */
 .floating-status {
     position: absolute;
@@ -728,102 +753,177 @@ body {
     align-items: flex-end;
 }
 
-/* ステータスピル（左側） */
+.floating-status-bottom-left {
+    bottom: var(--spacing-md);
+    left: var(--spacing-md);
+    top: auto;
+    /* Override top */
+    align-items: flex-start;
+    flex-direction: column;
+    /* Town -> Bait -> Rod */
+    gap: var(--spacing-md);
+}
+
+/* 繧ｹ繝繧ｿ繧ｹ繝斐Ν亥ｷｦ蛛ｴ/* ステータスピル（左側） - ゲームHUD風 */
+/* ステータスピル（左側） - 木目調 */
 .status-pill {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
-    padding: var(--spacing-sm) var(--spacing-md);
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: var(--radius-full);
+    padding: 8px 20px;
+    background: linear-gradient(135deg, #a1887f 0%, #8d6e63 100%);
+    border: 3px solid #4e342e;
+    border-radius: 50px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.3);
+    min-width: 140px;
+    transition: transform 0.2s ease;
+    color: #efebe9;
 }
 
+.status-pill:hover {
+    transform: translateX(5px);
+    filter: brightness(1.1);
+}
+
+/* 個別の色設定（アイコンとテキストに適用） */
+.status-pill:nth-child(1) .status-icon {
+    color: #fbbf24;
+    /* Money Gold */
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.status-pill:nth-child(2) .status-icon {
+    color: #ef4444;
+    /* Power Red */
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.status-pill:nth-child(3) .status-icon {
+    color: #3b82f6;
+    /* Inventory Blue */
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.status-value {
+    font-weight: 700;
+    font-family: var(--font-main);
+    text-shadow: 0 1px 2px rgba(78, 52, 46, 0.5);
+}
+
+
 .status-pill .status-icon {
-    font-size: 18px;
+    font-size: 20px;
+    color: #f8fafc;
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
 }
 
 .status-pill .status-value {
+    font-family: 'Roboto Mono', monospace;
+    /* 数字を見やすく */
     font-weight: 700;
     color: white;
-    font-size: 14px;
+    font-size: 16px;
+    letter-spacing: 0.5px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 /* フローティングボタン（右上） */
 .floating-btn {
-    width: 48px;
-    height: 48px;
+    min-width: 56px;
+    height: 56px;
     display: flex;
+    flex-direction: column;
+    /* アイコンと文字を縦に */
     align-items: center;
     justify-content: center;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: var(--radius-full);
+    background: linear-gradient(135deg, var(--ocean-dark), var(--ocean-mid));
+    border: none;
+    border-radius: 12px;
     cursor: pointer;
     transition: all 0.2s ease;
-    font-size: 20px;
+    font-size: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    z-index: 60;
+    padding: 0 8px;
+    /* 文字用に余白 */
+}
+
+.btn-town {
+    background: linear-gradient(135deg, #059669, #047857);
+    /* 緑系（Townっぽい色） */
+}
+
+.btn-label {
+    font-size: 10px;
+    font-weight: 700;
+    margin-top: -2px;
+    color: white;
 }
 
 .floating-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: scale(1.1);
+    background: var(--primary-color);
+    border-color: white;
+    transform: scale(1.05) rotate(5deg);
+    box-shadow: 0 0 20px var(--primary-light);
 }
 
-/* ステータスカード（右側） */
+/* ステータスカード（右側） - 情報パネル風 */
+/* ステータスカード（右側） - 情報パネル風 */
 .status-card {
-    padding: var(--spacing-sm) var(--spacing-md);
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: var(--radius-md);
+    padding: 8px 12px;
+    background: rgba(15, 23, 42, 0.85);
+    border: none;
+    border-right: 3px solid var(--primary-light);
+    border-radius: 4px;
     text-align: right;
+    min-width: 100px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* 左側のステータスカード用オーバーライド */
+.floating-status-bottom-left .status-card {
+    border-right: none;
+    border-left: 3px solid var(--primary-light);
+    text-align: left;
 }
 
 .status-label {
     font-size: 10px;
-    color: rgba(255, 255, 255, 0.6);
+    color: #94a3b8;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
 }
 
 .status-value-lg {
-    font-size: 16px;
-    font-weight: 700;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 18px;
+    font-weight: 800;
     color: white;
+    text-shadow: 0 0 10px rgba(14, 165, 233, 0.5);
 }
 
-/* 竿バッジ（左下） */
-.rod-badge {
-    position: absolute;
-    bottom: calc(80px + var(--spacing-md));
-    left: var(--spacing-md);
-    z-index: 50;
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-sm) var(--spacing-md);
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: var(--radius-md);
-}
-
+/* 竿バッジ（左下） - フレックスアイテムとして動作するように調整 */
+/* Old rod-badge rule removed */
 .rod-badge .rod-name {
-    font-weight: 600;
-    color: var(--accent-color);
+    font-weight: 700;
+    color: var(--primary-light);
     font-size: 14px;
+    text-shadow: 0 0 5px rgba(14, 165, 233, 0.5);
+    letter-spacing: 1px;
 }
 
 .rod-badge .rod-stars {
     color: var(--accent-color);
-    letter-spacing: 1px;
-    font-size: 12px;
+    letter-spacing: 2px;
+    font-size: 14px;
+    filter: drop-shadow(0 0 2px rgba(251, 191, 36, 0.5));
 }
 
+
+
 /* ----------------------------------------
-   1人称視点の釣り竿
+   1莠ｺ遘ｰ隕也せ縺ｮ驥｣繧顔ｫｿ
    ---------------------------------------- */
 .fishing-rod-view {
     position: absolute;
@@ -868,7 +968,7 @@ body {
 }
 
 /* ----------------------------------------
-   底部ナビゲーション
+   蠎暮Κ繝翫ン繧ｲ繝ｼ繧ｷ繝ｧ繝ｳ
    ---------------------------------------- */
 .bottom-nav {
     position: absolute;
@@ -917,7 +1017,7 @@ body {
 }
 
 /* ----------------------------------------
-   釣りエリア
+   驥｣繧翫お繝ｪ繧｢
    ---------------------------------------- */
 .fishing-area {
     flex: 1;
@@ -945,10 +1045,17 @@ body {
 }
 
 .instruction {
-    font-size: 18px;
-    color: var(--text-secondary);
+    font-size: 16px;
+    font-family: 'Roboto Mono', monospace;
+    color: #ffffff;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 8px 24px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
     margin-bottom: var(--spacing-lg);
     animation: pulse 2s ease-in-out infinite;
+    backdrop-filter: blur(4px);
+    letter-spacing: 1px;
 }
 
 @keyframes pulse {
@@ -968,7 +1075,7 @@ body {
     animation: bobbing 3s ease-in-out infinite;
 }
 
-/* 水面とウキ */
+/* 豌ｴ髱｢縺ｨ繧ｦ繧ｭ */
 .water-surface {
     position: relative;
     width: 200px;
@@ -987,14 +1094,14 @@ body {
     align-items: center;
 }
 
-/* ウキの棒（上部） */
+/* 繧ｦ繧ｭ縺ｮ譽抵ｼ井ｸ企Κ�� */
 .bobber-stick {
     width: 3px;
     height: 16px;
     background: #f97316;
 }
 
-/* ウキの本体（丸い赤） */
+/* 繧ｦ繧ｭ縺ｮ譛ｬ菴難ｼ井ｸｸ縺�ｵ､�� */
 .bobber-body {
     width: 28px;
     height: 28px;
@@ -1003,13 +1110,13 @@ body {
     border-bottom: 3px solid white;
 }
 
-/* 待機中は静止（アニメーションなし） */
+/* 蠕�ｩ滉ｸｭ縺ｯ髱呎ｭ｢�医い繝九Γ繝ｼ繧ｷ繝ｧ繝ｳ縺ｪ縺暦ｼ� */
 
-/* 揺れ（回数と間隔はインラインスタイルで動的に設定） */
+/* 謠ｺ繧鯉ｼ亥屓謨ｰ縺ｨ髢馴囈縺ｯ繧､繝ｳ繝ｩ繧､繝ｳ繧ｹ繧ｿ繧､繝ｫ縺ｧ蜍慕噪縺ｫ險ｭ螳夲ｼ� */
 .bobber.nibbling {
     animation-name: nibble-shake;
     animation-timing-function: ease-in-out;
-    /* animation-duration と animation-iteration-count はインラインで設定 */
+    /* animation-duration 縺ｨ animation-iteration-count 縺ｯ繧､繝ｳ繝ｩ繧､繝ｳ縺ｧ險ｭ螳� */
 }
 
 @keyframes nibble-shake {
@@ -1028,7 +1135,7 @@ body {
     }
 }
 
-/* 沈む */
+/* 豐医� */
 .bobber.sinking {
     animation: sink 0.4s ease-in forwards;
 }
@@ -1140,7 +1247,7 @@ body {
 }
 
 /* ----------------------------------------
-   ゲージバトル（インライン）
+   繧ｲ繝ｼ繧ｸ繝舌ヨ繝ｫ�医う繝ｳ繝ｩ繧､繝ｳ��
    ---------------------------------------- */
 .gauge-battle {
     width: 100%;
@@ -1183,7 +1290,7 @@ body {
     color: var(--text-secondary);
 }
 
-/* レア度別の色 */
+/* 繝ｬ繧｢蠎ｦ蛻･縺ｮ濶ｲ */
 .rarity-D {
     color: var(--rarity-D);
 }
@@ -1206,7 +1313,7 @@ body {
     animation: legendary-glow 1.5s ease-in-out infinite alternate;
 }
 
-/* 互換用 */
+/* 莠呈鋤逕ｨ */
 .rarity-common {
     color: var(--rarity-common);
 }
@@ -1249,10 +1356,11 @@ body {
     position: relative;
     width: 100%;
     height: 48px;
-    background: rgba(255, 255, 255, 0.1);
+    background: linear-gradient(180deg, #334155 0%, #1e293b 100%);
     border-radius: var(--radius-full);
     overflow: hidden;
-    border: 4px solid rgba(255, 255, 255, 0.2);
+    border: 4px solid #475569;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.6), 0 4px 6px rgba(0, 0, 0, 0.3);
 }
 
 .zone {
@@ -1264,7 +1372,11 @@ body {
 .white-zone {
     left: 0;
     width: 100%;
-    background: rgba(255, 255, 255, 0.2);
+    background: repeating-linear-gradient(45deg,
+            rgba(255, 255, 255, 0.05),
+            rgba(255, 255, 255, 0.05) 10px,
+            rgba(255, 255, 255, 0.1) 10px,
+            rgba(255, 255, 255, 0.1) 20px);
 }
 
 .green-zone {
@@ -1278,14 +1390,16 @@ body {
 
 .gauge-indicator {
     position: absolute;
-    top: -4px;
-    bottom: -4px;
-    width: 6px;
+    top: -6px;
+    bottom: -6px;
+    width: 8px;
     background: #fbbf24;
     box-shadow: 0 0 15px rgba(251, 191, 36, 1), 0 0 30px rgba(251, 191, 36, 0.5);
+    border: 1px solid white;
     transform: translateX(-50%);
     transition: none !important;
-    border-radius: 3px;
+    border-radius: 4px;
+    z-index: 10;
 }
 
 .gauge-instruction {
@@ -1293,7 +1407,7 @@ body {
     color: rgba(255, 255, 255, 0.6);
 }
 
-/* STOPボタン */
+/* STOP繝懊ち繝ｳ */
 .btn-stop {
     padding: var(--spacing-lg) var(--spacing-xl);
     font-size: 24px;
@@ -1317,7 +1431,7 @@ body {
     transform: scale(0.95);
 }
 
-/* ゲージバトル結果表示 */
+/* 繧ｲ繝ｼ繧ｸ繝舌ヨ繝ｫ邨先棡陦ｨ遉ｺ */
 .gauge-result {
     font-size: 48px;
     font-weight: 900;
@@ -1336,7 +1450,7 @@ body {
 }
 
 /* ----------------------------------------
-   結果表示
+   邨先棡陦ｨ遉ｺ
    ---------------------------------------- */
 .result-state {
     text-align: center;
@@ -1416,12 +1530,22 @@ body {
 }
 
 .result-state.missed .missed-text {
-    font-size: 18px;
-    color: var(--text-secondary);
+    font-size: 16px;
+    font-family: 'Roboto Mono', monospace;
+    color: #f472b6;
+    /* Pink color */
+    background: rgba(0, 0, 0, 0.6);
+    padding: 8px 24px;
+    border-radius: 20px;
+    margin-bottom: var(--spacing-lg);
+    backdrop-filter: blur(4px);
+    letter-spacing: 1px;
+    font-weight: 700;
+    text-shadow: none;
 }
 
 /* ----------------------------------------
-   釣り画面フッター
+   驥｣繧顔判髱｢繝輔ャ繧ｿ繝ｼ
    ---------------------------------------- */
 .fishing-footer {
     padding: var(--spacing-md);
@@ -1433,7 +1557,7 @@ body {
 }
 
 /* ----------------------------------------
-   ショップ画面
+   繧ｷ繝ｧ繝��逕ｻ髱｢
    ---------------------------------------- */
 #shop-screen {
     background: var(--bg-dark);
@@ -1462,7 +1586,7 @@ body {
 }
 
 /* ----------------------------------------
-   ショップタブ
+   繧ｷ繝ｧ繝��繧ｿ繝�
    ---------------------------------------- */
 .shop-tabs {
     display: flex;
@@ -1494,7 +1618,7 @@ body {
 }
 
 /* ----------------------------------------
-   ショップコンテンツ
+   繧ｷ繝ｧ繝��繧ｳ繝ｳ繝�Φ繝�
    ---------------------------------------- */
 .shop-content {
     flex: 1;
@@ -1552,7 +1676,7 @@ body {
 }
 
 /* ----------------------------------------
-   ショップアイテム
+   繧ｷ繝ｧ繝��繧｢繧､繝�Β
    ---------------------------------------- */
 .shop-items {
     display: flex;
@@ -1609,7 +1733,7 @@ body {
     margin-left: var(--spacing-md);
 }
 
-/* 新しいスキルショップ用スタイル */
+/* 譁ｰ縺励＞繧ｹ繧ｭ繝ｫ繧ｷ繝ｧ繝��逕ｨ繧ｹ繧ｿ繧､繝ｫ */
 .item-action-container {
     display: flex;
     align-items: center;
@@ -1645,7 +1769,7 @@ body {
     vertical-align: middle;
 }
 
-/* ショップボタン */
+/* 繧ｷ繝ｧ繝��繝懊ち繝ｳ */
 .btn {
     padding: var(--spacing-xs) var(--spacing-md);
     font-size: 13px;
@@ -1676,7 +1800,7 @@ body {
     border: 1px solid var(--danger-color);
 }
 
-/* ガチャ結果用スタイル */
+/* 繧ｬ繝√Ε邨先棡逕ｨ繧ｹ繧ｿ繧､繝ｫ */
 .gacha-card {
     width: 90%;
     max-width: 400px;
@@ -1791,7 +1915,7 @@ body {
 }
 
 /* ----------------------------------------
-   ショップフッター
+   繧ｷ繝ｧ繝��繝輔ャ繧ｿ繝ｼ
    ---------------------------------------- */
 .shop-footer {
     display: flex;
@@ -1807,7 +1931,7 @@ body {
 }
 
 /* ----------------------------------------
-   トーストメッセージ
+   繝医�繧ｹ繝医Γ繝�そ繝ｼ繧ｸ
    ---------------------------------------- */
 .toast-message {
     position: fixed;
@@ -1834,7 +1958,7 @@ body {
 }
 
 /* ----------------------------------------
-   レスポンシブ対応
+   繝ｬ繧ｹ繝昴Φ繧ｷ繝門ｯｾ蠢�
    ---------------------------------------- */
 @media (max-width: 480px) {
     .title-text {
@@ -1870,7 +1994,7 @@ body {
 }
 
 /* ----------------------------------------
-   キャストアニメーション
+   繧ｭ繝｣繧ｹ繝医い繝九Γ繝ｼ繧ｷ繝ｧ繝ｳ
    ---------------------------------------- */
 .cast-animation {
     position: relative;
@@ -1919,7 +2043,7 @@ body {
 }
 
 /* ========================================
-   図鑑画面の追加スタイル
+   蝗ｳ髑醍判髱｢縺ｮ霑ｽ蜉�繧ｹ繧ｿ繧､繝ｫ
    ======================================== */
 .encyclopedia-item {
     display: flex;
@@ -1998,7 +2122,7 @@ body {
     color: var(--text-secondary);
 }
 
-/* 称号付きアイテムの強調 */
+/* 遘ｰ蜿ｷ莉倥″繧｢繧､繝�Β縺ｮ蠑ｷ隱ｿ */
 .encyclopedia-item.special-entry {
     background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 140, 0, 0.1));
     border: 1px solid rgba(255, 215, 0, 0.3);
@@ -2015,7 +2139,7 @@ body {
 }
 
 /* ----------------------------------------
-   演出・アニメーション
+   貍泌�繝ｻ繧｢繝九Γ繝ｼ繧ｷ繝ｧ繝ｳ
    ---------------------------------------- */
 .screen-shake {
     animation: screen-shake 0.3s cubic-bezier(.36, .07, .19, .97) both;
@@ -2046,7 +2170,7 @@ body {
 }
 
 /* ========================================
-   餌セレクター
+   鬢後そ繝ｬ繧ｯ繧ｿ繝ｼ
    ======================================== */
 .bait-selector {
     display: flex;
@@ -2104,7 +2228,7 @@ body {
 }
 
 /* ========================================
-   購入ダイアログ
+   雉ｼ蜈･繝繧､繧｢繝ｭ繧ｰ
    ======================================== */
 .modal-overlay {
     position: fixed;
@@ -2195,7 +2319,7 @@ body {
 }
 
 /* ========================================
-   ランク表示
+   繝ｩ繝ｳ繧ｯ陦ｨ遉ｺ
    ======================================== */
 .rank-display {
     display: flex;
@@ -2218,7 +2342,7 @@ body {
     font-weight: 900;
     font-family: 'Arial Black', sans-serif;
     color: white;
-    /* 3D効果を削除し、視認性を優先 */
+    /* 3D蜉ｹ譫懊ｒ蜑企勁縺励∬ｦ冶ｪ肴ｧ繧貞━蜈� */
     text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
     -webkit-text-stroke: 2px rgba(255, 255, 255, 0.2);
     transform: scale(1);
@@ -2244,7 +2368,7 @@ body {
 .rank-char.rarity-S {
     color: #f59e0b;
     text-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
-    /* Sランクだけ少し光らせる */
+    /* S繝ｩ繝ｳ繧ｯ縺�縺大ｰ代＠蜈峨ｉ縺帙ｋ */
 }
 
 @keyframes rankPop {
@@ -2260,7 +2384,7 @@ body {
 }
 
 /* ========================================
-   ショップタブ
+   繧ｷ繝ｧ繝��繧ｿ繝�
    ======================================== */
 .shop-tabs {
     display: flex;
@@ -2292,7 +2416,7 @@ body {
 }
 
 /* ========================================
-   リサイクルガチャ（エコ・ボックス）
+   繝ｪ繧ｵ繧､繧ｯ繝ｫ繧ｬ繝√Ε�医お繧ｳ繝ｻ繝懊ャ繧ｯ繧ｹ��
    ======================================== */
 .recycle-section {
     margin-top: var(--spacing-xl);
@@ -2366,7 +2490,7 @@ body {
     overflow-y: auto;
     margin-bottom: var(--spacing-md);
     padding: 4px;
-    /* スクロールバー用 */
+    /* 繧ｹ繧ｯ繝ｭ繝ｼ繝ｫ繝舌�逕ｨ */
 }
 
 .recycle-item {
@@ -2395,7 +2519,7 @@ body {
 .recycle-item.dimmed {
     opacity: 0.5;
     /* cursor: not-allowed; */
-    /* 選択済みでもクリックで解除できるようにする場合はcursorは維持 */
+    /* 驕ｸ謚樊ｸ医∩縺ｧ繧ゅけ繝ｪ繝�け縺ｧ隗｣髯､縺ｧ縺阪ｋ繧医≧縺ｫ縺吶ｋ蝣ｴ蜷医�cursor縺ｯ邯ｭ謖� */
 }
 
 .recycle-item.tier-1 {
@@ -2481,7 +2605,7 @@ body {
 }
 
 /* ========================================
-   フィーバー/太陽・月 アニメーション
+   繝輔ぅ繝ｼ繝舌�/螟ｪ髯ｽ繝ｻ譛� 繧｢繝九Γ繝ｼ繧ｷ繝ｧ繝ｳ
    ======================================== */
 .fever-container {
     position: absolute;
@@ -2491,12 +2615,12 @@ body {
     height: 100%;
     pointer-events: none;
     z-index: 5;
-    /* 背景(0)より上、UIよりは下(適宜調整) */
+    /* 閭梧勹(0)繧医ｊ荳翫ゞI繧医ｊ縺ｯ荳�(驕ｩ螳懆ｪｿ謨ｴ) */
     overflow: hidden;
     transition: background 1s ease;
 }
 
-/* 太陽モード背景 */
+/* 螟ｪ髯ｽ繝｢繝ｼ繝芽レ譎ｯ */
 .fever-container.type-sun {
     background: linear-gradient(180deg, rgba(56, 189, 248, 0.1) 0%, rgba(56, 189, 248, 0) 100%);
 }
@@ -2505,7 +2629,7 @@ body {
     background: linear-gradient(180deg, rgba(249, 115, 22, 0.3) 0%, rgba(249, 115, 22, 0.1) 100%);
 }
 
-/* 月モード背景 */
+/* 譛医Δ繝ｼ繝芽レ譎ｯ */
 .fever-container.type-moon {
     background: linear-gradient(180deg, rgba(124, 58, 237, 0.1) 0%, rgba(124, 58, 237, 0) 100%);
 }
@@ -2517,7 +2641,7 @@ body {
 .celestial-body {
     position: absolute;
     bottom: -150px;
-    /* 初期位置：画面外 */
+    /* 蛻晄悄菴咲ｽｮ�夂判髱｢螟� */
     right: 30%;
     width: 100px;
     height: 100px;
@@ -2546,10 +2670,10 @@ body {
     text-shadow: 0 0 30px #fbbf24;
 }
 
-/* レベルに応じた上昇（CSSセレクタのワイルドカード活用） */
-/* 注意: class="fever-lv-X" を想定 */
+/* 繝ｬ繝吶Ν縺ｫ蠢懊§縺滉ｸ頑���SS繧ｻ繝ｬ繧ｯ繧ｿ縺ｮ繝ｯ繧､繝ｫ繝峨き繝ｼ繝画ｴｻ逕ｨ�� */
+/* 豕ｨ諢�: class="fever-lv-X" 繧呈Φ螳� */
 
-/* 天体表示エリア (画面上部30%) */
+/* 螟ｩ菴楢｡ｨ遉ｺ繧ｨ繝ｪ繧｢ (逕ｻ髱｢荳企Κ30%) */
 .fever-sky-area {
     position: absolute;
     top: 0;
@@ -2557,47 +2681,47 @@ body {
     width: 100%;
     height: 30%;
     overflow: hidden;
-    /* このエリア外にはみ出た部分は隠れる */
+    /* 縺薙�繧ｨ繝ｪ繧｢螟悶↓縺ｯ縺ｿ蜃ｺ縺滄Κ蛻��髫�繧後ｋ */
     pointer-events: none;
 }
 
-/* --- 太陽 (Sun) --- */
+/* --- 螟ｪ髯ｽ (Sun) --- */
 
-/* Lv0: 上空へ飛び去る */
+/* Lv0: 荳顔ｩｺ縺ｸ鬟帙�蜴ｻ繧� */
 .fever-container.type-sun[class~="fever-lv-0"] .sun {
     bottom: 150%;
     opacity: 0;
 }
 
-/* Lv1: Horizon下へリセット (透明) */
+/* Lv1: Horizon荳九∈繝ｪ繧ｻ繝�ヨ (騾乗�) */
 .fever-container.type-sun[class~="fever-lv-1"] .sun {
     bottom: -150px;
     opacity: 0;
     transition: none;
 }
 
-/* Lv2: 待機 */
+/* Lv2: 蠕�ｩ� */
 .fever-container.type-sun[class~="fever-lv-2"] .sun {
     bottom: -150px;
     opacity: 0;
     transition: all 0.5s;
 }
 
-/* Lv3: ほんの少し頭出し (Horizon下からチラ見せ) */
+/* Lv3: 縺ｻ繧薙�蟆代＠鬆ｭ蜃ｺ縺� (Horizon荳九°繧峨メ繝ｩ隕九○) */
 .fever-container.type-sun[class~="fever-lv-3"] .sun {
     bottom: -80px;
     opacity: 1;
     transform: scale(0.5);
 }
 
-/* Lv4: 頭出し (Horizon上へ10px程度) */
+/* Lv4: 鬆ｭ蜃ｺ縺� (Horizon荳翫∈10px遞句ｺｦ) */
 .fever-container.type-sun[class~="fever-lv-4"] .sun {
     bottom: -70px;
     opacity: 1;
     transform: scale(0.6);
 }
 
-/* --- 月 (Moon) --- */
+/* --- 譛� (Moon) --- */
 
 /* Lv0 */
 .fever-container.type-moon[class~="fever-lv-0"] .moon {
@@ -2633,8 +2757,8 @@ body {
     transform: scale(0.6);
 }
 
-/* Lv5: Horizonに半分 (bottom: -50px) */
-/* ラッパーにより下半分はマスクされる */
+/* Lv5: Horizon縺ｫ蜊雁� (bottom: -50px) */
+/* 繝ｩ繝�ヱ繝ｼ縺ｫ繧医ｊ荳句濠蛻��繝槭せ繧ｯ縺輔ｌ繧� */
 .fever-container.type-sun[class~="fever-lv-5"] .sun,
 .fever-container.type-moon[class~="fever-lv-5"] .moon {
     bottom: -50px;
@@ -2642,7 +2766,7 @@ body {
     transform: scale(0.7);
 }
 
-/* Lv6: 上昇開始 */
+/* Lv6: 荳頑�髢句ｧ� */
 .fever-container.type-sun[class~="fever-lv-6"] .sun,
 .fever-container.type-moon[class~="fever-lv-6"] .moon {
     bottom: 10%;
@@ -2690,7 +2814,7 @@ body {
     transform: scale(1.0);
 }
 
-/* Lv12: 頂点付近 (Sky Area上の80%) */
+/* Lv12: 鬆らせ莉倩ｿ� (Sky Area荳翫�80%) */
 .fever-container.type-sun[class~="fever-lv-12"] .sun,
 .fever-container.type-moon[class~="fever-lv-12"] .moon {
     bottom: 80%;
@@ -2699,26 +2823,26 @@ body {
     filter: drop-shadow(0 0 20px currentColor);
 }
 
-/* フィーバー発動中 (fever-active) */
+/* 繝輔ぅ繝ｼ繝舌�逋ｺ蜍穂ｸｭ (fever-active) */
 .fever-container.fever-active .sun,
 .fever-container.fever-active .moon {
-    /* 位置固定を削除し、レベルごとの位置に従う */
-    /* bottom: 60%; right: 50%; ... は削除 */
+    /* 菴咲ｽｮ蝗ｺ螳壹ｒ蜑企勁縺励√Ξ繝吶Ν縺斐→縺ｮ菴咲ｽｮ縺ｫ蠕薙≧ */
+    /* bottom: 60%; right: 50%; ... 縺ｯ蜑企勁 */
 
-    /* 発光・脈動エフェクトを強化 */
+    /* 逋ｺ蜈峨�閼亥虚繧ｨ繝輔ぉ繧ｯ繝医ｒ蠑ｷ蛹� */
     filter: drop-shadow(0 0 30px currentColor);
     animation: celestial-pulse 1s infinite alternate;
 }
 
 .fever-container.fever-active.type-sun .sun .material-icons {
     color: #ef4444;
-    /* 真っ赤な太陽 */
+    /* 逵溘▲襍､縺ｪ螟ｪ髯ｽ */
     text-shadow: 0 0 50px #ef4444, 0 0 100px #f59e0b;
 }
 
 .fever-container.fever-active.type-moon .moon .material-icons {
     color: #fbbf24;
-    /* 輝く月 */
+    /* 霈昴￥譛� */
     text-shadow: 0 0 50px #fbbf24, 0 0 100px #f59e0b;
 }
 
@@ -2735,7 +2859,7 @@ body {
 }
 
 /* ========================================
-   宝箱リザルト表示
+   螳晉ｮｱ繝ｪ繧ｶ繝ｫ繝郁｡ｨ遉ｺ
    ======================================== */
 .loot-list {
     display: flex;
@@ -2841,10 +2965,10 @@ body {
     max-width: 360px;
 }
 
-/* 宝箱リザルトはダークテーマにする (文字が白いため) */
+/* 螳晉ｮｱ繝ｪ繧ｶ繝ｫ繝医�繝繝ｼ繧ｯ繝��繝槭↓縺吶ｋ (譁�ｭ励′逋ｽ縺�◆繧�) */
 .treasure-result .result-card {
     background: #1e293b;
-    /* ダーク背景 */
+    /* 繝繝ｼ繧ｯ閭梧勹 */
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
 }
@@ -2868,4 +2992,684 @@ body {
         opacity: 1;
         transform: translateX(0);
     }
+}
+
+/* ========================================
+   繧､繝吶Φ繝域ｼ泌� (繝懊�繝医�魑･)
+   ======================================== */
+.event-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 20;
+    overflow: hidden;
+}
+
+/* 繝懊�繝� */
+.event-boat {
+    position: absolute;
+    top: 25%;
+    left: -150px;
+    font-size: 60px;
+    filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.3));
+    animation: boatPass 20s linear forwards;
+    z-index: 15;
+}
+
+@keyframes boatPass {
+    0% {
+        left: -150px;
+        transform: scaleX(1);
+    }
+
+    100% {
+        left: 120%;
+        transform: scaleX(1);
+    }
+}
+
+/* 魑･ */
+.event-bird {
+    position: absolute;
+    top: 15%;
+    right: -100px;
+    font-size: 40px;
+    color: #fff;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+    animation: birdFly 12s linear forwards;
+    z-index: 25;
+}
+
+@keyframes birdFly {
+    0% {
+        right: -100px;
+        transform: translateY(0) scaleX(-1);
+    }
+
+    20% {
+        transform: translateY(-30px) scaleX(-1);
+    }
+
+    40% {
+        transform: translateY(0px) scaleX(-1);
+    }
+
+    60% {
+        transform: translateY(20px) scaleX(-1);
+    }
+
+    80% {
+        transform: translateY(-10px) scaleX(-1);
+    }
+
+    100% {
+        right: 120%;
+        transform: translateY(0) scaleX(-1);
+    }
+}
+
+/* 繧､繝吶Φ繝医Γ繝�そ繝ｼ繧ｸ */
+.event-message {
+    position: absolute;
+    top: 15%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.75);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-size: 16px;
+    font-weight: bold;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    animation: eventMessageSlide 4s ease-in-out forwards;
+    z-index: 100;
+}
+
+.event-message .material-icons {
+    color: #fbbf24;
+}
+
+@keyframes eventMessageSlide {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -20px);
+    }
+
+    10% {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+
+    90% {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -20px);
+    }
+}
+
+.game-boat {
+    /* 繧ｵ繧､繧ｺ隱ｿ謨ｴ�壹♀螂ｽ縺ｿ縺ｮ螟ｧ縺阪＆縺ｫ */
+    font-size: 120px !important;
+
+    /* 濶ｲ�夂悄縺｣逋ｽ繧呈欠螳� */
+    color: #ffffff;
+
+
+    /* 繝昴う繝ｳ繝�2�壹お繝�ず繧貞ｰ代＠貊代ｉ縺九↓縺吶ｋ */
+    -webkit-font-smoothing: antialiased;
+
+    /* 驟咲ｽｮ險ｭ螳� */
+    display: inline-block;
+    user-select: none;
+    pointer-events: none;
+    /* 繧ｲ繝ｼ繝�繧ｭ繝｣繝ｩ縺ｨ縺励※謇ｱ縺�↑繧峨け繝ｪ繝�け蛻､螳壹ｒ辟｡蜉ｹ蛹悶＠縺ｦ繧０K */
+
+    /* 繧｢繝九Γ繝ｼ繧ｷ繝ｧ繝ｳ�壼ｽｱ縺後↑縺��縲∝虚縺阪〒蟄伜惠諢溘ｒ蜃ｺ縺励∪縺� */
+    animation: boat-floating 3.5s ease-in-out infinite;
+}
+
+/* 豌ｴ髱｢縺ｫ豬ｮ縺�※縺�ｋ繧医≧縺ｪ縲√ｆ縺｣縺上ｊ縺ｨ縺励◆荳贋ｸ九�蝗櫁ｻ｢縺ｮ蜍輔″ */
+@keyframes boat-floating {
+    0% {
+        transform: translateY(0) rotate(0deg);
+    }
+
+    25% {
+        transform: translateY(-5px) rotate(-2deg);
+    }
+
+    75% {
+        transform: translateY(5px) rotate(2deg);
+    }
+
+    100% {
+        transform: translateY(0) rotate(0deg);
+    }
+}
+
+/* ----------------------------------------
+   タウンメニュー（商店街）
+   ---------------------------------------- */
+.town-menu {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 8px;
+}
+
+.shop-building {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 24px;
+    background: linear-gradient(135deg, var(--bg-card) 0%, rgba(30, 41, 59, 0.9) 100%);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.shop-building:hover {
+    transform: translateY(-4px);
+    border-color: var(--primary-color);
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, var(--bg-card) 100%);
+}
+
+.shop-building::after {
+    content: 'ENTER';
+    position: absolute;
+    right: 20px;
+    font-size: 10px;
+    font-weight: 900;
+    color: var(--primary-light);
+    opacity: 0.5;
+    letter-spacing: 2px;
+}
+
+.building-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.building-icon .material-icons {
+    font-size: 36px;
+}
+
+.shop-building.rods .building-icon {
+    color: var(--rarity-S);
+}
+
+.shop-building.skills .building-icon {
+    color: var(--primary-light);
+}
+
+.shop-building.baits .building-icon {
+    color: var(--secondary-color);
+}
+
+.building-info {
+    text-align: left;
+}
+
+.building-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.building-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+
+/* ----------------------------------------
+   カジノ画面（娯楽街）スタイル
+   ---------------------------------------- */
+.casino-theme {
+    background: radial-gradient(circle at center, #2e1065 0%, #0f172a 100%);
+    position: relative;
+}
+
+.casino-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md);
+    background: rgba(0, 0, 0, 0.8);
+    border-bottom: 2px solid #fbbf24;
+    box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
+}
+
+.casino-title {
+    color: #fbbf24;
+    text-shadow: 0 0 10px rgba(251, 191, 36, 0.8);
+    font-weight: 900;
+    letter-spacing: 2px;
+}
+
+/* カジノビル専用ボタン（町メニュー用） */
+.shop-building.casino {
+    border-color: #f43f5e;
+    background: linear-gradient(135deg, rgba(244, 63, 94, 0.1) 0%, var(--bg-card) 100%);
+}
+
+.shop-building.casino .building-icon {
+    color: #f43f5e;
+    text-shadow: 0 0 10px #f43f5e;
+}
+
+/* ガチャマシンの見た目 */
+.gacha-machine-card {
+    background: #1e293b;
+    border: 2px solid #fbbf24;
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.2);
+}
+
+.machine-header {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.machine-display {
+    background: #000;
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    border: 1px solid #334155;
+    color: #fbbf24;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+    font-size: 1.2rem;
+    text-align: center;
+}
+
+/* リサイクルエリア（裏路地の交換所） */
+.recycle-alley {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px dashed #475569;
+    padding: 15px;
+    border-radius: var(--radius-md);
+}
+
+.recycle-alley h3 {
+    color: #10b981;
+    font-size: 14px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+/* カジノフッター */
+.casino-footer {
+    background: linear-gradient(to top, #0f172a, #2e1065);
+    border-top: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+
+/* Header Back Button */
+.btn-header-back {
+    background: transparent;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 8px;
+    margin-right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.btn-header-back:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.btn-header-back .material-icons {
+    font-size: 24px;
+}
+
+/* Money Popup Animation */
+.money-popup {
+    position: absolute;
+    font-weight: bold;
+    font-size: 1.2rem;
+    pointer-events: none;
+    animation: moneyPopup 1.5s forwards;
+    text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+    z-index: 100;
+    right: 0;
+    top: 100%;
+}
+
+@keyframes moneyPopup {
+    0% {
+        opacity: 0;
+        transform: translateY(0);
+    }
+
+    20% {
+        opacity: 1;
+        transform: translateY(10px);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+}
+
+/* ========================================
+   Visual Clouds
+   ======================================== */
+.sky-clouds {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 300px;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.cloud {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 50px;
+    filter: blur(8px);
+    animation: floatClouds linear infinite;
+}
+
+/* Cloud Shapes via pseudo-elements to make them fluffy */
+.cloud::after,
+.cloud::before {
+    content: '';
+    position: absolute;
+    background: inherit;
+    border-radius: 50%;
+}
+
+.cloud1 {
+    width: 120px;
+    height: 40px;
+    top: 40px;
+    left: -150px;
+    animation-duration: 45s;
+    opacity: 0.8;
+}
+
+.cloud1::after {
+    width: 50px;
+    height: 50px;
+    top: -25px;
+    left: 15px;
+}
+
+.cloud1::before {
+    width: 40px;
+    height: 40px;
+    top: -15px;
+    left: 50px;
+}
+
+.cloud2 {
+    width: 180px;
+    height: 50px;
+    top: 80px;
+    left: -200px;
+    animation-duration: 60s;
+    animation-delay: -20s;
+    opacity: 0.6;
+    transform: scale(0.8);
+}
+
+.cloud2::after {
+    width: 70px;
+    height: 70px;
+    top: -35px;
+    left: 20px;
+}
+
+.cloud2::before {
+    width: 60px;
+    height: 60px;
+    top: -20px;
+    left: 80px;
+}
+
+.cloud3 {
+    width: 100px;
+    height: 30px;
+    top: 20px;
+    left: -120px;
+    animation-duration: 35s;
+    animation-delay: -10s;
+    opacity: 0.5;
+    transform: scale(0.6);
+}
+
+.cloud3::after {
+    width: 40px;
+    height: 40px;
+    top: -20px;
+    left: 15px;
+}
+
+@keyframes floatClouds {
+    0% {
+        transform: translateX(-200px);
+    }
+
+    100% {
+        transform: translateX(120vw);
+    }
+}
+
+/* ----------------------------------------
+   餌ステータス（下中央・大）
+   ---------------------------------------- */
+/* ----------------------------------------
+   中央下部HUDコンテナ（統合版）
+   ---------------------------------------- */
+/* ----------------------------------------
+   中央下部HUDコンテナ（温かみのある木目調）
+   ---------------------------------------- */
+.bottom-hud-center {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 14px 28px;
+
+    /* 木目風のデザイン */
+    background: linear-gradient(135deg, #a1887f 0%, #8d6e63 100%);
+    border: var(--border-style);
+    border-radius: 50px;
+    /* 角を丸くして柔らかく */
+    box-shadow: var(--shadow-soft), inset 0 2px 4px rgba(255, 255, 255, 0.3);
+    z-index: 100;
+}
+
+/* 装飾用のリベット（鋲） */
+.bottom-hud-center::before,
+.bottom-hud-center::after {
+    content: "";
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: #4e342e;
+    border-radius: 50%;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.5);
+}
+
+.bottom-hud-center::before {
+    left: 15px;
+}
+
+.bottom-hud-center::after {
+    right: 15px;
+}
+
+/* 町へボタン（浮き出たボタン感） */
+.floating-btn {
+    cursor: pointer;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    color: var(--text-light);
+    text-decoration: none;
+    user-select: none;
+}
+
+.btn-town {
+    background: linear-gradient(180deg, #ff7043 0%, #d84315 100%);
+    border: 2px solid #bf360c;
+    border-radius: 12px;
+    width: 64px;
+    height: 64px;
+    box-shadow: 0 4px 0 #8d2b0b, 0 6px 10px rgba(0, 0, 0, 0.3);
+}
+
+.btn-town:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+}
+
+.btn-town:active {
+    transform: translateY(2px);
+    box-shadow: 0 0px 0 #8d2b0b, 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.btn-label {
+    font-size: 10px;
+    font-weight: bold;
+    margin-top: 2px;
+}
+
+/* 餌ステータス（中央部分） */
+.bait-status-large {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 20px;
+    min-width: 120px;
+    border-left: 2px dashed rgba(255, 255, 255, 0.3);
+    border-right: 2px dashed rgba(255, 255, 255, 0.3);
+}
+
+.bait-value {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--accent-yellow);
+    text-shadow: 2px 2px 0px #4e342e;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.bait-value::before {
+    font-size: 10px;
+    color: var(--text-light);
+    text-shadow: none;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-right: 4px;
+}
+
+/* 竿バッジ（右側） */
+.rod-badge {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 4px 12px;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    min-width: 100px;
+}
+
+.rod-name {
+    color: var(--text-light);
+    font-weight: bold;
+    font-size: 13px;
+    letter-spacing: 0.05em;
+}
+
+.rod-stars {
+    display: flex;
+    gap: 2px;
+}
+
+.material-icons.star-filled {
+    color: var(--accent-yellow);
+    font-size: 16px;
+}
+
+.material-icons.star-empty {
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 16px;
+}
+
+/* 餌セレクターボタン（テーマに合わせて調整） */
+.selector-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+    background: #5d4037;
+    color: #efebe9;
+    border: 1px solid #3e2723;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 0 #3e2723;
+    transition: all 0.1s;
+    padding: 0;
+}
+
+.selector-btn:hover {
+    background: #8d6e63;
+    transform: translateY(-1px);
+}
+
+.selector-btn:active {
+    transform: translateY(1px);
+    box-shadow: none;
+}
+
+.bait-selector-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }

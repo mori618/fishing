@@ -24,7 +24,13 @@ const FishingGame = {
         this.state = 'idle';
         this.currentFish = null;
         this.isGachaMode = false;
+        this.battlePhase = 1; // 1 or 2
         console.log('🎣 釣りゲームを初期化しました');
+
+        this.battlePhase = 1; // 1 or 2
+        console.log('🎣 釣りゲームを初期化しました');
+
+        // ランダムイベントループは廃止 (釣り終了時に判定)
     },
 
     // ========================================
@@ -136,6 +142,52 @@ const FishingGame = {
 
         // 餌ごとのランク出現重み設定 (ユーザー要望に基づく)
         // ... (既存コメント)
+
+        // ========================================
+        // 上位魚確定イベント (鳥)
+        // ========================================
+        if (GameState.highTierGuaranteed) {
+            console.log('🦅 鳥イベント効果: 上位魚確定で抽選！');
+
+            // フラグ消費
+            GameState.setHighTierGuaranteed(false);
+
+            // 現在の餌ランクより一つ上のランクを計算
+            const rankOrder = ['D', 'C', 'B', 'A', 'S', 'SS'];
+            const currentRankIndex = rankOrder.indexOf(bait.rank);
+            let targetRank = 'S'; // デフォルト
+
+            if (currentRankIndex !== -1 && currentRankIndex < rankOrder.length - 1) {
+                targetRank = rankOrder[currentRankIndex + 1];
+            } else if (currentRankIndex === rankOrder.length - 1) {
+                // 既に最高ランク(SS)の場合はSS維持（またはS以上など）
+                // ここではSS維持とする
+                targetRank = 'SS';
+            } else {
+                // 餌ランクが不明(D扱い)ならCへ
+                targetRank = 'C';
+            }
+
+            console.log(`🦅 ランクアップ: ${bait.rank} -> ${targetRank} 確定`);
+
+            // ターゲットランクの魚を抽出
+            const targetPool = GAME_DATA.FISH.filter(f => f.rarity === targetRank);
+
+            if (targetPool.length > 0) {
+                // ランダムに選択 (重み考慮)
+                let totalHWeight = 0;
+                targetPool.forEach(f => totalHWeight += f.weight);
+                let r = Math.random() * totalHWeight;
+
+                for (const fish of targetPool) {
+                    r -= fish.weight;
+                    if (r < 0) {
+                        return { ...fish };
+                    }
+                }
+                return { ...targetPool[0] };
+            }
+        }
 
         const spawnWeights = {
             'D': { D: 0.8, C: 0.2, S: 0.01 },
@@ -373,6 +425,19 @@ const FishingGame = {
             UIManager.showMissed('反応が遅かった！魚に逃げられた...');
 
             // 餌を消費（ヒットを逃した＝失敗）
+            if (GameState.baitType) {
+                GameState.useBait(false);
+                UIManager.updateBaitInfo();
+            }
+
+            // フィーバー中は失敗でもゲージが溜まる
+            if (GameState.fever.isActive) {
+                const feverResult = GameState.progressFever(true);
+                UIManager.updateFeverVisuals();
+                if (feverResult.message === 'end') {
+                    UIManager.showMessage('💨 フィーバー終了...', 3000);
+                }
+            }
             // 餌を消費（ヒットを逃した＝失敗）
             if (GameState.baitType) {
                 GameState.useBait(false);
@@ -387,6 +452,10 @@ const FishingGame = {
                     UIManager.showMessage('💨 フィーバー終了...', 3000);
                 }
             }
+
+            // イベント判定
+            this.triggerRandomEvent();
+
         }, finalHitWindow);
     },
 
@@ -453,11 +522,15 @@ const FishingGame = {
 
         console.log(`⚡ パワー判定: プレイヤー ${playerPower} vs 魚 ${fishPower} (${this.currentFish.name})`);
 
-        if (playerPower >= fishPower) {
+        // Aランク以上は強制的にバトル発生
+        const isForcedBattle = ['A', 'S', 'SS'].includes(this.currentFish.rarity);
+
+        if (playerPower >= fishPower && !isForcedBattle) {
             // 即座に釣り上げ成功
             this.catchSuccess();
         } else {
             // ゲージバトルへ移行
+            this.battlePhase = 1;
             this.startGaugeBattle(playerPower, fishPower);
         }
     },
@@ -469,7 +542,9 @@ const FishingGame = {
         this.state = 'gaugeBattle';
 
         // パワー差に基づいてゲージ設定を計算
-        const powerRatio = playerPower / fishPower;  // 0〜1未満
+        // 強制バトルの場合、プレイヤーの方が強い(1.0以上)可能性があるため、最大1.0に制限
+        const rawRatio = playerPower / fishPower;
+        const powerRatio = Math.min(0.99, rawRatio);
 
         // 速度：パワー差が小さいほど遅い
         const config = GAME_DATA.GAUGE_CONFIG;
@@ -558,13 +633,34 @@ const FishingGame = {
         catchRate += GameState.getCatchBonus();
         catchRate = Math.min(1, catchRate);  // 100%が上限
 
+        // SSランクは赤ゲージ必須（それ以外は0%）
+        if (this.currentFish.rarity === 'SS' && zone !== 'red') {
+            console.log('⛔ SSランク制約: 赤ゲージ以外は失敗');
+            catchRate = 0;
+        }
+
         console.log(`🎯 ゾーン: ${zone}, 捕獲率: ${(catchRate * 100).toFixed(1)}%`);
 
         // 少し停止して見せてから結果を表示
         setTimeout(() => {
             this.isProcessing = false;
-            if (Math.random() < catchRate) {
-                this.catchSuccess();
+
+            const isSuccess = Math.random() < catchRate;
+
+            if (isSuccess) {
+                // S, SSランクは2連戦
+                if (['S', 'SS'].includes(this.currentFish.rarity) && this.battlePhase === 1) {
+                    console.log('⚔️ 連戦発生！ Round 2 Start');
+                    this.battlePhase = 2;
+                    UIManager.showMessage('まだまだ！', 1000);
+
+                    // 少し間を置いて2回戦開始
+                    setTimeout(() => {
+                        this.startGaugeBattle(GameState.getTotalPower(), this.currentFish.power);
+                    }, 1000);
+                } else {
+                    this.catchSuccess();
+                }
             } else {
                 this.catchFailed();
             }
@@ -643,6 +739,8 @@ const FishingGame = {
         UIManager.showCatchSuccess(this.currentFish, () => {
             this.state = 'idle';
             UIManager.showIdle();
+            // イベント判定
+            this.triggerRandomEvent();
         });
 
         console.log(`🎉 ${this.currentFish.name}を釣り上げた！`);
@@ -735,7 +833,24 @@ const FishingGame = {
         this.nibbleTimer = null;
         this.hitTimer = null;
         this.gaugeAnimationId = null;
+        this.gaugeAnimationId = null;
         this.isProcessing = false;
+
+        // イベントループは止めない（釣り中もイベントは起きるかもしれないが、
+        // 画面切り替え時などに止める必要があるなら別途stopメソッドが必要）
+        // 今回はcleanupTimersは「釣りサイクルの一連の流れ」のクリアなので、
+        // グローバルなイベントループはここでは止めないでおくが、
+        // 念のためプロパティは定義しておく
+    },
+
+    // ========================================
+    // イベントループ停止（画面遷移時など）
+    // ========================================
+    stopRandomEventLoop() {
+        if (this.eventTimer) {
+            clearTimeout(this.eventTimer);
+            this.eventTimer = null;
+        }
     },
 
     // ========================================
@@ -853,6 +968,72 @@ const FishingGame = {
             this.state = 'idle';
             UIManager.showIdle();
         });
+    },
+
+    // ========================================
+    // ランダムイベント判定 (釣りが終わるたびに呼ばれる)
+    // ========================================
+    /*
+    startRandomEventLoop() 廃止
+    */
+
+    // ========================================
+    // イベント発生判定
+    // ========================================
+    triggerRandomEvent() {
+        // 釣り画面以外ではイベントを起こさない
+        if (UIManager.currentScreen !== 'fishing') return;
+
+        const rand = Math.random();
+
+        // 基本確率
+        const baseBoatChance = 0.05;
+        const baseBirdChance = 0.05;
+
+        // スキル補正
+        const boatBonus = GameState.getBoatEventBonus();
+        const birdBonus = GameState.getBirdEventBonus();
+
+        // 実際の確率
+        const boatThreshold = baseBoatChance + boatBonus;
+        // 鳥の判定はボートの判定の後に行うため、閾値をずらす
+        const birdThreshold = boatThreshold + baseBirdChance + birdBonus;
+
+        console.log(`🎲 イベント抽選: rand=${rand.toFixed(4)} (Boat < ${boatThreshold.toFixed(4)}, Bird < ${birdThreshold.toFixed(4)})`);
+
+        // 確率判定
+        if (rand < boatThreshold) {
+            // ボートイベント
+            console.log('🚢 イベント: 漁船通過');
+            UIManager.showBoatEvent();
+
+            // 効果発動
+            if (GameState.fever.isActive) {
+                // フィーバー中: 継続確定 (6に戻す)
+                GameState.fever.value = 6;
+                console.log('🔥 漁船効果: フィーバーリセット');
+            } else {
+                // 通常時: ゲージ+1
+                const result = GameState.progressFever(true); // 確定進行
+                UIManager.updateFeverVisuals();
+                console.log('⚡ 漁船効果: フィーバーチャージ');
+
+                if (result.message === 'start') {
+                    UIManager.showMessage(`🔥 ${result.type === 'sun' ? 'おたから' : 'おさかな'}フィーバー開始！`, 3000);
+                }
+            }
+
+        } else if (rand < birdThreshold) {
+            // 鳥イベント
+            console.log('🦅 イベント: 海鳥飛来');
+            UIManager.showBirdEvent();
+
+            // 効果発動: 次回上位確定
+            GameState.setHighTierGuaranteed(true);
+            console.log('✨ 海鳥効果: 次回上位確定');
+        } else {
+            console.log('🍃 イベントなし');
+        }
     },
 
     abort() {

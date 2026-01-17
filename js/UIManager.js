@@ -3,9 +3,111 @@
 
 const UIManager = {
     // ========================================
+    // ガチャ（スロットマシン）演出
+    // ========================================
+    showSlotAnimation(results, onComplete) {
+        const overlay = document.createElement('div');
+        overlay.id = 'gacha-slot-overlay';
+        overlay.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 2000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        `;
+
+        // スロットマシーンの見た目
+        const slotContainer = document.createElement('div');
+        slotContainer.style.cssText = `
+            border: 10px solid #ffd700;
+            border-radius: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.5);
+            display: flex; gap: 10px;
+        `;
+
+        // リールの作成 (3つ)
+        for (let i = 0; i < 3; i++) {
+            const reel = document.createElement('div');
+            reel.className = 'slot-reel';
+            reel.style.cssText = `
+                width: 80px; height: 120px;
+                background: #fff;
+                border: 4px solid #333;
+                border-radius: 10px;
+                overflow: hidden;
+                position: relative;
+            `;
+
+            // 回転するストリップ
+            const strip = document.createElement('div');
+            strip.className = 'reel-strip';
+            strip.style.cssText = `
+                position: absolute; top: 0; left: 0; width: 100%;
+                display: flex; flex-direction: column; align-items: center;
+            `;
+            // ダミーアイコン
+            const icons = ['auto_awesome', 'stars', 'bolt', 'palette', 'diamond', 'phishing'];
+            let stripHtml = '';
+            for (let j = 0; j < 20; j++) {
+                const icon = icons[Math.floor(Math.random() * icons.length)];
+                stripHtml += `<span class="material-icons" style="font-size: 48px; line-height: 120px; color: #333;">${icon}</span>`;
+            }
+            strip.innerHTML = stripHtml;
+
+            reel.appendChild(strip);
+            slotContainer.appendChild(reel);
+
+            // アニメーション (CSS keyframes needed or simple js)
+            // Simple JS implementation
+            this.animateReel(strip, i * 200 + 1500, results);
+        }
+
+        const title = document.createElement('div');
+        title.innerHTML = '<h2 style="color: #ffd700; font-size: 2rem; margin-bottom: 20px; text-shadow: 0 0 10px #ffd700;">JACKPOT SLOTS</h2>';
+
+        overlay.appendChild(title);
+        overlay.appendChild(slotContainer);
+        document.body.appendChild(overlay);
+
+        // 演出全体の時間（全てのリールが止まった後）
+        setTimeout(() => {
+            overlay.style.transition = 'opacity 0.5s';
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                overlay.remove();
+                if (onComplete) onComplete();
+            }, 500);
+        }, 3000); // 3秒後
+    },
+
+    animateReel(element, duration, results) {
+        // キーフレームアニメーションを動的に追加
+        const keyframes = [
+            { transform: 'translateY(0)' },
+            { transform: 'translateY(-1000px)' }
+        ];
+
+        const animation = element.animate(keyframes, {
+            duration: 200,
+            iterations: Infinity
+        });
+
+        setTimeout(() => {
+            animation.cancel();
+            // 最後の位置（結果に基づく）を決めるロジックは入れていない（簡易演出）
+            // 止まった位置に固定
+            element.style.transform = 'translateY(-50px)'; // センター合わせ
+
+            // 輝きエフェクト
+            element.parentElement.style.boxShadow = '0 0 20px white';
+            element.parentElement.style.borderColor = '#fff';
+        }, duration);
+    },
+    // ========================================
     // 現在の画面
     // ========================================
     currentScreen: 'start',  // start, fishing, shop
+    lastMoney: null,
 
     // ========================================
     // ゲージバトル設定
@@ -33,6 +135,7 @@ const UIManager = {
         if (screenId === 'fishing') {
             this.showIdle();
             this.updateStatus();
+            this.updateSkyVisuals();
         } else if (screenId === 'shop') {
             ShopManager.renderShop();
         } else if (screenId === 'encyclopedia') {
@@ -40,9 +143,6 @@ const UIManager = {
         }
     },
 
-    // ========================================
-    // スタート画面
-    // ========================================
     // ========================================
     // スタート画面
     // ========================================
@@ -58,7 +158,7 @@ const UIManager = {
             }
         }
 
-        // デバッグツールバー作成
+        /* // デバッグツールバー作成
         // 既存ボタン/ツールバーがあれば削除
         const existingBtn = document.getElementById('debug-money-btn');
         if (existingBtn) existingBtn.remove();
@@ -131,7 +231,7 @@ const UIManager = {
             this.showMessage(`Type: ${GameState.fever.type}`);
         }, 'rgba(100, 0, 200, 0.8)'));
 
-        document.body.appendChild(toolbar);
+        document.body.appendChild(toolbar); */
     },
 
     // ========================================
@@ -163,6 +263,15 @@ const UIManager = {
         if (state) {
             rodView.classList.add(state);
         }
+
+        // スキル色を適用
+        const skin = GameState.getCurrentSkin();
+        const rodShaft = rodView.querySelector('.rod-shaft');
+        if (rodShaft) {
+            rodShaft.style.backgroundColor = skin.rodColor;
+            // 枠線の色も少し暗くして調整（簡易的）
+            rodShaft.style.borderColor = skin.rodColor;
+        }
     },
 
     // ========================================
@@ -188,12 +297,14 @@ const UIManager = {
         const fishingArea = document.getElementById('fishing-area');
         if (!fishingArea) return;
 
+        const skin = GameState.getCurrentSkin();
+
         fishingArea.innerHTML = `
             <div class="waiting-state">
                 <div class="water-surface">
                     <div class="bobber waiting">
                         <div class="bobber-stick"></div>
-                        <div class="bobber-body"></div>
+                        <div class="bobber-body" style="background-color: ${skin.bobberColor}"></div>
                     </div>
                     <div class="ripple"></div>
                 </div>
@@ -210,12 +321,14 @@ const UIManager = {
         const fishingArea = document.getElementById('fishing-area');
         if (!fishingArea) return;
 
+        const skin = GameState.getCurrentSkin();
+
         fishingArea.innerHTML = `
             <div class="nibble-state">
                 <div class="water-surface">
                     <div class="bobber">
                         <div class="bobber-stick"></div>
-                        <div class="bobber-body"></div>
+                        <div class="bobber-body" style="background-color: ${skin.bobberColor}"></div>
                     </div>
                     <div class="ripple active"></div>
                 </div>
@@ -248,12 +361,14 @@ const UIManager = {
         const fishingArea = document.getElementById('fishing-area');
         if (!fishingArea) return;
 
+        const skin = GameState.getCurrentSkin();
+
         fishingArea.innerHTML = `
             <div class="hit-state">
                 <div class="water-surface">
                     <div class="bobber sinking">
                         <div class="bobber-stick"></div>
-                        <div class="bobber-body"></div>
+                        <div class="bobber-body" style="background-color: ${skin.bobberColor}"></div>
                     </div>
                     <div class="splash"></div>
                 </div>
@@ -446,71 +561,137 @@ const UIManager = {
         const overlay = document.getElementById('result-overlay');
         if (!overlay) return;
 
+        let handleKeydown;
+
         // クローズ処理
         const closeOverlay = () => {
             overlay.remove();
-            document.removeEventListener('keydown', handleKeydown);
+            if (handleKeydown) {
+                document.removeEventListener('keydown', handleKeydown);
+            }
             // コールバックを実行
             if (typeof onClose === 'function') {
                 onClose();
             }
         };
 
-        // クリックで閉じる
-        overlay.addEventListener('click', (e) => {
-            e.stopPropagation();
-            closeOverlay();
-        });
-
-        // スペースキーで閉じる
-        const handleKeydown = (e) => {
+        handleKeydown = (e) => {
             if (e.code === 'Space' || e.key === ' ') {
                 e.preventDefault();
                 closeOverlay();
             }
         };
-        document.addEventListener('keydown', handleKeydown);
+
+        // 誤操作防止の遅延（500ms）
+        setTimeout(() => {
+            // クリックで閉じる
+            overlay.addEventListener('click', (e) => {
+                e.stopPropagation();
+                closeOverlay();
+            });
+
+            // スペースキーで閉じる
+            document.addEventListener('keydown', handleKeydown);
+        }, 500);
+    },
+
+    // ========================================
+    // 空のビジュアルを更新
+    // ========================================
+    updateSkyVisuals() {
+        const fishingScreen = document.getElementById('fishing-screen');
+        if (!fishingScreen) return;
+
+        const currentSky = GameState.getCurrentSky();
+        if (!currentSky) return;
+
+        // Colors are top, bottom of the sky part.
+        // The sky part is roughly 0% to 35% of the screen.
+        // The original CSS was: linear-gradient(180deg, #87CEEB 0%, #3b82f6 30%, #1e3a8a 100%)
+        // We want to replace the top part (0-30%) with our sky gradient, and keep the ocean part (30-100%).
+
+        // Ocean colors (fixed for now, matching original or close to it)
+        // Original: #3b82f6 at 30%, #1e3a8a at 100%
+        // We will construct a multi-stop gradient.
+
+        const skyTop = currentSky.colors[0];
+        const skyBottom = currentSky.colors[1];
+
+        // Construct the new gradient
+        // 0% -> skyTop
+        // 30% -> skyBottom (Horizon)
+        // 30% -> #3b82f6 (Ocean Surface) - slightly hard transition or smooth? 
+        // Original was #87CEEB 0%, #3b82f6 30%. It was a smooth transition from sky to light blue ocean.
+        // To keep the sky distinct but connected:
+
+        const newGradient = `linear-gradient(180deg, ${skyTop} 0%, ${skyBottom} 30%, #1e3a8a 100%)`;
+
+        fishingScreen.style.background = newGradient;
     },
 
     // ========================================
     // ガチャ結果表示
     // ========================================
     showGachaResult(items, onClose) {
-        const fishingArea = document.getElementById('fishing-area');
-        if (!fishingArea) return;
-
         // 結果リストのHTML生成
-        const itemsHtml = items.map(item => `
+        const itemsHtml = items.map(item => {
+            let icon = 'auto_awesome';
+            let typeLabel = 'Skill';
+
+            if (item.category === 'skin') {
+                icon = 'palette';
+                typeLabel = 'Skin';
+            } else if (item.category === 'sky') {
+                icon = 'cloud';
+                typeLabel = 'Sky';
+            }
+
+            return `
             <div class="gacha-result-item rarity-${item.tier === 3 ? 'S' : item.tier === 2 ? 'B' : 'D'}">
                 <div class="gacha-item-icon">
-                    <span class="material-icons">auto_awesome</span>
+                    <span class="material-icons">${icon}</span>
                 </div>
                 <div class="gacha-item-info">
                     <div class="gacha-item-name">${item.name}</div>
-                    <div class="gacha-item-tier">Tier ${item.tier}</div>
+                    <div class="gacha-item-tier">Tier ${item.tier} (${typeLabel})</div>
                 </div>
-                ${item.isNew ? '<span class="new-badge">NEW!</span>' : ''}
+                ${item.isNew ? '<span class="new-badge">NEW!</span>' : '<span class="status-badge">済み</span>'}
             </div>
-        `).join('');
+        `}).join('');
 
         // インベントリに加算
         items.forEach(item => {
-            GameState.gainGachaResult(item.id);
+            GameState.gainGachaResult(item);
         });
 
-        fishingArea.innerHTML = `
-            <div class="result-overlay gacha-result" id="result-overlay">
-                <div class="result-card gacha-card">
-                    <div class="card-header">GACHA RESULT</div>
-                    
-                    <div class="gacha-items-grid">
-                        ${itemsHtml}
-                    </div>
+        // 既存のオーバーレイがあれば削除
+        const existing = document.getElementById('result-overlay');
+        if (existing) existing.remove();
 
-                    <div class="tap-hint">TAP TO CLOSE</div>
+        const overlay = document.createElement('div');
+        overlay.id = 'result-overlay';
+        overlay.className = 'result-overlay gacha-result';
+        // オーバーレイのスタイルを強制適用（CSSクラスがfishing-area依存の場合に備えて）
+        overlay.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 3000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            opacity: 0; animation: fadeIn 0.3s forwards;
+        `;
+
+        overlay.innerHTML = `
+            <div class="result-card gacha-card">
+                <div class="card-header">GACHA RESULT</div>
+                
+                <div class="gacha-items-grid">
+                    ${itemsHtml}
                 </div>
+
+                <div class="tap-hint">TAP TO CLOSE</div>
             </div>
         `;
+
+        document.body.appendChild(overlay);
 
         this.setupResultOverlayClose(onClose);
         this.updateStatus();
@@ -611,7 +792,51 @@ const UIManager = {
     // ========================================
     // 所持金更新
     // ========================================
+    // ========================================
+    // 所持金変動演出
+    // ========================================
+    showMoneyPopup(diff) {
+        if (diff === 0) return;
+
+        const isPlus = diff > 0;
+        const text = isPlus ? `+${diff.toLocaleString()}` : `${diff.toLocaleString()}`;
+        const color = isPlus ? '#4ade80' : '#f87171'; // Green : Red
+
+        // Popup targets (Main money display and Casino header)
+        const targets = [
+            document.querySelector('.shop-money'),
+            document.querySelector('#casino-screen .shop-money')
+        ];
+
+        targets.forEach(container => {
+            if (!container) return;
+
+            const popup = document.createElement('span');
+            popup.className = 'money-popup';
+            popup.textContent = text;
+            popup.style.color = color;
+
+            container.style.position = 'relative'; // Ensure relative positioning
+            container.appendChild(popup);
+
+            // Remove after animation
+            setTimeout(() => {
+                popup.remove();
+            }, 1500);
+        });
+    },
+
+    // ========================================
+    // 所持金更新
+    // ========================================
     updateMoney() {
+        // Delta popup
+        if (this.lastMoney !== null && this.lastMoney !== GameState.money) {
+            const diff = GameState.money - this.lastMoney;
+            this.showMoneyPopup(diff);
+        }
+        this.lastMoney = GameState.money;
+
         const moneyDisplay = document.getElementById('money-display');
         if (moneyDisplay) {
             moneyDisplay.textContent = `${GameState.money.toLocaleString()} G`;
@@ -621,6 +846,12 @@ const UIManager = {
         if (shopMoneyDisplay) {
             shopMoneyDisplay.textContent = `¥${GameState.money.toLocaleString()}`;
         }
+        // カジノ画面の所持金も更新
+        const casinoMoneyDisplay = document.getElementById('casino-money-display');
+        if (casinoMoneyDisplay) {
+            casinoMoneyDisplay.textContent = `¥${GameState.money.toLocaleString()}`;
+        }
+
         // パワー表示も更新
         const powerDisplay = document.getElementById('power-display');
         if (powerDisplay) {
@@ -657,7 +888,7 @@ const UIManager = {
 
         rodInfo.innerHTML = `
             <span class="rod-name">${rod.name}</span>
-            <span class="rod-stars">${starsHtml}</span>
+            <div class="rod-stars">${starsHtml}</div>
         `;
     },
 
@@ -673,15 +904,12 @@ const UIManager = {
         const count = GameState.getCurrentBaitCount();
         const displayCount = count === -1 ? '∞' : count;
 
+        // user's new UI expects: BAIT (pseudo) < content >
+        // We inject the buttons and the text.
         baitInfo.innerHTML = `
-            <div class="bait-selector">
-                <button class="selector-btn prev" onclick="GameState.switchBait(-1); UIManager.updateBaitInfo();">◀</button>
-                <div class="bait-display" onclick="UIManager.showBaitPurchaseDialog('${currentBaitId}')">
-                    <span class="bait-name">${bait.name}</span>
-                    <span class="bait-count">${displayCount}個</span>
-                </div>
-                <button class="selector-btn next" onclick="GameState.switchBait(1); UIManager.updateBaitInfo();">▶</button>
-            </div>
+            <button class="selector-btn prev" onclick="GameState.switchBait(-1); UIManager.updateBaitInfo();"><span class="material-icons">chevron_left</span></button>
+            <span style="cursor: pointer;" onclick="UIManager.showBaitPurchaseDialog('${currentBaitId}')">${bait.name} × ${displayCount}</span>
+            <button class="selector-btn next" onclick="GameState.switchBait(1); UIManager.updateBaitInfo();"><span class="material-icons">chevron_right</span></button>
         `;
     },
 
@@ -747,6 +975,95 @@ const UIManager = {
                 }
             });
         });
+    },
+
+    // ========================================
+    // ボート通過イベント表示
+    // ========================================
+    showBoatEvent(callback) {
+        const fishingArea = document.getElementById('fishing-screen');
+        if (!fishingArea) return;
+
+        // コンテナ取得または作成
+        let container = fishingArea.querySelector('.event-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'event-container';
+            fishingArea.insertBefore(container, fishingArea.firstChild); // 背景の手前
+        }
+
+        // ボート要素
+        const boat = document.createElement('div');
+        boat.className = 'event-boat';
+        boat.innerHTML = '<span class="material-icons game-boat">sailing</span>';
+        container.appendChild(boat);
+
+        // クリーンアップ
+        setTimeout(() => {
+            boat.remove();
+            if (callback) callback();
+        }, 20000); // アニメーション時間に合わせて削除
+    },
+
+    // ========================================
+    // 鳥通過イベント表示
+    // ========================================
+    showBirdEvent(callback) {
+        const fishingArea = document.getElementById('fishing-screen');
+        if (!fishingArea) return;
+
+        // コンテナ取得または作成
+        let container = fishingArea.querySelector('.event-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'event-container';
+            fishingArea.insertBefore(container, fishingArea.firstChild);
+        }
+
+        // 鳥要素 (3羽: ▽フォーメーション)
+        const birdsConfig = [
+            { id: 1, delay: 0.0, top: 12 },   // 左上 (先頭)
+            { id: 2, delay: 0.4, top: 12 },   // 右上 (後方)
+            { id: 3, delay: 0.2, top: 16 }    // 下中央
+        ];
+
+        birdsConfig.forEach((config, index) => {
+            const bird = document.createElement('div');
+            bird.className = 'event-bird';
+            bird.innerHTML = '<span class="material-icons game-bird">keyboard_arrow_down</span>';
+
+            // ずらし
+            bird.style.animationDelay = `${config.delay}s`;
+            bird.style.top = `${config.top}%`;
+
+            container.appendChild(bird);
+
+            // クリーンアップ
+            setTimeout(() => {
+                bird.remove();
+                if (index === 2 && callback) callback();
+            }, 12000 + (config.delay * 1000));
+        });
+    },
+
+    // ========================================
+    // イベントメッセージ表示
+    // ========================================
+    showEventMessage(text, icon = 'info') {
+        const fishingArea = document.getElementById('fishing-screen');
+        if (!fishingArea) return;
+
+        const msg = document.createElement('div');
+        msg.className = 'event-message';
+        msg.innerHTML = `
+            <span class="material-icons">${icon}</span>
+            <span>${text}</span>
+        `;
+        fishingArea.appendChild(msg);
+
+        setTimeout(() => {
+            msg.remove();
+        }, 4000);
     },
 
     // ========================================

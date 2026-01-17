@@ -103,6 +103,37 @@ const EncyclopediaManager = {
                 </div>
             `;
         }
+    },
+
+    // ========================================
+    // 捕獲を登録
+    // ========================================
+    registerCatch(fish, isSpecial = false) {
+        if (!GameState.encyclopedia) {
+            GameState.encyclopedia = {};
+        }
+
+        const id = fish.id;
+        if (!GameState.encyclopedia[id]) {
+            GameState.encyclopedia[id] = {
+                count: 0,
+                hasSpecial: false,
+                specialCount: 0
+            };
+        }
+
+        // カウント更新
+        GameState.encyclopedia[id].count++;
+
+        if (isSpecial) {
+            GameState.encyclopedia[id].hasSpecial = true;
+            GameState.encyclopedia[id].specialCount = (GameState.encyclopedia[id].specialCount || 0) + 1;
+        }
+
+        // 新種発見時は通知してもいいかも
+        if (GameState.encyclopedia[id].count === 1) {
+            console.log(`📖 新種登録: ${fish.name} `);
+        }
     }
 };
 

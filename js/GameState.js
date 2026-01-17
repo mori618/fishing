@@ -13,8 +13,23 @@ const GameState = {
     // 釣り竿の状態
     // ========================================
     rodRankIndex: 0,
-    rodStars: 0,
+    rodStarLevels: {},  // インデックスごとの星数 { 0: 0, 1: 0 }
     equippedSkills: [],
+
+    // Getter for backward compatibility (current rod's stars)
+    get rodStars() {
+        return this.rodStarLevels[this.rodRankIndex] || 0;
+    },
+
+    set rodStars(value) {
+        // Setter for migration or simple assignment
+        this.rodStarLevels[this.rodRankIndex] = value;
+    },
+
+    // ========================================
+    // イベント状態
+    // ========================================
+    highTierGuaranteed: false, // 鳥イベント用：次回上位魚確定フラグ
 
     // ========================================
     // インベントリ（釣った魚）
@@ -30,8 +45,12 @@ const GameState = {
     // アンロック状態
     // ========================================
     unlockedRods: [0],
+    unlockedSkins: ['skin_default'],
+    selectedSkin: 'skin_default',
     skillInventory: {}, // IDごとの所持数 { "power_up_1": 3 }
     // unlockedSkills: [], // 廃止予定 (移行用コードで処理)
+    unlockedSkies: ['sky_default'],
+    selectedSky: 'sky_default',
 
     // ========================================
     // 統計情報
@@ -56,6 +75,7 @@ const GameState = {
         if (saveData) {
             // セーブデータから復元
             this.money = saveData.player.money;
+            this.highTierGuaranteed = false; // ロード時はリセット
             // 互換性チェック: 古いデータの場合は移行
             if (saveData.player.baitInventory) {
                 this.baitInventory = { ...saveData.player.baitInventory };
@@ -77,12 +97,35 @@ const GameState = {
             this.baitType = saveData.player.baitType || 'bait_d';
 
             this.rodRankIndex = saveData.rod.rankIndex;
-            this.rodStars = saveData.rod.stars;
+
+            // ----------------------------------------
+            // 竿レベルの移行ロジック
+            // ----------------------------------------
+            if (saveData.rod.rodStarLevels) {
+                // 新形式データ
+                this.rodStarLevels = { ...saveData.rod.rodStarLevels };
+            } else {
+                // 旧形式からの移行:
+                // 現在持っていた星の数を、現在アンロックされている全ての竿に適用（救済措置）
+                const oldStars = saveData.rod.stars || 0;
+                this.rodStarLevels = {};
+                (saveData.unlocked.rods || [0]).forEach(rodId => {
+                    this.rodStarLevels[rodId] = oldStars;
+                });
+                console.log(`🔄 竿レベル移行完了: 全アンロック竿に星${oldStars}個を適用`);
+            }
+
             this.equippedSkills = [...saveData.rod.equippedSkills];
 
             this.inventory = [...saveData.inventory];
 
             this.unlockedRods = [...saveData.unlocked.rods];
+            // データ不整合防止: unlockedRodsにあるものは確実に初期化
+            this.unlockedRods.forEach(rodId => {
+                if (typeof this.rodStarLevels[rodId] === 'undefined') {
+                    this.rodStarLevels[rodId] = 0;
+                }
+            });
 
             // スキルデータの移行
             if (saveData.unlocked.skillInventory) {
@@ -103,6 +146,12 @@ const GameState = {
 
             // 図鑑データを復元
             this.encyclopedia = saveData.encyclopedia ? { ...saveData.encyclopedia } : {};
+
+            // スキン状態の復元
+            this.unlockedSkins = saveData.unlocked.skins || ['skin_default'];
+            this.selectedSkin = saveData.player.selectedSkin || 'skin_default';
+            this.unlockedSkies = saveData.unlocked.skies || ['sky_default'];
+            this.selectedSky = saveData.player.selectedSky || 'sky_default';
         } else {
             // 新規ゲーム
             const defaultData = SaveManager.getDefaultData();
@@ -117,9 +166,23 @@ const GameState = {
                 'bait_s': 0
             };
             this.baitType = 'bait_d';
+            // 初期スキン
+            this.unlockedSkins = ['skin_default'];
+            this.selectedSkin = 'skin_default';
+            this.unlockedSkies = ['sky_default'];
+            this.selectedSky = 'sky_default';
         }
 
+
         console.log('🎮 ゲーム状態を初期化しました');
+    },
+
+    // ========================================
+    // 上位魚確定フラグの設定
+    // ========================================
+    setHighTierGuaranteed(value) {
+        this.highTierGuaranteed = value;
+        console.log(`🦅 上位魚確定フラグ: ${value}`);
     },
 
     // ========================================
@@ -128,7 +191,18 @@ const GameState = {
     // お金操作
     addMoney(amount) {
         this.money += amount;
-        this.totalMoneyEarned += amount;
+        if (amount > 0) {
+            this.totalMoneyEarned += amount;
+        }
+    },
+
+    // 借金状態の確認
+    getDebt() {
+        return this.money < 0 ? Math.abs(this.money) : 0;
+    },
+
+    hasDebt() {
+        return this.money < 0;
     },
 
     getCurrentRod() {
@@ -140,7 +214,8 @@ const GameState = {
     // ========================================
     getTotalPower() {
         const rod = this.getCurrentRod();
-        let power = rod.basePower + (rod.starPowerBonus * this.rodStars);
+        const stars = this.rodStars; // Getterを使用
+        let power = rod.basePower + (rod.starPowerBonus * stars);
 
         // スキルボーナスを加算
         for (const skillId of this.equippedSkills) {
@@ -148,6 +223,15 @@ const GameState = {
             if (skill && skill.effect.type === 'power_boost') {
                 power += skill.effect.value;
             }
+        }
+
+        // ========================================
+        // フィーバーボーナス (月: お魚フィーバー)
+        // ========================================
+        if (this.fever.isActive && this.fever.type === 'moon') {
+            const feverBonus = 1.2; // 1.2倍 (20% UP)
+            power = Math.floor(power * feverBonus);
+            console.log(`🔥 お魚フィーバー効果: パワー 1.2倍! -> ${power}`);
         }
 
         return power;
@@ -430,8 +514,27 @@ const GameState = {
     // ========================================
     // ガチャ結果の受け取り（コスト消費なしでスキル追加）
     // ========================================
-    gainGachaResult(skillId) {
-        this.skillInventory[skillId] = (this.skillInventory[skillId] || 0) + 1;
+    // ========================================
+    // ガチャ結果の受け取り
+    // ========================================
+    gainGachaResult(item) {
+        // IDのみ渡された場合の互換性維持 (文字列かどうか判定)
+        const id = (typeof item === 'string') ? item : item.id;
+        const category = item.category || 'skill';
+
+        if (category === 'skill') {
+            this.skillInventory[id] = (this.skillInventory[id] || 0) + 1;
+        } else if (category === 'skin') {
+            if (!this.unlockedSkins.includes(id)) {
+                this.unlockedSkins.push(id);
+            }
+        } else if (category === 'sky') {
+            if (!this.unlockedSkies.includes(id)) {
+                this.unlockedSkies.push(id);
+            }
+        }
+
+        // オートセーブ
         SaveManager.save(this);
     },
 
@@ -474,9 +577,56 @@ const GameState = {
         this.money -= rod.price;
         this.unlockedRods.push(rodIndex);
 
+        // スキンをアンロック
+        this.unlockSkinByRodId(rod.id);
+
         // オートセーブ
         SaveManager.save(this);
 
+        return true;
+    },
+
+    // ========================================
+    // 現在の空（背景）を取得
+    // ========================================
+    getCurrentSky() {
+        if (!this.selectedSky) return GAME_DATA.SKIES[0];
+        return GAME_DATA.SKIES.find(s => s.id === this.selectedSky) || GAME_DATA.SKIES[0];
+    },
+
+    // ========================================
+    // 空（背景）の購入
+    // ========================================
+    buySky(skyId) {
+        const sky = GAME_DATA.SKIES.find(s => s.id === skyId);
+        if (!sky || this.money < sky.price) {
+            return false;
+        }
+
+        // 既にアンロック済みならスキップ
+        if (this.unlockedSkies.includes(skyId)) {
+            return false;
+        }
+
+        this.money -= sky.price;
+        this.unlockedSkies.push(skyId);
+
+        // オートセーブ
+        SaveManager.save(this);
+
+        return true;
+    },
+
+    // ========================================
+    // 空（背景）の装備
+    // ========================================
+    equipSky(skyId) {
+        if (!this.unlockedSkies.includes(skyId)) {
+            return false;
+        }
+
+        this.selectedSky = skyId;
+        SaveManager.save(this);
         return true;
     },
 
@@ -712,6 +862,34 @@ const GameState = {
     },
 
     // ========================================
+    // ボートイベント出現率のスキル補正を取得
+    // ========================================
+    getBoatEventBonus() {
+        let bonus = 0;
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'boat_event_boost') {
+                bonus += skill.effect.value;
+            }
+        }
+        return bonus;
+    },
+
+    // ========================================
+    // 鳥イベント出現率のスキル補正を取得
+    // ========================================
+    getBirdEventBonus() {
+        let bonus = 0;
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'bird_event_boost') {
+                bonus += skill.effect.value;
+            }
+        }
+        return bonus;
+    },
+
+    // ========================================
     // フィーバータイプ偏りボーナス取得
     // ========================================
     getFeverBiasBonus(type) {
@@ -795,6 +973,36 @@ const GameState = {
         // オートセーブ
         SaveManager.save(this);
         return true;
+    },
+
+    // ========================================
+    // スキン関連
+    // ========================================
+
+    // 現在のスキン情報を取得
+    getCurrentSkin() {
+        return GAME_DATA.SKINS.find(s => s.id === this.selectedSkin) || GAME_DATA.SKINS[0];
+    },
+
+    // スキンを装備
+    equipSkin(skinId) {
+        if (!this.unlockedSkins.includes(skinId)) {
+            return false;
+        }
+        this.selectedSkin = skinId;
+        SaveManager.save(this);
+        return true;
+    },
+
+    // ロッドIDに関連するスキンをアンロック
+    unlockSkinByRodId(rodId) {
+        const skin = GAME_DATA.SKINS.find(s => s.rodId === rodId);
+        if (skin && !this.unlockedSkins.includes(skin.id)) {
+            this.unlockedSkins.push(skin.id);
+            console.log(`✨ スキン解放: ${skin.name}`);
+            return true;
+        }
+        return false;
     },
 
     // ========================================

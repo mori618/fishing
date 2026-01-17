@@ -7,9 +7,12 @@
     <meta name="description" content="フィッシング・エボリューション - 魚を釣り、売り、装備を強化する成長型釣りゲーム">
     <title>フィッシング・エボリューション</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="chinchiro.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Roboto+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 
@@ -46,6 +49,15 @@
          釣り画面
          ======================================== -->
     <div id="fishing-screen" class="screen">
+        <!-- ゲーム画面風フレーム -->
+        <div class="fishing-area-frame"></div>
+        <!-- 背景の雲 -->
+        <div class="sky-clouds">
+            <div class="cloud cloud1"></div>
+            <div class="cloud cloud2"></div>
+            <div class="cloud cloud3"></div>
+        </div>
+
         <!-- フローティングステータス（左側） -->
         <div class="floating-status floating-status-left">
             <div class="status-pill">
@@ -56,32 +68,15 @@
                 <span class="status-icon"><span class="material-icons">bolt</span></span>
                 <span id="power-display" class="status-value">パワー: 10</span>
             </div>
-        </div>
-
-        <!-- フローティングステータス（右側） -->
-        <div class="floating-status floating-status-right">
-            <button id="shop-btn-top" class="floating-btn">
-                <span class="material-icons">shopping_cart</span>
-            </button>
-            <div class="status-card">
-                <div class="status-label">餌の残数</div>
-                <div id="bait-info" class="status-value-lg">0 個</div>
-            </div>
-            <div class="status-card">
-                <div class="status-label">所持魚</div>
-                <div id="inventory-count" class="status-value-lg">0 匹</div>
+            <div class="status-pill">
+                <span class="status-icon"><span class="material-icons">set_meal</span></span>
+                <span id="inventory-count" class="status-value">0 匹</span>
             </div>
         </div>
 
-        <!-- 装備中の竿（左下表示） -->
-        <div id="rod-info" class="rod-badge">
-            <span class="rod-name">木の釣竿</span>
-            <span class="rod-stars"><span class="material-icons star-empty">star_border</span><span
-                    class="material-icons star-empty">star_border</span><span
-                    class="material-icons star-empty">star_border</span><span
-                    class="material-icons star-empty">star_border</span><span
-                    class="material-icons star-empty">star_border</span></span>
-        </div>
+
+
+
 
         <!-- メイン釣りエリア -->
         <main id="fishing-area" class="fishing-area">
@@ -96,17 +91,30 @@
             <div class="rod-line"></div>
         </div>
 
+        <!-- 中央下部HUD（餌・竿・町） -->
+        <div class="bottom-hud-center">
+            <!-- 町へボタン -->
+            <button id="shop-btn-top" class="floating-btn btn-town">
+                <span class="material-icons">holiday_village</span>
+                <span class="btn-label">町へ</span>
+            </button>
+            <!-- 餌情報 -->
+            <div id="bait-status-display" class="bait-status-large">
+                <div id="bait-info" class="bait-value"></div>
+            </div>
+            <!-- 装備中の竿 -->
+            <div id="rod-info" class="rod-badge">
+                <span class="rod-name">木の釣竿</span>
+                <span class="rod-stars"><span class="material-icons star-empty">star_border</span><span
+                        class="material-icons star-empty">star_border</span><span
+                        class="material-icons star-empty">star_border</span><span
+                        class="material-icons star-empty">star_border</span><span
+                        class="material-icons star-empty">star_border</span></span>
+            </div>
+        </div>
+
         <!-- 底部ナビゲーション -->
-        <nav class="bottom-nav">
-            <button class="nav-item active" data-screen="fishing">
-                <span class="nav-icon"><span class="material-icons">phishing</span></span>
-                <span class="nav-label">釣り場</span>
-            </button>
-            <button id="shop-btn" class="nav-item" data-screen="shop">
-                <span class="nav-icon"><span class="material-icons">store</span></span>
-                <span class="nav-label">ショップ</span>
-            </button>
-        </nav>
+
     </div>
 
     <!-- ========================================
@@ -114,54 +122,52 @@
          ======================================== -->
     <div id="shop-screen" class="screen">
         <header class="shop-header">
-            <h2 class="shop-title"><span class="material-icons">store</span> ショップ</h2>
+            <h2 id="shop-main-title" class="shop-title"><span class="material-icons">location_city</span> フィッシング・タウン
+            </h2>
             <div class="shop-money">
                 <span class="status-icon"><span class="material-icons">paid</span></span>
                 <span id="shop-money-display">¥0</span>
             </div>
         </header>
 
-        <!-- カテゴリタブ -->
-        <nav class="shop-tabs">
-            <button class="shop-tab active" data-category="rods">
-                <span class="material-icons">phishing</span> 釣り竿
-            </button>
-            <button class="shop-tab" data-category="skills">
-                <span class="material-icons">bolt</span> スキル
-            </button>
-            <button class="shop-tab" data-category="baits">
-                <span class="material-icons">grass</span> 餌
-            </button>
-        </nav>
-
-        <!-- ショップコンテンツ -->
         <main class="shop-content">
-            <!-- 強化・装備情報セクション -->
-            <section id="upgrade-section" class="upgrade-section">
-                <!-- 動的に表示 -->
+            <div id="town-menu" class="town-menu">
+                <!-- Town buildings will be injected here -->
+            </div>
+
+            <section id="upgrade-section" class="upgrade-section hidden">
+                <!-- Upgrade info will be injected here -->
             </section>
 
-            <!-- アイテムリスト -->
             <section id="shop-items" class="shop-items">
-                <!-- 動的に表示 -->
+                <!-- Shop items will be injected here -->
             </section>
         </main>
 
-        <!-- フッター -->
         <footer class="shop-footer">
-            <button id="sell-btn" class="btn-action">
-                <span class="material-icons">sell</span>
-                魚を全て売却
-            </button>
-            <button id="encyclopedia-btn" class="btn-action">
-                <span class="material-icons">menu_book</span>
-                図鑑
-            </button>
-            <button id="back-btn" class="btn-nav">
-                <span class="material-icons">phishing</span>
-                釣りに戻る
-            </button>
+            <div id="shop-footer-actions" style="display: flex; gap: 16px; width: 100%;">
+                <!-- Dynamic footer buttons -->
+            </div>
         </footer>
+    </div>
+
+    <div id="casino-screen" class="screen">
+        <header class="casino-header">
+            <button class="btn-header-back" onclick="ShopManager.setCategory('town')">
+                <span class="material-icons">arrow_back</span>
+            </button>
+            <h2 class="casino-title"><span class="material-icons">stars</span> グランド・カジノ</h2>
+            <div class="shop-money">
+                <span class="status-icon"><span class="material-icons">paid</span></span>
+                <span id="casino-money-display">¥0</span>
+            </div>
+        </header>
+
+        <main class="shop-content casino-theme">
+            <div id="casino-main-area">
+                <!-- Casino content injected here -->
+            </div>
+        </main>
     </div>
 
     <!-- ========================================
@@ -196,6 +202,7 @@
     <script src="js/SaveManager.js"></script>
     <script src="js/GameState.js"></script>
     <script src="js/FishingGame.js"></script>
+    <script src="js/CasinoManager.js"></script>
     <script src="js/ShopManager.js"></script>
     <script src="js/EncyclopediaManager.js"></script>
     <script src="js/UIManager.js"></script>
