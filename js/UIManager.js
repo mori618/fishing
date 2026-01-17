@@ -3,6 +3,107 @@
 
 const UIManager = {
     // ========================================
+    // ガチャ（スロットマシン）演出
+    // ========================================
+    showSlotAnimation(results, onComplete) {
+        const overlay = document.createElement('div');
+        overlay.id = 'gacha-slot-overlay';
+        overlay.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 2000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        `;
+
+        // スロットマシーンの見た目
+        const slotContainer = document.createElement('div');
+        slotContainer.style.cssText = `
+            border: 10px solid #ffd700;
+            border-radius: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.5);
+            display: flex; gap: 10px;
+        `;
+
+        // リールの作成 (3つ)
+        for (let i = 0; i < 3; i++) {
+            const reel = document.createElement('div');
+            reel.className = 'slot-reel';
+            reel.style.cssText = `
+                width: 80px; height: 120px;
+                background: #fff;
+                border: 4px solid #333;
+                border-radius: 10px;
+                overflow: hidden;
+                position: relative;
+            `;
+
+            // 回転するストリップ
+            const strip = document.createElement('div');
+            strip.className = 'reel-strip';
+            strip.style.cssText = `
+                position: absolute; top: 0; left: 0; width: 100%;
+                display: flex; flex-direction: column; align-items: center;
+            `;
+            // ダミーアイコン
+            const icons = ['auto_awesome', 'stars', 'bolt', 'palette', 'diamond', 'phishing'];
+            let stripHtml = '';
+            for (let j = 0; j < 20; j++) {
+                const icon = icons[Math.floor(Math.random() * icons.length)];
+                stripHtml += `<span class="material-icons" style="font-size: 48px; line-height: 120px; color: #333;">${icon}</span>`;
+            }
+            strip.innerHTML = stripHtml;
+
+            reel.appendChild(strip);
+            slotContainer.appendChild(reel);
+
+            // アニメーション (CSS keyframes needed or simple js)
+            // Simple JS implementation
+            this.animateReel(strip, i * 200 + 1500, results);
+        }
+
+        const title = document.createElement('div');
+        title.innerHTML = '<h2 style="color: #ffd700; font-size: 2rem; margin-bottom: 20px; text-shadow: 0 0 10px #ffd700;">JACKPOT SLOTS</h2>';
+
+        overlay.appendChild(title);
+        overlay.appendChild(slotContainer);
+        document.body.appendChild(overlay);
+
+        // 演出全体の時間（全てのリールが止まった後）
+        setTimeout(() => {
+            overlay.style.transition = 'opacity 0.5s';
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                overlay.remove();
+                if (onComplete) onComplete();
+            }, 500);
+        }, 3000); // 3秒後
+    },
+
+    animateReel(element, duration, results) {
+        // キーフレームアニメーションを動的に追加
+        const keyframes = [
+            { transform: 'translateY(0)' },
+            { transform: 'translateY(-1000px)' }
+        ];
+
+        const animation = element.animate(keyframes, {
+            duration: 200,
+            iterations: Infinity
+        });
+
+        setTimeout(() => {
+            animation.cancel();
+            // 最後の位置（結果に基づく）を決めるロジックは入れていない（簡易演出）
+            // 止まった位置に固定
+            element.style.transform = 'translateY(-50px)'; // センター合わせ
+
+            // 輝きエフェクト
+            element.parentElement.style.boxShadow = '0 0 20px white';
+            element.parentElement.style.borderColor = '#fff';
+        }, duration);
+    },
+    // ========================================
     // 現在の画面
     // ========================================
     currentScreen: 'start',  // start, fishing, shop

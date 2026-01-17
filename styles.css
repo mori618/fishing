@@ -3033,3 +3033,164 @@ body {
         transform: translateY(0) rotate(0deg);
     }
 }
+/* ----------------------------------------
+   タウンメニュー（商店街）
+   ---------------------------------------- */
+.town-menu {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 8px;
+}
+
+.shop-building {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 24px;
+    background: linear-gradient(135deg, var(--bg-card) 0%, rgba(30, 41, 59, 0.9) 100%);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.shop-building:hover {
+    transform: translateY(-4px);
+    border-color: var(--primary-color);
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, var(--bg-card) 100%);
+}
+
+.shop-building::after {
+    content: 'ENTER';
+    position: absolute;
+    right: 20px;
+    font-size: 10px;
+    font-weight: 900;
+    color: var(--primary-light);
+    opacity: 0.5;
+    letter-spacing: 2px;
+}
+
+.building-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.building-icon .material-icons {
+    font-size: 36px;
+}
+
+.shop-building.rods .building-icon { color: var(--rarity-S); }
+.shop-building.skills .building-icon { color: var(--primary-light); }
+.shop-building.baits .building-icon { color: var(--secondary-color); }
+
+.building-info {
+    text-align: left;
+}
+
+.building-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.building-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+
+/* ----------------------------------------
+   カジノ画面（娯楽街）スタイル
+   ---------------------------------------- */
+.casino-theme {
+    background: radial-gradient(circle at center, #2e1065 0%, #0f172a 100%);
+    position: relative;
+}
+
+.casino-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md);
+    background: rgba(0, 0, 0, 0.8);
+    border-bottom: 2px solid #fbbf24;
+    box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
+}
+
+.casino-title {
+    color: #fbbf24;
+    text-shadow: 0 0 10px rgba(251, 191, 36, 0.8);
+    font-weight: 900;
+    letter-spacing: 2px;
+}
+
+/* カジノビル専用ボタン（町メニュー用） */
+.shop-building.casino {
+    border-color: #f43f5e;
+    background: linear-gradient(135deg, rgba(244, 63, 94, 0.1) 0%, var(--bg-card) 100%);
+}
+
+.shop-building.casino .building-icon {
+    color: #f43f5e;
+    text-shadow: 0 0 10px #f43f5e;
+}
+
+/* ガチャマシンの見た目 */
+.gacha-machine-card {
+    background: #1e293b;
+    border: 2px solid #fbbf24;
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.2);
+}
+
+.machine-header {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.machine-display {
+    background: #000;
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    border: 1px solid #334155;
+    color: #fbbf24;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+    font-size: 1.2rem;
+    text-align: center;
+}
+
+/* リサイクルエリア（裏路地の交換所） */
+.recycle-alley {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px dashed #475569;
+    padding: 15px;
+    border-radius: var(--radius-md);
+}
+
+.recycle-alley h3 {
+    color: #10b981;
+    font-size: 14px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+/* カジノフッター */
+.casino-footer {
+    background: linear-gradient(to top, #0f172a, #2e1065);
+    border-top: 1px solid rgba(251, 191, 36, 0.3);
+}
+

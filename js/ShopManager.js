@@ -5,17 +5,28 @@ const ShopManager = {
     // ========================================
     // ショップカテゴリ
     // ========================================
-    currentCategory: 'rods',  // rods, skills, baits
-    currentTab: 'skill',      // skill, gacha
-    currentStyleTab: 'gear',  // gear, sky
-    recycleSelectedSkills: [], // リサイクル用に選択されたスキルのIDリスト
+    // ========================================
+    // ショップカテゴリ
+    // ========================================
+    currentCategory: 'town', // デフォルトを町(town)に変更
+    currentTab: 'skill',
+    recycleSelectedSkills: [],
 
+    // ========================================
+    // カテゴリ切り替え
+    // ========================================
     // ========================================
     // カテゴリ切り替え
     // ========================================
     setCategory(category) {
         this.currentCategory = category;
-        this.renderShop();
+
+        if (category === 'casino') {
+            UIManager.showScreen('casino');
+            CasinoManager.render();
+        } else {
+            this.renderShop();
+        }
     },
 
     // ========================================
@@ -38,44 +49,122 @@ const ShopManager = {
     // ショップ画面をレンダリング
     // ========================================
     renderShop() {
-        // ショップアイテムコンテナを取得
         const container = document.getElementById('shop-items');
-        // リセット前には何もしない（各renderメソッド内でクリアするが、タブ挿入のためにここでも制御が必要かも）
+        const townMenu = document.getElementById('town-menu');
+        const upgradeSection = document.getElementById('upgrade-section');
+        const title = document.getElementById('shop-main-title');
 
-        switch (this.currentCategory) {
-            case 'rods':
-                this.renderRodShop();
-                break;
-            case 'skills':
-                // サブタブを表示（コンテナの直前、あるいはコンテナ内に都度描画）
-                // ここでは renderSkillShop / renderGachaShop の先頭で呼ぶ形にするか、
-                // あるいは共通処理としてここで呼ぶか。
-                // 既存のHTML構造上、shop-itemsの中にタブを入れると消えてしまうので、
-                // shop-itemsの前に動的に入れるか、shop-itemsのinnerHTMLの最初にタブを入れる。
-                // 簡易的に innerHTML の最初にタブを入れる実装にする。
+        // 表示のリセット
+        container.innerHTML = '';
+        if (townMenu) townMenu.classList.add('hidden');
+        if (upgradeSection) upgradeSection.classList.add('hidden');
 
-                if (this.currentTab === 'skill') {
-                    this.renderSkillShop();
-                } else if (this.currentTab === 'gacha') {
-                    // ガチャショップ描画
-                    this.renderGachaShop(container);
-                }
-                break;
-            case 'baits':
-                this.renderBaitShop();
-                break;
-            case 'skins':
-                if (this.currentStyleTab === 'sky') {
-                    this.renderSkyShop(container);
-                } else {
-                    this.renderSkinShop(container);
-                }
-                // サブタブを描画（最上部に挿入）
-                this.renderStyleTabs(container);
-                break;
-            case 'casino':
-                this.renderCasino(container);
-                break;
+        if (this.currentCategory === 'town') {
+            title.innerHTML = '<span class="material-icons">location_city</span> フィッシング・タウン';
+            this.renderTownMenu();
+        } else {
+            if (upgradeSection) upgradeSection.classList.remove('hidden');
+
+            switch (this.currentCategory) {
+                case 'rods':
+                    title.innerHTML = '<span class="material-icons">phishing</span> ロッド工房 匠';
+                    this.renderRodShop();
+                    break;
+                case 'skills':
+                    title.innerHTML = '<span class="material-icons">bolt</span> 冒険者の道場';
+                    if (this.currentTab === 'skill') {
+                        this.renderSkillShop();
+                    } else if (this.currentTab === 'gacha') {
+                        this.renderGachaShop(container);
+                    }
+                    break;
+                case 'baits':
+                    title.innerHTML = '<span class="material-icons">grass</span> 万屋 タックル';
+                    this.renderBaitShop();
+                    break;
+                case 'skins':
+                    title.innerHTML = '<span class="material-icons">palette</span> スタイリスト';
+                    if (this.currentStyleTab === 'sky') {
+                        this.renderSkyShop(container);
+                    } else {
+                        this.renderSkinShop(container);
+                    }
+                    this.renderStyleTabs(container); // Re-add tabs
+                    break;
+                // 'casino' case is removed as it's handled in setCategory now
+            }
+        }
+        this.updateFooter();
+    },
+
+    // 町のメニューを描画
+    renderTownMenu() {
+        const townMenu = document.getElementById('town-menu');
+        if (!townMenu) return;
+
+        townMenu.classList.remove('hidden');
+        townMenu.innerHTML = `
+            <div class="shop-building rods" onclick="ShopManager.setCategory('rods')">
+                <div class="building-icon"><span class="material-icons">phishing</span></div>
+                <div class="building-info">
+                    <div class="building-name">ロッド工房 匠</div>
+                    <div class="building-desc">竿の購入・星強化を行えます</div>
+                </div>
+            </div>
+            <div class="shop-building skills" onclick="ShopManager.setCategory('skills')">
+                <div class="building-icon"><span class="material-icons">bolt</span></div>
+                <div class="building-info">
+                    <div class="building-name">冒険者の道場</div>
+                    <div class="building-desc">スキルの習得・装備</div>
+                </div>
+            </div>
+            <div class="shop-building baits" onclick="ShopManager.setCategory('baits')">
+                <div class="building-icon"><span class="material-icons">grass</span></div>
+                <div class="building-info">
+                    <div class="building-name">万屋 タックル</div>
+                    <div class="building-desc">各種ランクの餌を取り扱っています</div>
+                </div>
+            </div>
+             <div class="shop-building styles" onclick="ShopManager.setCategory('skins')" style="border-color: var(--accent-color);">
+                <div class="building-icon" style="color: var(--accent-color);"><span class="material-icons">palette</span></div>
+                <div class="building-info">
+                    <div class="building-name">スタイリスト</div>
+                    <div class="building-desc">見た目の変更・空の変更</div>
+                </div>
+            </div>
+             <div class="shop-building casino" onclick="ShopManager.setCategory('casino')">
+                <div class="building-icon"><span class="material-icons">stars</span></div>
+                <div class="building-info">
+                    <div class="building-name">グランド・カジノ</div>
+                    <div class="building-desc">運試しとスキルリサイクル</div>
+                </div>
+            </div>
+        `;
+    },
+
+    // フッターボタンを状況に応じて更新
+    updateFooter() {
+        const footerActions = document.getElementById('shop-footer-actions');
+        if (!footerActions) return;
+
+        if (this.currentCategory === 'town') {
+            footerActions.innerHTML = `
+                <button id="sell-btn" class="btn-action" onclick="ShopManager.sellAllFish()">
+                    <span class="material-icons">sell</span> 魚を全て売却
+                </button>
+                <button id="encyclopedia-btn" class="btn-action" onclick="UIManager.showScreen('encyclopedia')">
+                    <span class="material-icons">menu_book</span> 図鑑
+                </button>
+                <button id="back-btn" class="btn-nav" onclick="UIManager.showScreen('fishing')">
+                    <span class="material-icons">phishing</span> 釣り場へ
+                </button>
+            `;
+        } else {
+            footerActions.innerHTML = `
+                <button class="btn-nav" style="flex: 1;" onclick="ShopManager.setCategory('town')">
+                    <span class="material-icons">arrow_back</span> 町に戻る
+                </button>
+            `;
         }
     },
 
@@ -657,6 +746,10 @@ const ShopManager = {
         // お金を消費
         GameState.money -= cost;
         UIManager.updateMoney();
+        const moneyDisplay = document.getElementById('shop-money-display');
+        if (moneyDisplay) moneyDisplay.textContent = `¥${GameState.money.toLocaleString()}`;
+        const casinoMoney = document.getElementById('casino-money-display');
+        if (casinoMoney) casinoMoney.textContent = `¥${GameState.money.toLocaleString()}`;
 
         // 抽選実行
         const results = [];
@@ -665,7 +758,9 @@ const ShopManager = {
         }
 
         // ガチャ演出開始
-        FishingGame.startGacha(results);
+        UIManager.showSlotAnimation(results, () => {
+            FishingGame.startGacha(results);
+        });
     },
 
     // ========================================
@@ -944,323 +1039,6 @@ const ShopManager = {
             this.renderShop();
             UIManager.updateMoney();
         }
-    },
-
-    // ========================================
-    // カジノ（チンチロリン）
-    // ========================================
-    renderCasino(container) {
-        container = container || document.getElementById('shop-items');
-
-        // 借金状態なら赤く表示
-        const isDebt = GameState.hasDebt();
-        const debtAmount = GameState.getDebt();
-
-        // 借金返済のメッセージ
-        let debtHtml = '';
-        if (isDebt) {
-            debtHtml = `<div style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; border-radius: 8px; padding: 10px; margin-bottom: 20px; text-align: center; color: #fca5a5;">
-                <span class="material-icons" style="vertical-align: middle;">warning</span> 
-                現在借金中: <strong>-${debtAmount.toLocaleString()} G</strong>
-            </div>`;
-        }
-
-        let html = `
-            ${debtHtml}
-            <div class="casino-header" style="text-align: center; margin-bottom: 20px; padding: 20px; background: rgba(0,0,0,0.3); border-radius: 12px;">
-                <h3 style="margin-bottom: 10px; font-size: 1.5rem;">🎲 チンチロリン</h3>
-                <div class="casino-rules" style="font-size: 0.8rem; color: #ccc; text-align: left; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px;">
-                    <strong>ルール:</strong><br>
-                    • <strong>4-5-6 (シゴロ)</strong>: 4倍勝ち<br>
-                    • <strong>ゾロ目 / 相手が1-2-3</strong>: 3倍勝ち<br>
-                    • <strong>通常勝ち</strong>: 2倍勝ち<br>
-                    • <strong>1-2-3 (ヒフミ) / 相手がゾロ目</strong>: 没収 + 同額支払い (計2倍負け)<br>
-                    • <strong>相手が4-5-6</strong>: 没収 + 2倍支払い (計3倍負け)<br>
-                    <span style="color: #ef4444;">※支払い不能分は借金になります</span>
-                </div>
-            </div>
-
-            <div class="casino-board" style="display: flex; flex-direction: column; align-items: center; gap: 20px;">
-                <div class="bet-input-container" style="display: flex; gap: 10px; align-items: center;">
-                    <span style="font-weight: bold;">賭け金:</span>
-                    <input type="number" id="bet-amount" value="100" min="10" step="10" 
-                        style="padding: 8px; border-radius: 4px; border: 1px solid #555; background: #333; color: white; width: 100px; text-align: right;">
-                    <span>G</span>
-                </div>
-                
-                <div class="casino-actions">
-                    <button class="btn btn-buy" onclick="ShopManager.playCasino()" style="padding: 12px 32px; font-size: 1.2rem; background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);">
-                        勝負する！
-                    </button>
-                </div>
-                
-                <div id="casino-result" class="casino-result" style="width: 100%; min-height: 150px; display: none; flex-direction: column; items-align: center; justify-content: center; background: rgba(255,255,255,0.05); border-radius: 12px; padding: 20px; text-align: center;">
-                    <!-- 結果表示エリア -->
-                </div>
-            </div>
-        `;
-
-        container.innerHTML = html;
-    },
-
-    // カジノ実行
-    async playCasino() {
-        const input = document.getElementById('bet-amount');
-        const bet = parseInt(input.value, 10);
-
-        if (isNaN(bet) || bet <= 0) {
-            UIManager.showMessage('賭け金を正しく入力してください');
-            return;
-        }
-
-        if (GameState.money < bet) {
-            UIManager.showMessage('賭け金が足りません！');
-            return;
-        }
-
-        // ロジック実行（結果は即時確定するが、表示を遅延させる）
-        const data = CasinoManager.playRound(bet);
-
-        // 演出実行
-        await this.runCasinoAnimation(data);
-
-        // 最終的な所持金更新
-        UIManager.updateMoney();
-
-        // 借金発生時の演出など
-        if (GameState.hasDebt()) {
-            UIManager.showMessage('借金をしてしまった...');
-        }
-
-        // カジノ画面をリフレッシュ（借金表示更新のため）
-        // ただし入力値が消えるので、結果表示後に少し待ってからの方がいいかも？
-        // ここでは借金警告エリアだけ更新したいが、簡易的に全体リロードはしない
-        // renderCasino内で借金表示を更新するロジックがあれば良いが、今回はshowMessageで代用
-    },
-
-    // アニメーション付き結果表示
-    async runCasinoAnimation(data) {
-        const resultArea = document.getElementById('casino-result');
-        if (resultArea) {
-            resultArea.style.display = 'flex';
-            // resultArea.innerHTML = '<div style="font-size:1.2rem; color:#aaa;">勝負開始...</div>'; // 初期メッセージはボタン表示時に上書きされるので削除
-        }
-
-        // ヘルパー: 指定時間待機
-        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-        // ヘルパー: ロールボタン表示待機
-        const waitForRoll = (label = 'サイコロを振る') => {
-            return new Promise(resolve => {
-                if (!resultArea) return resolve();
-
-                // ボタン表示
-                const btnId = 'casino-roll-btn';
-                resultArea.innerHTML = `
-                    <div style="margin-bottom: 20px; color: #fff;">準備完了！</div>
-                    <button id="${btnId}" class="btn" style="padding: 15px 40px; font-size: 1.5rem; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4); animation: pulse 2s infinite;">
-                        🎲 ${label}
-                    </button>
-                    ${!document.getElementById('anim-style-pulse') ? `
-                    <style id="anim-style-pulse">
-                        @keyframes pulse {
-                            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
-                            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
-                            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
-                        }
-                    </style>` : ''}
-                `;
-
-                document.getElementById(btnId).addEventListener('click', () => {
-                    resolve();
-                });
-            });
-        };
-
-        // UI構築用ヘルパー
-        const updateDisplay = (playerDice, playerHandText, dealerDice, dealerHandText, message) => {
-            if (!resultArea) return;
-            let html = '';
-
-            // プレイヤー
-            if (playerDice) {
-                html += `
-                    <div style="font-size: 1.2rem; margin-bottom: 20px; color: #fff;">
-                        自分: <span style="font-weight:bold; font-size:1.5rem;">${playerHandText}</span>
-                        <div class="dice-display">${this.getDiceIcons(playerDice)}</div>
-                    </div>
-                `;
-            } else {
-                html += `
-                    <div style="font-size: 1.2rem; margin-bottom: 20px; color: #fff; opacity: 0.5;">
-                        自分: ...
-                    </div>
-                `;
-            }
-
-            // ディーラー（データがある場合のみ枠を表示）
-            if (dealerDice || dealerHandText !== '-') {
-                html += `
-                    <div style="font-size: 1.2rem; margin-bottom: 20px; color: #aaa;">
-                        相手: <span style="font-weight:bold; font-size:1.5rem;">${dealerHandText}</span>
-                        <div class="dice-display">${dealerDice ? this.getDiceIcons(dealerDice) : '???'}</div>
-                    </div>
-                `;
-            }
-
-            // メッセージ
-            if (message) {
-                html += `<div style="font-size: 1.5rem; font-weight: bold; color: #fbbf24;">${message}</div>`;
-            }
-
-            resultArea.innerHTML = html;
-        };
-
-        // ----------------------------------------
-        // プレイヤーのターン演出
-        // ----------------------------------------
-        let lastPlayerDice = null;
-        let lastPlayerHandText = '...';
-
-        for (let i = 0; i < data.playerHistory.length; i++) {
-            const turn = data.playerHistory[i];
-            const isLast = i === data.playerHistory.length - 1;
-
-            // ロールボタン待機 (初回または再挑戦時)
-            // 状況を表示した上でボタンを出す必要があるが、単純化のためボタンのみ表示 -> クリック -> Rolling -> 結果
-            // 2回目以降は前回の結果を表示しつつボタンを出したい
-
-            if (i > 0) {
-                // 再挑戦の場合
-                // 前回の結果を表示したままボタンを追加するのはupdateDisplayの構造上難しいので、
-                // 簡易的にボタン画面に切り替える（ただし本来はリトライ感を出したい）
-                // ここではシンプルに「目なし... 再挑戦！」の表示の後にボタンを出す
-                await waitForRoll('再挑戦！(振る)');
-            } else {
-                // 初回
-                await waitForRoll('サイコロを振る');
-            }
-
-            // サイコロを振る演出
-            updateDisplay(lastPlayerDice, lastPlayerHandText, null, '-', 'Rolling...');
-            await sleep(600); // 演出時間
-
-            lastPlayerDice = turn.dice;
-            lastPlayerHandText = turn.hand.text;
-
-            // 結果表示
-            const msg = turn.hand.type === 'menashi' ? (isLast ? '目なし...' : '目なし... 再挑戦！') : turn.hand.text + '！';
-            updateDisplay(lastPlayerDice, lastPlayerHandText, null, '-', msg);
-
-            // 次のロールがある場合、少し待ってからループ先頭でボタン表示へ
-            if (!isLast) await sleep(1000);
-            else await sleep(1000);
-        }
-
-        // プレイヤーの結果で即決着がついた場合
-        const playerWinDirect = data.playerHand.type === '456';
-        const playerLoseDirect = data.playerHand.type === '123';
-
-        if (playerWinDirect || playerLoseDirect) {
-            this.showFinalResult(data, resultArea);
-            return;
-        }
-
-        // ----------------------------------------
-        // ディーラーのターン演出
-        // ----------------------------------------
-        // 相手のターンはボタン待ちなし（自動）
-        updateDisplay(lastPlayerDice, lastPlayerHandText, null, 'Rolling...', '相手の番です...');
-        await sleep(1000);
-
-        let lastDealerDice = null;
-        let lastDealerHandText = '...';
-
-        for (let i = 0; i < data.dealerHistory.length; i++) {
-            const turn = data.dealerHistory[i];
-            const isLast = i === data.dealerHistory.length - 1;
-
-            // サイコロを振る演出
-            updateDisplay(lastPlayerDice, lastPlayerHandText, null, 'Rolling...', '相手が振っています...');
-            await sleep(600);
-
-            lastDealerDice = turn.dice;
-            lastDealerHandText = turn.hand.text;
-
-            // 結果表示
-            const msg = turn.hand.type === 'menashi' ? (isLast ? '相手: 目なし...' : '相手: 目なし... 再挑戦') : '相手: ' + turn.hand.text + '！';
-            updateDisplay(lastPlayerDice, lastPlayerHandText, lastDealerDice, lastDealerHandText, msg);
-            await sleep(1000);
-        }
-
-        // ----------------------------------------
-        // 最終結果表示
-        // ----------------------------------------
-        this.showFinalResult(data, resultArea);
-    },
-
-    // 最終リザルト表示（既存のrenderCasinoResultを流用・改修）
-    showFinalResult(data, resultArea) {
-        const resultColor = data.profit > 0 ? '#22c55e' : (data.profit < 0 ? '#ef4444' : '#94a3b8');
-        const resultText = data.result === 'win' ? 'WIN!' : (data.result === 'lose' ? 'LOSE...' : 'DRAW');
-
-        let html = `
-            <div style="font-size: 1.2rem; margin-bottom: 10px; color: #fff;">
-                自分: <span style="font-weight:bold; font-size:1.5rem;">${data.playerHand.text}</span> 
-                <span class="dice-display">${this.getDiceIcons(data.playerDice)}</span>
-            </div>
-        `;
-
-        // 相手の手を表示すべきか（即決着以外）
-        // 簡略化: dealerHistoryが存在すれば表示
-        if (data.dealerHistory && data.dealerHistory.length > 0) {
-            html += `
-                <div style="font-size: 1.2rem; margin-bottom: 20px; color: #aaa;">
-                    相手: <span style="font-weight:bold; font-size:1.5rem;">${data.dealerHand.text}</span>
-                    <span class="dice-display">${this.getDiceIcons(data.dealerDice)}</span>
-                </div>
-            `;
-        }
-
-        html += `
-            <div class="result-outcome" style="font-size: 2.5rem; font-weight: bold; color: ${resultColor}; text-shadow: 0 0 10px ${resultColor}; margin: 10px 0; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
-                ${resultText}
-            </div>
-            <div class="result-reason" style="font-size: 1rem; color: #ccc; margin-bottom: 10px;">
-                ${data.reason}
-            </div>
-            <div class="result-profit" style="font-size: 1.5rem; font-weight: bold; color: ${resultColor};">
-                ${data.profit > 0 ? '+' : ''}${data.profit.toLocaleString()} G
-            </div>
-        `;
-
-        resultArea.innerHTML = html;
-
-        // スタイル追加 (popInアニメーション)
-        if (!document.getElementById('anim-style-pop')) {
-            const style = document.createElement('style');
-            style.id = 'anim-style-pop';
-            style.innerHTML = `
-                @keyframes popIn {
-                    0% { transform: scale(0.5); opacity: 0; }
-                    100% { transform: scale(1); opacity: 1; }
-                }
-                .dice-display { display: inline-block; vertical-align: middle; margin-left: 10px; }
-            `;
-            document.head.appendChild(style);
-        }
-    },
-
-    // (Old method, can be removed or left as alias logic if needed, but runCasinoAnimation replaces it)
-    renderCasinoResult(data) {
-        // Alias to showFinalResult for compatibility if called directly
-        const resultArea = document.getElementById('casino-result');
-        if (resultArea) this.showFinalResult(data, resultArea);
-    },
-
-    getDiceIcons(dice) {
-        const unicodeDice = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
-        return dice.map(d => `<span style="font-size: 2rem; margin: 0 2px;">${unicodeDice[d - 1]}</span>`).join('');
     },
 
     // ========================================
