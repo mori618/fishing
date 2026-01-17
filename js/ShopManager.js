@@ -25,6 +25,7 @@ const ShopManager = {
             UIManager.showScreen('casino');
             CasinoManager.render();
         } else {
+            UIManager.showScreen('shop');
             this.renderShop();
         }
     },
@@ -707,7 +708,9 @@ const ShopManager = {
         UIManager.updateMoney(); // 必要なら
 
         // ガチャ演出へ (単発扱い)
-        FishingGame.startGacha([result]);
+        UIManager.showGachaResult([result], () => {
+            ShopManager.renderShop(); // リサイクルはショップ画面内
+        });
     },
 
     // ========================================
@@ -759,7 +762,13 @@ const ShopManager = {
 
         // ガチャ演出開始
         UIManager.showSlotAnimation(results, () => {
-            FishingGame.startGacha(results);
+            UIManager.showGachaResult(results, () => {
+                if (UIManager.currentScreen === 'casino') {
+                    CasinoManager.render();
+                } else {
+                    ShopManager.renderShop();
+                }
+            });
         });
     },
 
@@ -900,7 +909,7 @@ const ShopManager = {
         const container = document.getElementById('shop-items');
         container.innerHTML = '';
 
-        GAME_DATA.BAITS.forEach(bait => {
+        GAME_DATA.BAITS.filter(b => b.id !== 'bait_d').forEach(bait => {
             const canBuy = GameState.money >= bait.price;
 
             const item = document.createElement('div');
@@ -936,7 +945,7 @@ const ShopManager = {
         const container = document.getElementById('upgrade-section');
         if (!container) return;
 
-        const baitCount = GameState.baitCount;
+        const baitCount = GameState.getCurrentBaitCount();
         const baitType = GameState.baitType;
         const bait = baitType ? GAME_DATA.BAITS.find(b => b.id === baitType) : null;
 

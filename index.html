@@ -7,9 +7,12 @@
     <meta name="description" content="フィッシング・エボリューション - 魚を釣り、売り、装備を強化する成長型釣りゲーム">
     <title>フィッシング・エボリューション</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="chinchiro.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Roboto+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 
@@ -46,6 +49,15 @@
          釣り画面
          ======================================== -->
     <div id="fishing-screen" class="screen">
+        <!-- ゲーム画面風フレーム -->
+        <div class="fishing-area-frame"></div>
+        <!-- 背景の雲 -->
+        <div class="sky-clouds">
+            <div class="cloud cloud1"></div>
+            <div class="cloud cloud2"></div>
+            <div class="cloud cloud3"></div>
+        </div>
+
         <!-- フローティングステータス（左側） -->
         <div class="floating-status floating-status-left">
             <div class="status-pill">
@@ -56,32 +68,15 @@
                 <span class="status-icon"><span class="material-icons">bolt</span></span>
                 <span id="power-display" class="status-value">パワー: 10</span>
             </div>
-        </div>
-
-        <!-- フローティングステータス（右側） -->
-        <div class="floating-status floating-status-right">
-            <button id="shop-btn-top" class="floating-btn">
-                <span class="material-icons">shopping_cart</span>
-            </button>
-            <div class="status-card">
-                <div class="status-label">餌の残数</div>
-                <div id="bait-info" class="status-value-lg">0 個</div>
-            </div>
-            <div class="status-card">
-                <div class="status-label">所持魚</div>
-                <div id="inventory-count" class="status-value-lg">0 匹</div>
+            <div class="status-pill">
+                <span class="status-icon"><span class="material-icons">set_meal</span></span>
+                <span id="inventory-count" class="status-value">0 匹</span>
             </div>
         </div>
 
-        <!-- 装備中の竿（左下表示） -->
-        <div id="rod-info" class="rod-badge">
-            <span class="rod-name">木の釣竿</span>
-            <span class="rod-stars"><span class="material-icons star-empty">star_border</span><span
-                    class="material-icons star-empty">star_border</span><span
-                    class="material-icons star-empty">star_border</span><span
-                    class="material-icons star-empty">star_border</span><span
-                    class="material-icons star-empty">star_border</span></span>
-        </div>
+
+
+
 
         <!-- メイン釣りエリア -->
         <main id="fishing-area" class="fishing-area">
@@ -94,6 +89,28 @@
         <div id="fishing-rod-view" class="fishing-rod-view">
             <div class="rod-shaft"></div>
             <div class="rod-line"></div>
+        </div>
+
+        <!-- 中央下部HUD（餌・竿・町） -->
+        <div class="bottom-hud-center">
+            <!-- 町へボタン -->
+            <button id="shop-btn-top" class="floating-btn btn-town">
+                <span class="material-icons">holiday_village</span>
+                <span class="btn-label">町へ</span>
+            </button>
+            <!-- 餌情報 -->
+            <div id="bait-status-display" class="bait-status-large">
+                <div id="bait-info" class="bait-value"></div>
+            </div>
+            <!-- 装備中の竿 -->
+            <div id="rod-info" class="rod-badge">
+                <span class="rod-name">木の釣竿</span>
+                <span class="rod-stars"><span class="material-icons star-empty">star_border</span><span
+                        class="material-icons star-empty">star_border</span><span
+                        class="material-icons star-empty">star_border</span><span
+                        class="material-icons star-empty">star_border</span><span
+                        class="material-icons star-empty">star_border</span></span>
+            </div>
         </div>
 
         <!-- 底部ナビゲーション -->
@@ -136,6 +153,9 @@
 
     <div id="casino-screen" class="screen">
         <header class="casino-header">
+            <button class="btn-header-back" onclick="ShopManager.setCategory('town')">
+                <span class="material-icons">arrow_back</span>
+            </button>
             <h2 class="casino-title"><span class="material-icons">stars</span> グランド・カジノ</h2>
             <div class="shop-money">
                 <span class="status-icon"><span class="material-icons">paid</span></span>
@@ -148,12 +168,6 @@
                 <!-- Casino content injected here -->
             </div>
         </main>
-
-        <footer class="shop-footer casino-footer">
-            <button class="btn-nav" style="flex: 1;" onclick="ShopManager.setCategory('town')">
-                <span class="material-icons">arrow_back</span> 町に戻る
-            </button>
-        </footer>
     </div>
 
     <!-- ========================================

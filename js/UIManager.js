@@ -107,6 +107,7 @@ const UIManager = {
     // 現在の画面
     // ========================================
     currentScreen: 'start',  // start, fishing, shop
+    lastMoney: null,
 
     // ========================================
     // ゲージバトル設定
@@ -632,9 +633,6 @@ const UIManager = {
     // ガチャ結果表示
     // ========================================
     showGachaResult(items, onClose) {
-        const fishingArea = document.getElementById('fishing-area');
-        if (!fishingArea) return;
-
         // 結果リストのHTML生成
         const itemsHtml = items.map(item => {
             let icon = 'auto_awesome';
@@ -666,19 +664,34 @@ const UIManager = {
             GameState.gainGachaResult(item);
         });
 
-        fishingArea.innerHTML = `
-            <div class="result-overlay gacha-result" id="result-overlay">
-                <div class="result-card gacha-card">
-                    <div class="card-header">GACHA RESULT</div>
-                    
-                    <div class="gacha-items-grid">
-                        ${itemsHtml}
-                    </div>
+        // 既存のオーバーレイがあれば削除
+        const existing = document.getElementById('result-overlay');
+        if (existing) existing.remove();
 
-                    <div class="tap-hint">TAP TO CLOSE</div>
+        const overlay = document.createElement('div');
+        overlay.id = 'result-overlay';
+        overlay.className = 'result-overlay gacha-result';
+        // オーバーレイのスタイルを強制適用（CSSクラスがfishing-area依存の場合に備えて）
+        overlay.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 3000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            opacity: 0; animation: fadeIn 0.3s forwards;
+        `;
+
+        overlay.innerHTML = `
+            <div class="result-card gacha-card">
+                <div class="card-header">GACHA RESULT</div>
+                
+                <div class="gacha-items-grid">
+                    ${itemsHtml}
                 </div>
+
+                <div class="tap-hint">TAP TO CLOSE</div>
             </div>
         `;
+
+        document.body.appendChild(overlay);
 
         this.setupResultOverlayClose(onClose);
         this.updateStatus();
@@ -779,7 +792,51 @@ const UIManager = {
     // ========================================
     // 所持金更新
     // ========================================
+    // ========================================
+    // 所持金変動演出
+    // ========================================
+    showMoneyPopup(diff) {
+        if (diff === 0) return;
+
+        const isPlus = diff > 0;
+        const text = isPlus ? `+${diff.toLocaleString()}` : `${diff.toLocaleString()}`;
+        const color = isPlus ? '#4ade80' : '#f87171'; // Green : Red
+
+        // Popup targets (Main money display and Casino header)
+        const targets = [
+            document.querySelector('.shop-money'),
+            document.querySelector('#casino-screen .shop-money')
+        ];
+
+        targets.forEach(container => {
+            if (!container) return;
+
+            const popup = document.createElement('span');
+            popup.className = 'money-popup';
+            popup.textContent = text;
+            popup.style.color = color;
+
+            container.style.position = 'relative'; // Ensure relative positioning
+            container.appendChild(popup);
+
+            // Remove after animation
+            setTimeout(() => {
+                popup.remove();
+            }, 1500);
+        });
+    },
+
+    // ========================================
+    // 所持金更新
+    // ========================================
     updateMoney() {
+        // Delta popup
+        if (this.lastMoney !== null && this.lastMoney !== GameState.money) {
+            const diff = GameState.money - this.lastMoney;
+            this.showMoneyPopup(diff);
+        }
+        this.lastMoney = GameState.money;
+
         const moneyDisplay = document.getElementById('money-display');
         if (moneyDisplay) {
             moneyDisplay.textContent = `${GameState.money.toLocaleString()} G`;
@@ -789,6 +846,12 @@ const UIManager = {
         if (shopMoneyDisplay) {
             shopMoneyDisplay.textContent = `¥${GameState.money.toLocaleString()}`;
         }
+        // カジノ画面の所持金も更新
+        const casinoMoneyDisplay = document.getElementById('casino-money-display');
+        if (casinoMoneyDisplay) {
+            casinoMoneyDisplay.textContent = `¥${GameState.money.toLocaleString()}`;
+        }
+
         // パワー表示も更新
         const powerDisplay = document.getElementById('power-display');
         if (powerDisplay) {
@@ -825,7 +888,7 @@ const UIManager = {
 
         rodInfo.innerHTML = `
             <span class="rod-name">${rod.name}</span>
-            <span class="rod-stars">${starsHtml}</span>
+            <div class="rod-stars">${starsHtml}</div>
         `;
     },
 
@@ -841,15 +904,12 @@ const UIManager = {
         const count = GameState.getCurrentBaitCount();
         const displayCount = count === -1 ? '∞' : count;
 
+        // user's new UI expects: BAIT (pseudo) < content >
+        // We inject the buttons and the text.
         baitInfo.innerHTML = `
-            <div class="bait-selector">
-                <button class="selector-btn prev" onclick="GameState.switchBait(-1); UIManager.updateBaitInfo();">◀</button>
-                <div class="bait-display" onclick="UIManager.showBaitPurchaseDialog('${currentBaitId}')">
-                    <span class="bait-name">${bait.name}</span>
-                    <span class="bait-count">${displayCount}個</span>
-                </div>
-                <button class="selector-btn next" onclick="GameState.switchBait(1); UIManager.updateBaitInfo();">▶</button>
-            </div>
+            <button class="selector-btn prev" onclick="GameState.switchBait(-1); UIManager.updateBaitInfo();"><span class="material-icons">chevron_left</span></button>
+            <span style="cursor: pointer;" onclick="UIManager.showBaitPurchaseDialog('${currentBaitId}')">${bait.name} × ${displayCount}</span>
+            <button class="selector-btn next" onclick="GameState.switchBait(1); UIManager.updateBaitInfo();"><span class="material-icons">chevron_right</span></button>
         `;
     },
 
