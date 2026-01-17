@@ -1030,7 +1030,6 @@ const FishingGame = {
 
             // 効果発動: 次回上位確定
             GameState.setHighTierGuaranteed(true);
-            UIManager.showEventMessage('BIG CHANCE!', 'star');
             console.log('✨ 海鳥効果: 次回上位確定');
         } else {
             console.log('🍃 イベントなし');

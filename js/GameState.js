@@ -191,7 +191,18 @@ const GameState = {
     // お金操作
     addMoney(amount) {
         this.money += amount;
-        this.totalMoneyEarned += amount;
+        if (amount > 0) {
+            this.totalMoneyEarned += amount;
+        }
+    },
+
+    // 借金状態の確認
+    getDebt() {
+        return this.money < 0 ? Math.abs(this.money) : 0;
+    },
+
+    hasDebt() {
+        return this.money < 0;
     },
 
     getCurrentRod() {

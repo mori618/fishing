@@ -49,32 +49,19 @@ document.addEventListener('DOMContentLoaded', () => {
         FishingGame.onClick();
     });
 
-    // ショップボタン（底部ナビゲーション）
-    document.getElementById('shop-btn').addEventListener('click', () => {
-        FishingGame.abort();
-        updateNavActive('shop');
-        UIManager.showScreen('shop');
-    });
+
 
     // ショップボタン（右上）
     const shopBtnTop = document.getElementById('shop-btn-top');
     if (shopBtnTop) {
         shopBtnTop.addEventListener('click', () => {
             FishingGame.abort();
-            updateNavActive('shop');
+
             UIManager.showScreen('shop');
         });
     }
 
-    // ナビゲーションのアクティブ状態を更新する関数
-    function updateNavActive(screen) {
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.classList.remove('active');
-            if (item.dataset.screen === screen) {
-                item.classList.add('active');
-            }
-        });
-    }
+
 
     // ========================================
     // ショップ画面のイベント
@@ -96,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 釣りに戻るボタン
     document.getElementById('back-btn').addEventListener('click', () => {
-        updateNavActive('fishing');
+
         UIManager.showScreen('fishing');
     });
 
@@ -110,14 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
         UIManager.showScreen('shop');
     });
 
-    // 底部ナビゲーションの釣り場ボタン
-    const fishingNavBtn = document.querySelector('.nav-item[data-screen="fishing"]');
-    if (fishingNavBtn) {
-        fishingNavBtn.addEventListener('click', () => {
-            updateNavActive('fishing');
-            UIManager.showScreen('fishing');
-        });
-    }
+
 
     // ========================================
     // キーボードショートカット（デバッグ用）
