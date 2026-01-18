@@ -188,6 +188,10 @@ const GameState = {
     // ========================================
     // 現在の釣り竿データを取得
     // ========================================
+    getCurrentRod() {
+        return GAME_DATA.RODS[this.rodRankIndex] || GAME_DATA.RODS[0];
+    },
+
     // お金操作
     addMoney(amount) {
         this.money += amount;

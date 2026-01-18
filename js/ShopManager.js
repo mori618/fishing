@@ -5,16 +5,11 @@ const ShopManager = {
     // ========================================
     // ショップカテゴリ
     // ========================================
-    // ========================================
-    // ショップカテゴリ
-    // ========================================
     currentCategory: 'town', // デフォルトを町(town)に変更
     currentTab: 'skill',
+    currentStyleTab: 'gear',
     recycleSelectedSkills: [],
 
-    // ========================================
-    // カテゴリ切り替え
-    // ========================================
     // ========================================
     // カテゴリ切り替え
     // ========================================
@@ -51,12 +46,14 @@ const ShopManager = {
     // ========================================
     renderShop() {
         const container = document.getElementById('shop-items');
+        const tabContainer = document.getElementById('shop-tabs-container');
         const townMenu = document.getElementById('town-menu');
         const upgradeSection = document.getElementById('upgrade-section');
         const title = document.getElementById('shop-main-title');
 
         // 表示のリセット
         container.innerHTML = '';
+        if (tabContainer) tabContainer.innerHTML = '';
         if (townMenu) townMenu.classList.add('hidden');
         if (upgradeSection) upgradeSection.classList.add('hidden');
 
@@ -90,7 +87,7 @@ const ShopManager = {
                     } else {
                         this.renderSkinShop(container);
                     }
-                    this.renderStyleTabs(container); // Re-add tabs
+                    this.renderStyleTabs(tabContainer); // Use tabContainer
                     break;
                 // 'casino' case is removed as it's handled in setCategory now
             }
@@ -287,12 +284,20 @@ const ShopManager = {
                     `;
                 }
             } else {
-                actionHtml = `
-                    <button class="btn btn-buy ${canBuy ? '' : 'disabled'}" 
-                        onclick="ShopManager.buySky('${sky.id}')" ${canBuy ? '' : 'disabled'}>
-                        ¥${sky.price.toLocaleString()}
-                    </button>
-                `;
+                if (sky.isGachaExclusive) {
+                    actionHtml = `
+                        <button class="btn disabled" disabled>
+                            ガチャ限定
+                        </button>
+                    `;
+                } else {
+                    actionHtml = `
+                        <button class="btn btn-buy ${canBuy ? '' : 'disabled'}" 
+                            onclick="ShopManager.buySky('${sky.id}')" ${canBuy ? '' : 'disabled'}>
+                            ¥${sky.price.toLocaleString()}
+                        </button>
+                    `;
+                }
             }
 
             item.innerHTML = `
@@ -370,27 +375,57 @@ const ShopManager = {
     // スタイルタブ描画 helper
     // ========================================
     renderStyleTabs(container) {
+        let target = container || document.getElementById('shop-tabs-container');
+        let usePrepend = false;
+
+        // フォールバック: 専用コンテナがない場合は shop-items を使用
+        if (!target) {
+            target = document.getElementById('shop-items');
+            usePrepend = true;
+        }
+
+        if (!target) return;
+
         const isGear = this.currentStyleTab === 'gear';
-        // タブHTMLを生成
+
         const html = `
-            <div class="shop-tabs sub-tabs" style="margin-bottom: 20px; border-bottom: none; justify-content: center;">
+            <div class="shop-tabs sub-tabs">
                 <button class="shop-tab ${isGear ? 'active' : ''}" onclick="ShopManager.switchStyleTab('gear')">
-                    <span class="material-icons">fishing</span> 道具
+                    <span class="material-icons">phishing</span> 道具
                 </button>
                 <button class="shop-tab ${!isGear ? 'active' : ''}" onclick="ShopManager.switchStyleTab('sky')">
                     <span class="material-icons">cloud</span> 空
                 </button>
             </div>
         `;
-        // containerの先頭に挿入
-        container.innerHTML = html + container.innerHTML;
+
+        if (usePrepend) {
+            // 既存のコンテンツを保持して先頭に追加
+            const div = document.createElement('div');
+            div.innerHTML = html;
+            target.prepend(div.firstElementChild);
+        } else {
+            // 専用コンテナなら中身を書き換え
+            target.innerHTML = html;
+        }
     },
 
     // ========================================
     // スキル/ガチャ タブ描画 helper
     // ========================================
     renderSubTabs(container) {
+        let target = container || document.getElementById('shop-tabs-container');
+        let usePrepend = false;
+
+        if (!target) {
+            target = document.getElementById('shop-items');
+            usePrepend = true;
+        }
+
+        if (!target) return;
+
         const isSkill = this.currentTab === 'skill';
+
         const html = `
             <div class="shop-tabs sub-tabs" style="margin-bottom: 20px; border-bottom: none; justify-content: center;">
                 <button class="shop-tab ${isSkill ? 'active' : ''}" onclick="ShopManager.switchTab('skill')">
@@ -401,7 +436,14 @@ const ShopManager = {
                 </button>
             </div>
         `;
-        container.innerHTML = html + container.innerHTML;
+
+        if (usePrepend) {
+            const div = document.createElement('div');
+            div.innerHTML = html;
+            target.prepend(div.firstElementChild);
+        } else {
+            target.innerHTML = html;
+        }
     },
 
     // ========================================
@@ -542,8 +584,8 @@ const ShopManager = {
         // リサイクルUIの描画
         this.renderRecycleUI();
 
-        // サブタブを描画（最上部に挿入）
-        this.renderSubTabs(container);
+        // サブタブを描画
+        this.renderSubTabs();
     },
 
     // ========================================
@@ -876,8 +918,8 @@ const ShopManager = {
         // スキルスロット情報
         this.renderSkillSlotInfo();
 
-        // サブタブを描画（最上部に挿入）
-        this.renderSubTabs(container);
+        // サブタブを描画
+        this.renderSubTabs();
     },
 
     // ========================================
