@@ -35,14 +35,14 @@ const CasinoManager = {
 
         // タブナビゲーション
         const tabsContainer = document.createElement('div');
-        tabsContainer.className = 'shop-tabs sub-tabs';
+        tabsContainer.className = 'casino-tabs sub-tabs';
         tabsContainer.style.marginBottom = '20px';
         tabsContainer.style.justifyContent = 'center';
         tabsContainer.innerHTML = `
-            <button class="shop-tab ${this.currentTab === 'dice' ? 'active' : ''}" onclick="CasinoManager.switchTab('dice')">
+            <button class="casino-tab ${this.currentTab === 'dice' ? 'active' : ''}" onclick="CasinoManager.switchTab('dice')">
                 <span class="material-icons">casino</span> チンチロ
             </button>
-            <button class="shop-tab ${this.currentTab === 'rules' ? 'active' : ''}" onclick="CasinoManager.switchTab('rules')">
+            <button class="casino-tab ${this.currentTab === 'rules' ? 'active' : ''}" onclick="CasinoManager.switchTab('rules')">
                 <span class="material-icons">description</span> ルール説明
             </button>
         `;

@@ -12,7 +12,7 @@ const RODS = [
         basePower: 10,
         starPowerBonus: 3,  // 星1つあたりのパワー上昇
         price: 0,           // 初期装備
-        upgradeCosts: [100, 250, 500, 1000, 2500], // 星1〜5への強化費用
+        upgradeCosts: [100, 300, 600, 1200, 3000], // 星1〜5への強化費用
         description: '初心者向けの木製釣竿'
     },
     {
@@ -20,8 +20,8 @@ const RODS = [
         name: '竹の釣竿',
         basePower: 22,
         starPowerBonus: 5,
-        price: 500,
-        upgradeCosts: [500, 1200, 2500, 5000, 10000],
+        price: 2000,
+        upgradeCosts: [1000, 2500, 5000, 10000, 20000],
         description: 'しなやかで扱いやすい竹製釣竿'
     },
     {
@@ -29,8 +29,8 @@ const RODS = [
         name: 'カーボン釣竿',
         basePower: 42,
         starPowerBonus: 8,
-        price: 2000,
-        upgradeCosts: [2500, 6000, 12000, 25000, 50000],
+        price: 10000,
+        upgradeCosts: [5000, 12000, 25000, 50000, 100000],
         description: '軽量で強度に優れたカーボン製'
     },
     {
@@ -38,8 +38,8 @@ const RODS = [
         name: 'チタン釣竿',
         basePower: 74,
         starPowerBonus: 12,
-        price: 8000,
-        upgradeCosts: [10000, 25000, 50000, 100000, 200000],
+        price: 50000,
+        upgradeCosts: [20000, 50000, 100000, 200000, 400000],
         description: '最高級のチタン合金製釣竿'
     },
     {
@@ -47,8 +47,8 @@ const RODS = [
         name: '伝説の釣竿',
         basePower: 122,
         starPowerBonus: 20,
-        price: 30000,
-        upgradeCosts: [50000, 120000, 300000, 600000, 800000],
+        price: 250000,
+        upgradeCosts: [100000, 250000, 500000, 1000000, 2000000],
         description: '古より伝わる伝説の釣竿'
     }
 ];

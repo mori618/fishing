@@ -76,21 +76,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 売却ボタン
-    document.getElementById('sell-btn').addEventListener('click', () => {
-        ShopManager.sellAllFish();
-    });
-
-    // 釣りに戻るボタン
-    document.getElementById('back-btn').addEventListener('click', () => {
-
-        UIManager.showScreen('fishing');
-    });
-
-    // 図鑑ボタン
-    document.getElementById('encyclopedia-btn').addEventListener('click', () => {
-        UIManager.showScreen('encyclopedia');
-    });
 
     // 図鑑から戻るボタン
     document.getElementById('encyclopedia-back-btn').addEventListener('click', () => {

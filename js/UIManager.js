@@ -405,6 +405,9 @@ const UIManager = {
         const fishingArea = document.getElementById('fishing-area');
         if (!fishingArea) return;
 
+        // 竿をバトル状態（奮闘中）にする
+        this.updateRodView('battle');
+
         // ゾーンの位置を計算（中央に赤ゾーン）
         const centerStart = (100 - redZoneWidth) / 2;
         const greenStart1 = centerStart - this.greenZoneWidth;

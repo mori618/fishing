@@ -482,6 +482,7 @@ const FishingGame = {
             case 'nibble':
                 // 早すぎるクリック - 失敗扱いにする
                 this.cleanupTimers();
+                UIManager.updateRodView('strike');
                 this.earlyClickFailed();
                 break;
 
@@ -491,7 +492,21 @@ const FishingGame = {
                     clearTimeout(this.hitTimer);
                     this.hitTimer = null;
                 }
-                this.checkPower();
+
+                // バトルが発生するか先に判定
+                const playerPower = GameState.getTotalPower();
+                const fishPower = this.currentFish ? this.currentFish.power : 0;
+                const isForcedBattle = ['A', 'S', 'SS'].includes(this.currentFish.rarity);
+                const willBattle = !(playerPower >= fishPower && !isForcedBattle);
+
+                if (willBattle) {
+                    // ゲージバトルの場合は即座に開始（以前の挙動）
+                    this.checkPower();
+                } else {
+                    // 即時釣り上げの場合は「合わせ（振り上げ）」を実行して成功へ
+                    UIManager.updateRodView('strike');
+                    this.checkPower();
+                }
                 break;
 
             case 'gaugeBattle':
@@ -644,6 +659,9 @@ const FishingGame = {
         // 少し停止して見せてから結果を表示
         setTimeout(() => {
             this.isProcessing = false;
+
+            // 実際の決着に合わせて竿を振り上げる
+            UIManager.updateRodView('strike');
 
             const isSuccess = Math.random() < catchRate;
 
