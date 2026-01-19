@@ -200,20 +200,22 @@ const FishingGame = {
         let currentWeights = spawnWeights[bait.rank] || spawnWeights['D'];
 
         // ========================================
-        // フィーバーモード (月) の場合: 高ランク魚出現率アップ
+        // フィーバーモード (月) の場合: 指定されたランク出現率を適用
         // ========================================
         if (GameState.fever.isActive && GameState.fever.type === 'moon') {
-            console.log('🔥 月フィーバー: 高ランク魚出現率アップ！');
-            // 簡易的に上位ランクの重みを増やす調整
-            // 例: Aランク以上の重みを2倍にする
-            // ディープコピーしてから変更
-            currentWeights = JSON.parse(JSON.stringify(currentWeights));
+            console.log('🔥 月フィーバー: 餌ごとの刷新されたランク出現率を適用！');
 
-            if (currentWeights.S) currentWeights.S *= 3;
-            if (currentWeights.SS) currentWeights.SS *= 3;
-            if (currentWeights.A) currentWeights.A *= 2;
-            if (currentWeights.B) currentWeights.B *= 1.5;
+            const feverWeights = {
+                'D': { D: 10, C: 85, B: 1, A: 2, S: 2 },
+                'C': { C: 24, B: 76 },
+                'B': { B: 30, A: 70 },
+                'A': { A: 70, S: 30 },
+                'S': { A: 40, S: 50, SS: 10 }
+            };
+
+            currentWeights = feverWeights[bait.rank] || feverWeights['D'];
         }
+
 
         // 重みに基づいてランクを抽選
         let totalWeight = 0;
@@ -454,20 +456,7 @@ const FishingGame = {
                     UIManager.showMessage('💨 フィーバー終了...', 3000);
                 }
             }
-            // 餌を消費（ヒットを逃した＝失敗）
-            if (GameState.baitType) {
-                GameState.useBait(false);
-                UIManager.updateBaitInfo();
-            }
 
-            // フィーバー中は失敗でもゲージが溜まる
-            if (GameState.fever.isActive) {
-                const feverResult = GameState.progressFever(true);
-                UIManager.updateFeverVisuals();
-                if (feverResult.message === 'end') {
-                    UIManager.showMessage('💨 フィーバー終了...', 3000);
-                }
-            }
 
             // イベント判定
             this.triggerRandomEvent();
