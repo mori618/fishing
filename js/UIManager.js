@@ -473,11 +473,16 @@ const UIManager = {
     // ========================================
     // 釣り上げ成功
     // ========================================
-    showCatchSuccess(fish, onClose) {
+    showCatchSuccess(fish, onClose, count = 1) {
         const fishingArea = document.getElementById('fishing-area');
         if (!fishingArea) return;
 
         const fishIcon = fish.icon || 'set_meal';
+
+        let countBadge = '';
+        if (count > 1) {
+            countBadge = `<div class="multi-catch-badge">${count}匹釣れた！</div>`;
+        }
 
         fishingArea.innerHTML = `
             <div class="result-overlay success" id="result-overlay">
@@ -491,6 +496,8 @@ const UIManager = {
                             <div class="rarity-glow"></div>
                         </div>
                     </div>
+
+                    ${countBadge}
 
                     <div class="result-content">
                         <div class="rank-display">

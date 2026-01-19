@@ -764,6 +764,58 @@ const SKILLS = [
         effect: { type: 'bird_event_boost', value: 0.15 },
         price: 25000,
         tier: 3
+    },
+
+    // ダブルキャッチ (Dual Catcher) - 2匹釣り
+    {
+        id: 'dual_catcher_1',
+        name: 'ダブルキャッチ I',
+        description: '10%の確率で魚が2匹釣れる',
+        effect: { type: 'multi_catch_2', value: 0.10 },
+        price: 3000,
+        tier: 1
+    },
+    {
+        id: 'dual_catcher_2',
+        name: 'ダブルキャッチ II',
+        description: '25%の確率で魚が2匹釣れる',
+        effect: { type: 'multi_catch_2', value: 0.25 },
+        price: 10000,
+        tier: 2
+    },
+    {
+        id: 'dual_catcher_3',
+        name: 'ダブルキャッチ III',
+        description: '50%の確率で魚が2匹釣れる',
+        effect: { type: 'multi_catch_2', value: 0.50 },
+        price: 30000,
+        tier: 3
+    },
+
+    // トリプルキャッチ (Triple Catcher) - 3匹釣り
+    {
+        id: 'triple_catcher_1',
+        name: 'トリプルキャッチ I',
+        description: '5%の確率で魚が3匹釣れる',
+        effect: { type: 'multi_catch_3', value: 0.05 },
+        price: 5000,
+        tier: 1
+    },
+    {
+        id: 'triple_catcher_2',
+        name: 'トリプルキャッチ II',
+        description: '15%の確率で魚が3匹釣れる',
+        effect: { type: 'multi_catch_3', value: 0.15 },
+        price: 20000,
+        tier: 2
+    },
+    {
+        id: 'triple_catcher_3',
+        name: 'トリプルキャッチ III',
+        description: '30%の確率で魚が3匹釣れる',
+        effect: { type: 'multi_catch_3', value: 0.30 },
+        price: 60000,
+        tier: 3
     }
 ];
 

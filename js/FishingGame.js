@@ -778,8 +778,23 @@ const FishingGame = {
             return;
         }
 
-        // インベントリに追加
-        GameState.addFish(this.currentFish);
+        // インベントリに追加 (複数釣り判定)
+        let catchCount = 1;
+        const chance3 = GameState.getMultiCatch3Chance();
+        const chance2 = GameState.getMultiCatch2Chance();
+
+        // 優先順位: 3匹 > 2匹
+        if (Math.random() < chance3) {
+            catchCount = 3;
+            console.log('✨ トリプルキャッチ発動！ 3匹ゲット');
+        } else if (Math.random() < chance2) {
+            catchCount = 2;
+            console.log('✨ ダブルキャッチ発動！ 2匹ゲット');
+        }
+
+        for (let i = 0; i < catchCount; i++) {
+            GameState.addFish(this.currentFish);
+        }
 
         // 餌を消費
         if (GameState.baitType) {
@@ -805,9 +820,9 @@ const FishingGame = {
             UIManager.showIdle();
             // イベント判定
             this.triggerRandomEvent();
-        });
+        }, catchCount); // catchCountを渡す
 
-        console.log(`🎉 ${this.currentFish.name}を釣り上げた！`);
+        console.log(`🎉 ${this.currentFish.name}を釣り上げた！ (x${catchCount})`);
     },
 
     // ========================================
@@ -953,9 +968,30 @@ const FishingGame = {
         if (lootTable.baits && lootTable.baits.length > 0) {
             let selectedBaitConfig = null;
 
+            // --- 優先排出ロジック ---
+            const currentBaitId = GameState.baitType;
+            const currentBaitData = GAME_DATA.BAITS.find(b => b.id === currentBaitId);
+            const rankOrder = { 'D': 0, 'C': 1, 'B': 2, 'A': 3, 'S': 4 };
+            const currentRank = currentBaitData ? (rankOrder[currentBaitData.rank] ?? -1) : -1;
+
+            // 候補リスト作成（ランク情報を付与）
+            const candidates = lootTable.baits.map(b => {
+                const d = GAME_DATA.BAITS.find(db => db.id === b.id);
+                return { ...b, rankValue: d ? (rankOrder[d.rank] ?? 0) : 0 };
+            });
+
+            // 上位ランクの餌のみを抽出
+            const betterBaits = candidates.filter(b => b.rankValue > currentRank);
+
+            // 上位餌があれば優先、なければ全候補
+            const targetList = (betterBaits.length > 0) ? betterBaits : candidates;
+
+            if (betterBaits.length > 0) {
+                console.log(`✨ 宝箱: 装備(Rank ${currentBaitData?.rank})より上位の餌を優先します`);
+            }
+
             // 重み計算 (質の高い餌の重みを qualityMult で増やす)
-            // 簡易的に、リストの後半(インデックスが大きい)の weight を qualityMult 倍する
-            const weightedBaits = lootTable.baits.map((b, index) => {
+            const weightedBaits = targetList.map((b, index) => {
                 let w = b.weight;
                 // インデックスが大きい(=恐らくリストの下の方にある良い餌)ほどブースト
                 if (index > 0) w *= qualityMult;

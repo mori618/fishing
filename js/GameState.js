@@ -478,6 +478,34 @@ const GameState = {
     },
 
     // ========================================
+    // ダブルキャッチ (2匹釣り) 確率を取得
+    // ========================================
+    getMultiCatch2Chance() {
+        let chance = 0;
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'multi_catch_2') {
+                chance += skill.effect.value;
+            }
+        }
+        return Math.min(chance, 1.0);
+    },
+
+    // ========================================
+    // トリプルキャッチ (3匹釣り) 確率を取得
+    // ========================================
+    getMultiCatch3Chance() {
+        let chance = 0;
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'multi_catch_3') {
+                chance += skill.effect.value;
+            }
+        }
+        return Math.min(chance, 1.0);
+    },
+
+    // ========================================
     // 魚をインベントリに追加
     // ========================================
     addFish(fish) {
