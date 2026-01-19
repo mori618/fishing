@@ -404,11 +404,11 @@ const FishingGame = {
 
                     // ランク差に応じた係数
                     if (rankDiff >= 3) {
-                        rippleScale = 2.0;
+                        rippleScale = 2.3;
                     } else if (rankDiff === 2) {
-                        rippleScale = 1.5;
+                        rippleScale = 1.8;
                     } else if (rankDiff === 1) {
-                        rippleScale = 1.2;
+                        rippleScale = 1.5;
                     } else {
                         rippleScale = 1.0;
                     }
