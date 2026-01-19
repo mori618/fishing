@@ -233,9 +233,9 @@ const GameState = {
         // フィーバーボーナス (月: お魚フィーバー)
         // ========================================
         if (this.fever.isActive && this.fever.type === 'moon') {
-            const feverBonus = 1.2; // 1.2倍 (20% UP)
+            const feverBonus = 2.0; // 2.0倍 (100% UP)
             power = Math.floor(power * feverBonus);
-            console.log(`🔥 お魚フィーバー効果: パワー 1.2倍! -> ${power}`);
+            console.log(`🔥 お魚フィーバー効果: パワー 2.0倍! -> ${power}`);
         }
 
         return power;
@@ -313,7 +313,7 @@ const GameState = {
         if (this.baitType) {
             const bait = GAME_DATA.BAITS.find(b => b.id === this.baitType);
             if (bait) {
-                bonus += bait.rareBoost;
+                bonus += (bait.rareBoost || 0);
             }
         }
 
@@ -475,6 +475,34 @@ const GameState = {
             }
         }
         return multiplier;
+    },
+
+    // ========================================
+    // ダブルキャッチ (2匹釣り) 確率を取得
+    // ========================================
+    getMultiCatch2Chance() {
+        let chance = 0;
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'multi_catch_2') {
+                chance += skill.effect.value;
+            }
+        }
+        return Math.min(chance, 1.0);
+    },
+
+    // ========================================
+    // トリプルキャッチ (3匹釣り) 確率を取得
+    // ========================================
+    getMultiCatch3Chance() {
+        let chance = 0;
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'multi_catch_3') {
+                chance += skill.effect.value;
+            }
+        }
+        return Math.min(chance, 1.0);
     },
 
     // ========================================
@@ -1078,8 +1106,15 @@ const GameState = {
 
                 // 初めて溜まった(Lv1)タイミングでタイプを決定
                 if (this.fever.value === 1) {
-                    // 50%で太陽か月
-                    this.fever.type = Math.random() < 0.5 ? 'sun' : 'moon';
+                    // スキル偏向の適用 (基本50%)
+                    const sunBonus = this.getFeverBiasBonus('sun');
+                    const moonBonus = this.getFeverBiasBonus('moon');
+
+                    // 太陽の確率: 0.5 + 太陽ボーナス - 月ボーナス
+                    const sunChance = 0.5 + sunBonus - moonBonus;
+
+                    this.fever.type = Math.random() < sunChance ? 'sun' : 'moon';
+                    console.log(`🔥 フィーバータイプ抽選: Sun ${Math.round(sunChance * 100)}% (Base 50% + ${Math.round(sunBonus * 100)}% - ${Math.round(moonBonus * 100)}%)`);
                 }
 
                 // 発動判定 (Lv6到達)

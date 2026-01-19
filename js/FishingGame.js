@@ -76,7 +76,7 @@ const FishingGame = {
             // ただし、タイプ抽選は通常通り行う
             // 必要あればフィーバー用ボーナスを加算しても良い
 
-            const weights = GAME_DATA.TREASURE_CONFIG.rarityWeights;
+            const weights = { WOOD: 0.6, SILVER: 0.3, GOLD: 0.1 };
             let random = Math.random();
             let selectedType = 'WOOD';
 
@@ -200,20 +200,22 @@ const FishingGame = {
         let currentWeights = spawnWeights[bait.rank] || spawnWeights['D'];
 
         // ========================================
-        // フィーバーモード (月) の場合: 高ランク魚出現率アップ
+        // フィーバーモード (月) の場合: 指定されたランク出現率を適用
         // ========================================
         if (GameState.fever.isActive && GameState.fever.type === 'moon') {
-            console.log('🔥 月フィーバー: 高ランク魚出現率アップ！');
-            // 簡易的に上位ランクの重みを増やす調整
-            // 例: Aランク以上の重みを2倍にする
-            // ディープコピーしてから変更
-            currentWeights = JSON.parse(JSON.stringify(currentWeights));
+            console.log('🔥 月フィーバー: 餌ごとの刷新されたランク出現率を適用！');
 
-            if (currentWeights.S) currentWeights.S *= 3;
-            if (currentWeights.SS) currentWeights.SS *= 3;
-            if (currentWeights.A) currentWeights.A *= 2;
-            if (currentWeights.B) currentWeights.B *= 1.5;
+            const feverWeights = {
+                'D': { D: 10, C: 85, B: 1, A: 2, S: 2 },
+                'C': { C: 24, B: 76 },
+                'B': { B: 30, A: 70 },
+                'A': { A: 70, S: 30 },
+                'S': { A: 40, S: 50, SS: 10 }
+            };
+
+            currentWeights = feverWeights[bait.rank] || feverWeights['D'];
         }
+
 
         // 重みに基づいてランクを抽選
         let totalWeight = 0;
@@ -244,16 +246,32 @@ const FishingGame = {
         }
 
         // 同ランク内での抽選 (個別のweightを考慮)
+        // レア魚出現率UPスキルの適用: 頻度が低い(weight < 15)魚の出現率を底上げ
+        const rareBonus = GameState.getRareBonus();
+
+        // プールの各魚に重みを適用
+        const weightedPool = fishPool.map(f => {
+            let effectiveWeight = f.weight;
+            // weight < 15 は「あまり釣れない」以下 (頻度プロパティ連携)
+            if (rareBonus > 0 && f.weight < 15) {
+                // ボーナスを適用 (効果を実感しやすくするため係数を2.0とする)
+                // 例: bonus 0.2 (+20%) -> weight * 1.4 
+                effectiveWeight = f.weight * (1 + rareBonus * 2.0);
+            }
+            return { fish: f, weight: effectiveWeight };
+        });
+
+        // 総重量を計算
         let poolTotalWeight = 0;
-        fishPool.forEach(f => poolTotalWeight += f.weight);
+        weightedPool.forEach(item => poolTotalWeight += item.weight);
 
         random = Math.random() * poolTotalWeight;
-        let selectedFish = fishPool[0];
+        let selectedFish = weightedPool[0].fish;
 
-        for (const fish of fishPool) {
-            random -= fish.weight;
+        for (const item of weightedPool) {
+            random -= item.weight;
             if (random < 0) {
-                selectedFish = { ...fish }; // コピーを作成
+                selectedFish = { ...item.fish }; // コピーを作成
                 break;
             }
         }
@@ -362,7 +380,42 @@ const FishingGame = {
     nibble(currentCount = 0, targetCount = null) {
         if (targetCount === null) {
             this.state = 'nibble';
-            UIManager.showNibble();
+
+            // ----------------------------------------
+            // 波紋のサイズ計算
+            // ----------------------------------------
+            let rippleScale = 1.0;
+
+            if (this.currentFish) {
+                // 宝箱は小さく
+                if (this.currentFish.isTreasure) {
+                    rippleScale = 0.8;
+                }
+                // 魚の場合、ランク比較
+                else {
+                    const baitId = GameState.baitType;
+                    const bait = GAME_DATA.BAITS.find(b => b.id === baitId);
+
+                    const rankIndices = { 'D': 0, 'C': 1, 'B': 2, 'A': 3, 'S': 4, 'SS': 5, 'GOD': 6 };
+                    const fishRankVal = rankIndices[this.currentFish.rarity] || 0;
+                    const baitRankVal = bait ? (rankIndices[bait.rank] || 0) : 0; // 餌なしは最低ランク扱い
+
+                    const rankDiff = fishRankVal - baitRankVal;
+
+                    // ランク差に応じた係数
+                    if (rankDiff >= 3) {
+                        rippleScale = 2.3;
+                    } else if (rankDiff === 2) {
+                        rippleScale = 1.8;
+                    } else if (rankDiff === 1) {
+                        rippleScale = 1.5;
+                    } else {
+                        rippleScale = 1.0;
+                    }
+                }
+            }
+
+            UIManager.showNibble(rippleScale);
 
             if (this.isGachaMode) {
                 // ガチャは2回固定
@@ -375,7 +428,7 @@ const FishingGame = {
                     Math.floor(Math.random() * (GAME_DATA.FISHING_CONFIG.nibbleCountMax - GAME_DATA.FISHING_CONFIG.nibbleCountMin + 1));
             }
 
-            console.log(`🎣 予兆開始: 合計 ${targetCount} 回揺れます`);
+            console.log(`🎣 予兆開始: 合計 ${targetCount} 回揺れます (Scale: ${rippleScale})`);
         }
 
         if (currentCount < targetCount) {
@@ -438,20 +491,7 @@ const FishingGame = {
                     UIManager.showMessage('💨 フィーバー終了...', 3000);
                 }
             }
-            // 餌を消費（ヒットを逃した＝失敗）
-            if (GameState.baitType) {
-                GameState.useBait(false);
-                UIManager.updateBaitInfo();
-            }
 
-            // フィーバー中は失敗でもゲージが溜まる
-            if (GameState.fever.isActive) {
-                const feverResult = GameState.progressFever(true);
-                UIManager.updateFeverVisuals();
-                if (feverResult.message === 'end') {
-                    UIManager.showMessage('💨 フィーバー終了...', 3000);
-                }
-            }
 
             // イベント判定
             this.triggerRandomEvent();
@@ -635,8 +675,49 @@ const FishingGame = {
         const config = GAME_DATA.GAUGE_CONFIG.zones[zone];
 
         // 捕獲確率を計算
-        let catchRate = config.catchRate.min +
-            Math.random() * (config.catchRate.max - config.catchRate.min);
+        let catchRate;
+
+        if (zone === 'red') {
+            // ========================================
+            // 赤ゲージ停止時の動的成功率計算
+            // ========================================
+            const bait = GAME_DATA.BAITS.find(b => b.id === GameState.baitType) || GAME_DATA.BAITS[0];
+            const rankIndices = { 'D': 0, 'C': 1, 'B': 2, 'A': 3, 'S': 4, 'SS': 5 };
+
+            const fishRank = rankIndices[this.currentFish.rarity] || 0;
+            const baitRank = rankIndices[bait.rank] || 0;
+            const rankDiff = fishRank - baitRank;
+
+            // ランク差によるベース成功率
+            let baseRate = 0.9; // 同ランク or 格下
+            if (rankDiff === 1) baseRate = 0.8;      // 1つ上
+            else if (rankDiff === 2) baseRate = 0.6; // 2つ上
+            else if (rankDiff >= 3) baseRate = 0.4;  // 3つ上 (それ以上も一旦40%ベース)
+
+            // パワー差による補正
+            const playerPower = GameState.getTotalPower();
+            const fishPower = this.currentFish.power;
+            const powerDiff = Math.max(0, fishPower - playerPower);
+
+            // パワー差が大きいほど減衰 
+            // 例: パワー差がプレイヤーパワーと同じだけある(倍の敵)場合、-50%
+            const powerPenalty = (powerDiff / Math.max(1, playerPower)) * 0.5;
+
+            catchRate = baseRate - powerPenalty;
+
+            // ユーザー要望: パワー差がありすぎても0%にはしない (最低1%保証)
+            if (catchRate < 0.01) {
+                catchRate = 0.01;
+            }
+
+            // ログ出力
+            console.log(`📊 キャッチ判定: ランク差${rankDiff}(${baseRate * 100}%) - パワー罰則${(powerPenalty * 100).toFixed(1)}% = ${(catchRate * 100).toFixed(1)}% (Min 5%)`);
+
+        } else {
+            // 赤以外は従来通りの設定値
+            catchRate = config.catchRate.min +
+                Math.random() * (config.catchRate.max - config.catchRate.min);
+        }
 
         // 達人の針スキル: 赤ゾーンなら確定 (100%)
         if (zone === 'red' && GameState.hasPerfectMaster && GameState.hasPerfectMaster()) {
@@ -732,8 +813,23 @@ const FishingGame = {
             return;
         }
 
-        // インベントリに追加
-        GameState.addFish(this.currentFish);
+        // インベントリに追加 (複数釣り判定)
+        let catchCount = 1;
+        const chance3 = GameState.getMultiCatch3Chance();
+        const chance2 = GameState.getMultiCatch2Chance();
+
+        // 優先順位: 3匹 > 2匹
+        if (Math.random() < chance3) {
+            catchCount = 3;
+            console.log('✨ トリプルキャッチ発動！ 3匹ゲット');
+        } else if (Math.random() < chance2) {
+            catchCount = 2;
+            console.log('✨ ダブルキャッチ発動！ 2匹ゲット');
+        }
+
+        for (let i = 0; i < catchCount; i++) {
+            GameState.addFish(this.currentFish);
+        }
 
         // 餌を消費
         if (GameState.baitType) {
@@ -759,9 +855,9 @@ const FishingGame = {
             UIManager.showIdle();
             // イベント判定
             this.triggerRandomEvent();
-        });
+        }, catchCount); // catchCountを渡す
 
-        console.log(`🎉 ${this.currentFish.name}を釣り上げた！`);
+        console.log(`🎉 ${this.currentFish.name}を釣り上げた！ (x${catchCount})`);
     },
 
     // ========================================
@@ -883,8 +979,15 @@ const FishingGame = {
         const results = [];
 
         // スキル効果を取得
-        const quantityMult = GameState.getTreasureQuantityMultiplier();
-        const qualityMult = GameState.getTreasureQualityMultiplier();
+        let quantityMult = GameState.getTreasureQuantityMultiplier();
+        let qualityMult = GameState.getTreasureQualityMultiplier();
+
+        // 太陽フィーバーボーナス
+        if (GameState.fever.isActive && GameState.fever.type === 'sun') {
+            quantityMult *= 1.5;
+            qualityMult *= 2.0; // スキル出現率UP
+            console.log('🔥 太陽フィーバー: 報酬量・質 2倍！');
+        }
 
         console.log(`🎁 宝箱開封: ${type}, Quantity x${quantityMult.toFixed(2)}, Quality x${qualityMult.toFixed(2)}`);
 
@@ -900,9 +1003,30 @@ const FishingGame = {
         if (lootTable.baits && lootTable.baits.length > 0) {
             let selectedBaitConfig = null;
 
+            // --- 優先排出ロジック ---
+            const currentBaitId = GameState.baitType;
+            const currentBaitData = GAME_DATA.BAITS.find(b => b.id === currentBaitId);
+            const rankOrder = { 'D': 0, 'C': 1, 'B': 2, 'A': 3, 'S': 4 };
+            const currentRank = currentBaitData ? (rankOrder[currentBaitData.rank] ?? -1) : -1;
+
+            // 候補リスト作成（ランク情報を付与）
+            const candidates = lootTable.baits.map(b => {
+                const d = GAME_DATA.BAITS.find(db => db.id === b.id);
+                return { ...b, rankValue: d ? (rankOrder[d.rank] ?? 0) : 0 };
+            });
+
+            // 上位ランクの餌のみを抽出
+            const betterBaits = candidates.filter(b => b.rankValue > currentRank);
+
+            // 上位餌があれば優先、なければ全候補
+            const targetList = (betterBaits.length > 0) ? betterBaits : candidates;
+
+            if (betterBaits.length > 0) {
+                console.log(`✨ 宝箱: 装備(Rank ${currentBaitData?.rank})より上位の餌を優先します`);
+            }
+
             // 重み計算 (質の高い餌の重みを qualityMult で増やす)
-            // 簡易的に、リストの後半(インデックスが大きい)の weight を qualityMult 倍する
-            const weightedBaits = lootTable.baits.map((b, index) => {
+            const weightedBaits = targetList.map((b, index) => {
                 let w = b.weight;
                 // インデックスが大きい(=恐らくリストの下の方にある良い餌)ほどブースト
                 if (index > 0) w *= qualityMult;
@@ -965,17 +1089,29 @@ const FishingGame = {
                             const newSkill = availableSkills[Math.floor(Math.random() * availableSkills.length)];
 
                             // 既に持っているかチェック
-                            if (GameState.hasSkill(newSkill.id)) {
-                                const refund = Math.floor(newSkill.price / 2);
-                                GameState.addMoney(refund);
-                                results.push({ type: 'refund', value: refund, name: `${newSkill.name} (重複)` });
-                            } else {
-                                GameState.addSkill(newSkill.id);
-                                results.push({ type: 'skill', id: newSkill.id, name: newSkill.name });
-                            }
+                            GameState.addSkill(newSkill.id);
+                            results.push({ type: 'skill', id: newSkill.id, name: newSkill.name });
                         }
                     }
-                }
+                } // end loop
+            } // end loop
+        } // end if (lootTable.skills)
+
+        // 限定スキル抽選 (宝箱からのみ、低確率1%)
+        if (Math.random() < 0.01) {
+            const limitedSkillIds = [
+                'nibble_fix', // 予兆察知
+                'sun_blessing', // 太陽の加護
+                'moon_blessing', // 月の加護
+                'perfect_master_1' // 達人の針
+            ];
+            const targetId = limitedSkillIds[Math.floor(Math.random() * limitedSkillIds.length)];
+            const skillData = GAME_DATA.SKILLS.find(s => s.id === targetId);
+
+            if (skillData) {
+                console.log(`✨ 限定スキル当選！: ${skillData.name}`);
+                GameState.addSkill(skillData.id);
+                results.push({ type: 'skill', id: skillData.id, name: `${skillData.name} (限定!)` });
             }
         }
 

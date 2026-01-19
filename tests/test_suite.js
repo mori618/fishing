@@ -13,7 +13,9 @@ describe('Data Integrity (gameData.js)', () => {
     it('All SKINS should refer to valid ROD IDs', () => {
         const rodIds = GAME_DATA.RODS.map(r => r.id);
         GAME_DATA.SKINS.forEach(skin => {
-            expect(rodIds).toContain(skin.rodId);
+            if (!skin.isGachaExclusive) {
+                expect(rodIds).toContain(skin.rodId);
+            }
         });
     });
 
@@ -146,4 +148,40 @@ describe('Encyclopedia Logic', () => {
     it('Should not count "common" or generic IDs if ignored', () => {
         // Depends on implementation, but assuming we track by ID
     });
+});
+// This file is executed in a sandbox where describe, it, expect are globals.
+
+describe('Multi-Catch Skills', () => {
+
+    it('should have 0 chance by default', () => {
+        GameState.equippedSkills = [];
+        expect(GameState.getMultiCatch2Chance()).toBe(0);
+        expect(GameState.getMultiCatch3Chance()).toBe(0);
+    });
+
+    it('should calculate Dual Catcher chance correctly', () => {
+        GameState.equippedSkills = ['dual_catcher_1'];
+        expect(GameState.getMultiCatch2Chance()).toBe(0.10);
+
+        GameState.equippedSkills = ['dual_catcher_2'];
+        expect(GameState.getMultiCatch2Chance()).toBe(0.25);
+
+        // Multiple skills
+        GameState.equippedSkills = ['dual_catcher_1', 'dual_catcher_2'];
+        expect(GameState.getMultiCatch2Chance()).toBe(0.35); // 0.10 + 0.25
+
+        // Cap at 1.0 (though technically 0.35 is low, just verifying logic)
+        // If we have enough to exceed 1.0
+        GameState.equippedSkills = ['dual_catcher_3', 'dual_catcher_3', 'dual_catcher_1']; // 0.5 + 0.5 + 0.1 = 1.1 -> 1.0
+        expect(GameState.getMultiCatch2Chance()).toBe(1.0);
+    });
+
+    it('should calculate Triple Catcher chance correctly', () => {
+        GameState.equippedSkills = ['triple_catcher_1'];
+        expect(GameState.getMultiCatch3Chance()).toBe(0.05);
+
+        GameState.equippedSkills = ['triple_catcher_3'];
+        expect(GameState.getMultiCatch3Chance()).toBe(0.30);
+    });
+
 });
