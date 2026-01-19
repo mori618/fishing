@@ -232,6 +232,66 @@ const UIManager = {
         }, 'rgba(100, 0, 200, 0.8)'));
 
         document.body.appendChild(toolbar); */
+
+        // スワイプ操作の初期化
+        this.initSwipeListeners();
+    },
+
+    // ========================================
+    // スワイプ操作の初期化
+    // ========================================
+    initSwipeListeners() {
+        let touchStartX = 0;
+        let touchStartY = 0;
+        const minSwipeDistance = 50; // スワイプと判定する最小距離
+
+        const handleTouchStart = (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+        };
+
+        const handleTouchEnd = (e) => {
+            const touchEndX = e.changedTouches[0].screenX;
+            const touchEndY = e.changedTouches[0].screenY;
+
+            const deltaX = touchEndX - touchStartX;
+            const deltaY = touchEndY - touchStartY;
+
+            // 横方向のスワイプか判定 (縦方向の移動が大きすぎる場合は無視)
+            if (Math.abs(deltaX) > minSwipeDistance && Math.abs(deltaY) < 100) {
+                if (deltaX < 0) {
+                    // 左スワイプ (右へ進む)
+                    if (this.currentScreen === 'fishing') {
+                        // 釣り -> ショップ
+                        // 釣り実行中は遷移させない（ステートでチェック）
+                        if (FishingGame.state === 'idle') {
+                            FishingGame.abort();
+                            this.showScreen('shop');
+                        }
+                    }
+                } else {
+                    // 右スワイプ (左へ戻る)
+                    if (this.currentScreen === 'shop') {
+                        // ショップ -> 釣り
+                        this.showScreen('fishing');
+                    }
+                }
+            }
+        };
+
+        // 釣り画面のスワイプ設定
+        const fishingScreen = document.getElementById('fishing-screen');
+        if (fishingScreen) {
+            fishingScreen.addEventListener('touchstart', handleTouchStart, { passive: true });
+            fishingScreen.addEventListener('touchend', handleTouchEnd, { passive: true });
+        }
+
+        // ショップ画面のスワイプ設定
+        const shopScreen = document.getElementById('shop-screen');
+        if (shopScreen) {
+            shopScreen.addEventListener('touchstart', handleTouchStart, { passive: true });
+            shopScreen.addEventListener('touchend', handleTouchEnd, { passive: true });
+        }
     },
 
     // ========================================
@@ -317,7 +377,7 @@ const UIManager = {
     // ========================================
     // 釣り画面: 予兆（ウキ揺れ）
     // ========================================
-    showNibble() {
+    showNibble(scale = 1.0) {
         const fishingArea = document.getElementById('fishing-area');
         if (!fishingArea) return;
 
@@ -330,7 +390,7 @@ const UIManager = {
                         <div class="bobber-stick"></div>
                         <div class="bobber-body" style="background-color: ${skin.bobberColor}"></div>
                     </div>
-                    <div class="ripple active"></div>
+                    <div class="ripple active" style="transform: scale(${scale});"></div>
                 </div>
             </div>
         `;

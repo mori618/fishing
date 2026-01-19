@@ -380,7 +380,42 @@ const FishingGame = {
     nibble(currentCount = 0, targetCount = null) {
         if (targetCount === null) {
             this.state = 'nibble';
-            UIManager.showNibble();
+
+            // ----------------------------------------
+            // 波紋のサイズ計算
+            // ----------------------------------------
+            let rippleScale = 1.0;
+
+            if (this.currentFish) {
+                // 宝箱は小さく
+                if (this.currentFish.isTreasure) {
+                    rippleScale = 0.8;
+                }
+                // 魚の場合、ランク比較
+                else {
+                    const baitId = GameState.baitType;
+                    const bait = GAME_DATA.BAITS.find(b => b.id === baitId);
+
+                    const rankIndices = { 'D': 0, 'C': 1, 'B': 2, 'A': 3, 'S': 4, 'SS': 5, 'GOD': 6 };
+                    const fishRankVal = rankIndices[this.currentFish.rarity] || 0;
+                    const baitRankVal = bait ? (rankIndices[bait.rank] || 0) : 0; // 餌なしは最低ランク扱い
+
+                    const rankDiff = fishRankVal - baitRankVal;
+
+                    // ランク差に応じた係数
+                    if (rankDiff >= 3) {
+                        rippleScale = 2.0;
+                    } else if (rankDiff === 2) {
+                        rippleScale = 1.5;
+                    } else if (rankDiff === 1) {
+                        rippleScale = 1.2;
+                    } else {
+                        rippleScale = 1.0;
+                    }
+                }
+            }
+
+            UIManager.showNibble(rippleScale);
 
             if (this.isGachaMode) {
                 // ガチャは2回固定
@@ -393,7 +428,7 @@ const FishingGame = {
                     Math.floor(Math.random() * (GAME_DATA.FISHING_CONFIG.nibbleCountMax - GAME_DATA.FISHING_CONFIG.nibbleCountMin + 1));
             }
 
-            console.log(`🎣 予兆開始: 合計 ${targetCount} 回揺れます`);
+            console.log(`🎣 予兆開始: 合計 ${targetCount} 回揺れます (Scale: ${rippleScale})`);
         }
 
         if (currentCount < targetCount) {
