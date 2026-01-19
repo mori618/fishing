@@ -233,9 +233,9 @@ const GameState = {
         // フィーバーボーナス (月: お魚フィーバー)
         // ========================================
         if (this.fever.isActive && this.fever.type === 'moon') {
-            const feverBonus = 1.2; // 1.2倍 (20% UP)
+            const feverBonus = 2.0; // 2.0倍 (100% UP)
             power = Math.floor(power * feverBonus);
-            console.log(`🔥 お魚フィーバー効果: パワー 1.2倍! -> ${power}`);
+            console.log(`🔥 お魚フィーバー効果: パワー 2.0倍! -> ${power}`);
         }
 
         return power;
@@ -1078,8 +1078,15 @@ const GameState = {
 
                 // 初めて溜まった(Lv1)タイミングでタイプを決定
                 if (this.fever.value === 1) {
-                    // 50%で太陽か月
-                    this.fever.type = Math.random() < 0.5 ? 'sun' : 'moon';
+                    // スキル偏向の適用 (基本50%)
+                    const sunBonus = this.getFeverBiasBonus('sun');
+                    const moonBonus = this.getFeverBiasBonus('moon');
+
+                    // 太陽の確率: 0.5 + 太陽ボーナス - 月ボーナス
+                    const sunChance = 0.5 + sunBonus - moonBonus;
+
+                    this.fever.type = Math.random() < sunChance ? 'sun' : 'moon';
+                    console.log(`🔥 フィーバータイプ抽選: Sun ${Math.round(sunChance * 100)}% (Base 50% + ${Math.round(sunBonus * 100)}% - ${Math.round(moonBonus * 100)}%)`);
                 }
 
                 // 発動判定 (Lv6到達)

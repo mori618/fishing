@@ -76,7 +76,7 @@ const FishingGame = {
             // ただし、タイプ抽選は通常通り行う
             // 必要あればフィーバー用ボーナスを加算しても良い
 
-            const weights = GAME_DATA.TREASURE_CONFIG.rarityWeights;
+            const weights = { WOOD: 0.6, SILVER: 0.3, GOLD: 0.1 };
             let random = Math.random();
             let selectedType = 'WOOD';
 
@@ -929,8 +929,15 @@ const FishingGame = {
         const results = [];
 
         // スキル効果を取得
-        const quantityMult = GameState.getTreasureQuantityMultiplier();
-        const qualityMult = GameState.getTreasureQualityMultiplier();
+        let quantityMult = GameState.getTreasureQuantityMultiplier();
+        let qualityMult = GameState.getTreasureQualityMultiplier();
+
+        // 太陽フィーバーボーナス
+        if (GameState.fever.isActive && GameState.fever.type === 'sun') {
+            quantityMult *= 1.5;
+            qualityMult *= 2.0; // スキル出現率UP
+            console.log('🔥 太陽フィーバー: 報酬量・質 2倍！');
+        }
 
         console.log(`🎁 宝箱開封: ${type}, Quantity x${quantityMult.toFixed(2)}, Quality x${qualityMult.toFixed(2)}`);
 
@@ -1011,17 +1018,29 @@ const FishingGame = {
                             const newSkill = availableSkills[Math.floor(Math.random() * availableSkills.length)];
 
                             // 既に持っているかチェック
-                            if (GameState.hasSkill(newSkill.id)) {
-                                const refund = Math.floor(newSkill.price / 2);
-                                GameState.addMoney(refund);
-                                results.push({ type: 'refund', value: refund, name: `${newSkill.name} (重複)` });
-                            } else {
-                                GameState.addSkill(newSkill.id);
-                                results.push({ type: 'skill', id: newSkill.id, name: newSkill.name });
-                            }
+                            GameState.addSkill(newSkill.id);
+                            results.push({ type: 'skill', id: newSkill.id, name: newSkill.name });
                         }
                     }
-                }
+                } // end loop
+            } // end loop
+        } // end if (lootTable.skills)
+
+        // 限定スキル抽選 (宝箱からのみ、低確率1%)
+        if (Math.random() < 0.01) {
+            const limitedSkillIds = [
+                'nibble_fix', // 予兆察知
+                'sun_blessing', // 太陽の加護
+                'moon_blessing', // 月の加護
+                'perfect_master_1' // 達人の針
+            ];
+            const targetId = limitedSkillIds[Math.floor(Math.random() * limitedSkillIds.length)];
+            const skillData = GAME_DATA.SKILLS.find(s => s.id === targetId);
+
+            if (skillData) {
+                console.log(`✨ 限定スキル当選！: ${skillData.name}`);
+                GameState.addSkill(skillData.id);
+                results.push({ type: 'skill', id: skillData.id, name: `${skillData.name} (限定!)` });
             }
         }
 

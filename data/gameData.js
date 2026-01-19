@@ -686,52 +686,20 @@ const SKILLS = [
 
     // 太陽の加護 (Sun's Blessing)
     {
-        id: 'sun_blessing_1',
-        name: '太陽の加護 I',
-        description: 'おたからフィーバー確率 +15%',
-        effect: { type: 'fever_bias_sun', value: 0.15 },
-        price: 4000,
-        tier: 1
-    },
-    {
-        id: 'sun_blessing_2',
-        name: '太陽の加護 II',
-        description: 'おたからフィーバー確率 +30%',
-        effect: { type: 'fever_bias_sun', value: 0.30 },
-        price: 15000,
-        tier: 2
-    },
-    {
-        id: 'sun_blessing_3',
-        name: '太陽の加護 III',
-        description: 'おたからフィーバー確率 +45%',
-        effect: { type: 'fever_bias_sun', value: 0.45 },
+        id: 'sun_blessing',
+        name: '太陽の加護',
+        description: 'おたからフィーバー確率 +25%',
+        effect: { type: 'fever_bias_sun', value: 0.25 },
         price: 50000,
         tier: 3
     },
 
     // 月の加護 (Moon's Blessing)
     {
-        id: 'moon_blessing_1',
-        name: '月の加護 I',
-        description: 'おさかなフィーバー確率 +15%',
-        effect: { type: 'fever_bias_moon', value: 0.15 },
-        price: 4000,
-        tier: 1
-    },
-    {
-        id: 'moon_blessing_2',
-        name: '月の加護 II',
-        description: 'おさかなフィーバー確率 +30%',
-        effect: { type: 'fever_bias_moon', value: 0.30 },
-        price: 15000,
-        tier: 2
-    },
-    {
-        id: 'moon_blessing_3',
-        name: '月の加護 III',
-        description: 'おさかなフィーバー確率 +45%',
-        effect: { type: 'fever_bias_moon', value: 0.45 },
+        id: 'moon_blessing',
+        name: '月の加護',
+        description: 'おさかなフィーバー確率 +25%',
+        effect: { type: 'fever_bias_moon', value: 0.25 },
         price: 50000,
         tier: 3
     },

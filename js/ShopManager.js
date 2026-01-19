@@ -823,8 +823,15 @@ const ShopManager = {
         if (tier === 'tier3') targetTier = 3;
         if (tier === 'special' || tier === 'tier4') targetTier = 3; // Special/Tier4は現状Tier3相当
 
-        // 該当Tierのスキルを抽出
-        const candidates = GAME_DATA.SKILLS.filter(s => s.tier === targetTier);
+        const limitedSkillIds = [
+            'nibble_fix',
+            'sun_blessing',
+            'moon_blessing',
+            'perfect_master_1'
+        ];
+
+        // 該当Tierのスキルを抽出 (限定スキルは除外)
+        const candidates = GAME_DATA.SKILLS.filter(s => s.tier === targetTier && !limitedSkillIds.includes(s.id));
 
         // 候補がない場合はフォールバック
         if (candidates.length === 0) {
