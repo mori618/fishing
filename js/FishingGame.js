@@ -244,16 +244,32 @@ const FishingGame = {
         }
 
         // 同ランク内での抽選 (個別のweightを考慮)
+        // レア魚出現率UPスキルの適用: 頻度が低い(weight < 15)魚の出現率を底上げ
+        const rareBonus = GameState.getRareBonus();
+
+        // プールの各魚に重みを適用
+        const weightedPool = fishPool.map(f => {
+            let effectiveWeight = f.weight;
+            // weight < 15 は「あまり釣れない」以下 (頻度プロパティ連携)
+            if (rareBonus > 0 && f.weight < 15) {
+                // ボーナスを適用 (効果を実感しやすくするため係数を2.0とする)
+                // 例: bonus 0.2 (+20%) -> weight * 1.4 
+                effectiveWeight = f.weight * (1 + rareBonus * 2.0);
+            }
+            return { fish: f, weight: effectiveWeight };
+        });
+
+        // 総重量を計算
         let poolTotalWeight = 0;
-        fishPool.forEach(f => poolTotalWeight += f.weight);
+        weightedPool.forEach(item => poolTotalWeight += item.weight);
 
         random = Math.random() * poolTotalWeight;
-        let selectedFish = fishPool[0];
+        let selectedFish = weightedPool[0].fish;
 
-        for (const fish of fishPool) {
-            random -= fish.weight;
+        for (const item of weightedPool) {
+            random -= item.weight;
             if (random < 0) {
-                selectedFish = { ...fish }; // コピーを作成
+                selectedFish = { ...item.fish }; // コピーを作成
                 break;
             }
         }

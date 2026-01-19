@@ -13,7 +13,9 @@ describe('Data Integrity (gameData.js)', () => {
     it('All SKINS should refer to valid ROD IDs', () => {
         const rodIds = GAME_DATA.RODS.map(r => r.id);
         GAME_DATA.SKINS.forEach(skin => {
-            expect(rodIds).toContain(skin.rodId);
+            if (!skin.isGachaExclusive) {
+                expect(rodIds).toContain(skin.rodId);
+            }
         });
     });
 

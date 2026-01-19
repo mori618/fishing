@@ -313,7 +313,7 @@ const GameState = {
         if (this.baitType) {
             const bait = GAME_DATA.BAITS.find(b => b.id === this.baitType);
             if (bait) {
-                bonus += bait.rareBoost;
+                bonus += (bait.rareBoost || 0);
             }
         }
 

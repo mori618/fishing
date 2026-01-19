@@ -46,6 +46,7 @@ const EncyclopediaManager = {
                             <div class="fish-name rarity-${fish.rarity}">${fish.name}</div>
                         </div>
                         <div class="fish-count">捕獲数: ${normalCount} 匹</div>
+                        <div class="fish-frequency">出現頻度: ${fish.frequency || '不明'}</div>
                         <div class="fish-description">${fish.description}</div>
                     </div>
                 `;
@@ -83,6 +84,7 @@ const EncyclopediaManager = {
                             <div class="special-tag">ヌシ級</div>
                         </div>
                         <div class="fish-count">捕獲数: ${specialCount} 匹</div>
+                        <div class="fish-frequency">出現頻度: ${fish.frequency || '不明'}</div>
                         <div class="fish-description">${fish.titleDescription}</div>
                     </div>
                 `;
