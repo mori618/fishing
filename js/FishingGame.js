@@ -640,8 +640,49 @@ const FishingGame = {
         const config = GAME_DATA.GAUGE_CONFIG.zones[zone];
 
         // 捕獲確率を計算
-        let catchRate = config.catchRate.min +
-            Math.random() * (config.catchRate.max - config.catchRate.min);
+        let catchRate;
+
+        if (zone === 'red') {
+            // ========================================
+            // 赤ゲージ停止時の動的成功率計算
+            // ========================================
+            const bait = GAME_DATA.BAITS.find(b => b.id === GameState.baitType) || GAME_DATA.BAITS[0];
+            const rankIndices = { 'D': 0, 'C': 1, 'B': 2, 'A': 3, 'S': 4, 'SS': 5 };
+
+            const fishRank = rankIndices[this.currentFish.rarity] || 0;
+            const baitRank = rankIndices[bait.rank] || 0;
+            const rankDiff = fishRank - baitRank;
+
+            // ランク差によるベース成功率
+            let baseRate = 0.9; // 同ランク or 格下
+            if (rankDiff === 1) baseRate = 0.8;      // 1つ上
+            else if (rankDiff === 2) baseRate = 0.6; // 2つ上
+            else if (rankDiff >= 3) baseRate = 0.4;  // 3つ上 (それ以上も一旦40%ベース)
+
+            // パワー差による補正
+            const playerPower = GameState.getTotalPower();
+            const fishPower = this.currentFish.power;
+            const powerDiff = Math.max(0, fishPower - playerPower);
+
+            // パワー差が大きいほど減衰 
+            // 例: パワー差がプレイヤーパワーと同じだけある(倍の敵)場合、-50%
+            const powerPenalty = (powerDiff / Math.max(1, playerPower)) * 0.5;
+
+            catchRate = baseRate - powerPenalty;
+
+            // ユーザー要望: パワー差がありすぎても0%にはしない (最低1%保証)
+            if (catchRate < 0.01) {
+                catchRate = 0.01;
+            }
+
+            // ログ出力
+            console.log(`📊 キャッチ判定: ランク差${rankDiff}(${baseRate * 100}%) - パワー罰則${(powerPenalty * 100).toFixed(1)}% = ${(catchRate * 100).toFixed(1)}% (Min 5%)`);
+
+        } else {
+            // 赤以外は従来通りの設定値
+            catchRate = config.catchRate.min +
+                Math.random() * (config.catchRate.max - config.catchRate.min);
+        }
 
         // 達人の針スキル: 赤ゾーンなら確定 (100%)
         if (zone === 'red' && GameState.hasPerfectMaster && GameState.hasPerfectMaster()) {
