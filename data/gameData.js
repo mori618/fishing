@@ -816,6 +816,114 @@ const SKILLS = [
         effect: { type: 'multi_catch_3', value: 0.30 },
         price: 60000,
         tier: 3
+    },
+
+    // ========================================
+    // ミッション関連スキル
+    // ========================================
+
+    // 増幅の心得 (Skill Amplifier) - 他スキル効果アップ
+    {
+        id: 'amplifier_1',
+        name: '増幅の心得 I',
+        description: '他のスキル効果を1.2倍にする',
+        effect: { type: 'skill_amplifier', value: 0.20 },
+        price: 5000,
+        tier: 1
+    },
+    {
+        id: 'amplifier_2',
+        name: '増幅の心得 II',
+        description: '他のスキル効果を1.35倍にする',
+        effect: { type: 'skill_amplifier', value: 0.35 },
+        price: 15000,
+        tier: 2
+    },
+    {
+        id: 'amplifier_3',
+        name: '増幅の心得 III',
+        description: '他のスキル効果を1.5倍にする',
+        effect: { type: 'skill_amplifier', value: 0.50 },
+        price: 40000,
+        tier: 3
+    },
+
+    // 依頼人のコネ (Client Connection) - ミッション報酬アップ
+    {
+        id: 'client_connection_1',
+        name: '依頼人のコネ I',
+        description: 'ミッション報酬が1.5倍になる',
+        effect: { type: 'mission_reward', value: 1.5 },
+        price: 3000,
+        tier: 1
+    },
+    {
+        id: 'client_connection_2',
+        name: '依頼人のコネ II',
+        description: 'ミッション報酬が1.75倍になる',
+        effect: { type: 'mission_reward', value: 1.75 },
+        price: 10000,
+        tier: 2
+    },
+    {
+        id: 'client_connection_3',
+        name: '依頼人のコネ III',
+        description: 'ミッション報酬が2倍になる',
+        effect: { type: 'mission_reward', value: 2.0 },
+        price: 30000,
+        tier: 3
+    },
+
+    // ストイック (Stoic) - 目標増・報酬大幅増
+    {
+        id: 'stoic_1',
+        name: 'ストイック I',
+        description: 'ミッション目標が2倍になるが、報酬が3倍になる',
+        effect: { type: 'stoic', targetMult: 2.0, rewardMult: 3.0 },
+        price: 5000,
+        tier: 1
+    },
+    {
+        id: 'stoic_2',
+        name: 'ストイック II',
+        description: 'ミッション目標が3倍になるが、報酬が5倍になる',
+        effect: { type: 'stoic', targetMult: 3.0, rewardMult: 5.0 },
+        price: 15000,
+        tier: 2
+    },
+    {
+        id: 'stoic_3',
+        name: 'ストイック III',
+        description: 'ミッション目標が4倍になるが、報酬が8倍になる',
+        effect: { type: 'stoic', targetMult: 4.0, rewardMult: 8.0 },
+        price: 40000,
+        tier: 3
+    },
+
+    // 気楽な釣り人 (Casual Fisher) - 目標減・報酬減
+    {
+        id: 'casual_fisher_1',
+        name: '気楽な釣り人 I',
+        description: 'ミッション目標が0.7倍、報酬が0.7倍になる',
+        effect: { type: 'casual', targetMult: 0.7, rewardMult: 0.7 },
+        price: 2000,
+        tier: 1
+    },
+    {
+        id: 'casual_fisher_2',
+        name: '気楽な釣り人 II',
+        description: 'ミッション目標が0.6倍、報酬が0.8倍になる',
+        effect: { type: 'casual', targetMult: 0.6, rewardMult: 0.8 },
+        price: 6000,
+        tier: 2
+    },
+    {
+        id: 'casual_fisher_3',
+        name: '気楽な釣り人 III',
+        description: 'ミッション目標が0.5倍になるが、報酬は変わらない',
+        effect: { type: 'casual', targetMult: 0.5, rewardMult: 1.0 },
+        price: 20000,
+        tier: 3
     }
 ];
 

@@ -140,6 +140,10 @@ const UIManager = {
             ShopManager.renderShop();
         } else if (screenId === 'encyclopedia') {
             EncyclopediaManager.render();
+        } else if (screenId === 'stats') {
+            this.renderStats();
+        } else if (screenId === 'gacha') {
+            this.prepareGachaScreen();
         }
     },
 
@@ -852,8 +856,14 @@ const UIManager = {
     // ========================================
     // ステータス表示更新
     // ========================================
+    // ステータスの更新 (お金・チケット)
     updateStatus() {
         this.updateMoney();
+        // チケット表示があれば更新
+        const ticketDisplay = document.getElementById('gacha-ticket-display');
+        if (ticketDisplay) {
+            ticketDisplay.textContent = GameState.gachaTickets;
+        }
         this.updateInventory();
         this.updateRodInfo();
         this.updateBaitInfo();
@@ -1206,10 +1216,259 @@ const UIManager = {
             toast.classList.remove('show');
             setTimeout(() => toast.remove(), 300);
         }, duration);
+    },
+
+    // ========================================
+    // 実績画面のレンダリング
+    // ========================================
+    renderStats() {
+        const container = document.getElementById('stats-container');
+        if (!container) return;
+
+        const stats = {
+            '累計釣り上げ数': `${GameState.totalFishCaught} 匹`,
+            '累計宝箱取得数': `${GameState.totalTreasure} 個`,
+            '累計獲得スキル数': `${GameState.totalSkills} 個`,
+            '累計獲得コイン': `${GameState.totalCoinsEarned.toLocaleString()} G`,
+            '最大釣り上げサイズ': GameState.biggestFish ? `${GameState.biggestFish.name} (${GameState.biggestFish.power})` : 'なし',
+            'カジノ累計勝利額': `${GameState.casinoTotalWin.toLocaleString()} G`,
+            'カジノ累計敗北額': `${GameState.casinoTotalLoss.toLocaleString()} G`,
+            'ガシャチケット所持数': `${GameState.gachaTickets} 枚`
+        };
+
+        const rankStats = GameState.caughtByRank;
+        const ranksHtml = Object.entries(rankStats).map(([rank, count]) => `
+            <div class="stat-row">
+                <span class="stat-label rank-label rarity-${rank}">Rank ${rank}</span>
+                <span class="stat-value">${count} 匹</span>
+            </div>
+        `).join('');
+
+        let html = '<div class="stats-group"><h3>総合統計</h3>';
+        for (const [label, value] of Object.entries(stats)) {
+            html += `
+                <div class="stat-row">
+                    <span class="stat-label">${label}</span>
+                    <span class="stat-value">${value}</span>
+                </div>
+            `;
+        }
+        html += '</div>';
+
+        html += '<div class="stats-group"><h3>ランク別釣り上げ数</h3>';
+        html += ranksHtml;
+        html += '</div>';
+
+        container.innerHTML = html;
+    },
+
+    // ========================================
+    // ガチャ演出と結果表示
+    // ========================================
+    prepareGachaScreen() {
+        const handle = document.getElementById('gacha-handle');
+        const machineContainer = document.getElementById('gacha-machine-container');
+        const resultDisplay = document.getElementById('gacha-result-display');
+
+        machineContainer.classList.remove('hidden');
+        resultDisplay.classList.add('hidden');
+        handle.classList.remove('spinning');
+
+        // カプセルをランダムに配置
+        const capsuleContainer = document.getElementById('capsule-container');
+        capsuleContainer.innerHTML = '';
+        const colors = ['#f87171', '#60a5fa', '#34d399', '#fbbf24', '#a78bfa'];
+        for (let i = 0; i < 20; i++) {
+            const cap = document.createElement('div');
+            cap.className = 'gacha-capsule';
+            cap.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            cap.style.left = Math.random() * 150 + 'px';
+            cap.style.top = Math.random() * 130 + 'px';
+            capsuleContainer.appendChild(cap);
+        }
+    },
+
+    startGachaPerformance(results, onComplete) {
+        const handle = document.getElementById('gacha-handle');
+        const machineContainer = document.getElementById('gacha-machine-container');
+        const resultDisplay = document.getElementById('gacha-result-display');
+
+        // ハンドルを回す
+        handle.classList.add('spinning');
+
+        // 演出ウェイト
+        setTimeout(() => {
+            handle.classList.remove('spinning');
+
+            // マシンを隠して結果を表示
+            machineContainer.classList.add('hidden');
+            resultDisplay.classList.remove('hidden');
+
+            this.renderGachaResults(results);
+
+            // 閉じるボタン
+            const closeBtn = document.getElementById('gacha-close-btn');
+            closeBtn.onclick = () => {
+                this.showScreen('shop'); // ショップに戻る
+                if (onComplete) onComplete();
+            };
+        }, 1500);
+    },
+
+    renderGachaResults(results) {
+        const container = document.getElementById('gacha-items-container');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        results.forEach(item => {
+            // ガチャ結果を GameState に反映（所持数追加）
+            GameState.gainGachaResult(item);
+
+            const ownedCount = GameState.getSkillCount(item.id);
+
+            const card = document.createElement('div');
+            card.className = `gacha-result-card rarity-${item.rarity || 'C'} ${item.isNew ? 'is-new' : ''}`;
+
+            card.innerHTML = `
+                <div class="item-icon">
+                    <span class="material-icons">${item.icon || 'auto_awesome'}</span>
+                </div>
+                <div class="item-name">${item.name}</div>
+                <div class="owned-count">所持: ${ownedCount}</div>
+            `;
+            container.appendChild(card);
+        });
+    },
+
+    // ========================================
+    // ミッションUIの更新
+    // ========================================
+    updateMissionUI() {
+        const missionDisplay = document.getElementById('mission-display');
+        const missionText = document.getElementById('mission-text');
+        if (!missionDisplay || !missionText) return;
+
+        // 初心者ミッションの場合
+        const beginnerText = MissionManager.getCurrentMissionText();
+        if (beginnerText !== null) {
+            missionDisplay.classList.remove('dynamic-mode');
+            missionText.innerHTML = beginnerText;
+            return;
+        }
+
+        // 動的ミッションの場合
+        if (MissionManager.isDynamicMissionActive()) {
+            missionDisplay.classList.add('dynamic-mode');
+            const missions = GameState.dynamicMissions;
+            let html = '';
+            ['A', 'B', 'C'].forEach(slot => {
+                const m = missions[slot];
+                if (!m) return;
+                const isTicket = m.reward.type === 'ticket';
+                const progressText = `${m.current}/${m.target}`;
+                html += `
+                    <div class="dynamic-mission-item ${isTicket ? 'ticket-reward' : ''}">
+                        <span class="slot-label">${slot}</span>
+                        <span class="mission-desc">${m.text} (${progressText})</span>
+                        ${isTicket ? '<span class="reward-icon">🎫</span>' : ''}
+                    </div>
+                `;
+            });
+            missionText.innerHTML = html;
+        } else {
+            missionText.textContent = '全てのミッションを達成しました！';
+        }
+    },
+
+    // = ::::::::::::::::::::::::::::::::::::::::
+    // ヘルプの表示
+    // ::::::::::::::::::::::::::::::::::::::::
+    showHelp() {
+        this.showMessage('ヘルプ: 画面をタップしてキャストし、タイミングよくタップして魚を釣りましょう！');
+        MissionManager.checkMission('help_click');
+    },
+
+    // UIの初期化
+    init() {
+        // スタート画面の初期化
+        this.initStartScreen();
+
+        // ミッションUIの初期更新
+        this.updateMissionUI();
+
+        // ボタンのイベントリスナー設定
+        document.getElementById('encyclopedia-back-btn')?.addEventListener('click', () => {
+            this.showScreen('fishing'); // 釣り画面に戻る
+        });
+
+        document.getElementById('stats-back-btn')?.addEventListener('click', () => {
+            this.showScreen('encyclopedia');
+        });
+
+        document.getElementById('help-btn')?.addEventListener('click', () => {
+            this.showHelp();
+        });
+
+        // ガチャ画面のハンドルクリックでも回せるようにする
+        document.getElementById('gacha-handle')?.addEventListener('click', () => {
+            // すでに回っているか結果表示中なら無視
+            const handle = document.getElementById('gacha-handle');
+            if (handle.classList.contains('spinning')) return;
+            const resultDisplay = document.getElementById('gacha-result-display');
+            if (!resultDisplay.classList.contains('hidden')) return;
+
+            // FIXME: ここで回すのは ShopManager 経由が良いが、
+            // 演出中のハンドルクリックを「確定」などの操作に割り当てることも可能
+        });
     }
 };
+
+// CSSを動的に追加（stats-container用）
+const statsStyles = document.createElement('style');
+statsStyles.textContent = `
+    .stats-container {
+        padding: 16px;
+        color: var(--text-primary);
+    }
+    .stats-group {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .stats-group h3 {
+        margin-top: 0;
+        margin-bottom: 12px;
+        color: #ffd700;
+        font-size: 1.1rem;
+        border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+        padding-bottom: 4px;
+    }
+    .stat-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .stat-row:last-child {
+        border-bottom: none;
+    }
+    .stat-label {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+    .stat-value {
+        font-weight: bold;
+        color: var(--text-primary);
+    }
+`;
+document.head.appendChild(statsStyles);
 
 // グローバルに公開
 if (typeof window !== 'undefined') {
     window.UIManager = UIManager;
 }
+UIManager.init();

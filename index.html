@@ -72,6 +72,16 @@
                 <span class="status-icon"><span class="material-icons">set_meal</span></span>
                 <span id="inventory-count" class="status-value">0 匹</span>
             </div>
+            <div class="status-pill">
+                <span class="status-icon"><span class="material-icons">confirmation_number</span></span>
+                <span id="gacha-ticket-display" class="status-value">0</span>
+            </div>
+
+            <!-- 初心者ミッション表示 -->
+            <div id="mission-display" class="mission-display">
+                <div class="mission-label">MISSION</div>
+                <div id="mission-text" class="mission-text">ミッション読み込み中...</div>
+            </div>
         </div>
 
 
@@ -89,6 +99,17 @@
         <div id="fishing-rod-view" class="fishing-rod-view">
             <div class="rod-shaft"></div>
             <div class="rod-line"></div>
+        </div>
+
+        <!-- 設定・メニュー系（右下） -->
+        <div class="bottom-hud-right">
+            <button id="help-btn" class="floating-btn btn-help">
+                <span class="material-icons">help_outline</span>
+            </button>
+            <button id="encyclopedia-btn-top" class="floating-btn btn-encyclopedia">
+                <span class="material-icons">menu_book</span>
+                <span class="btn-label">図鑑</span>
+            </button>
         </div>
 
         <!-- 中央下部HUD（餌・竿・町） -->
@@ -200,14 +221,72 @@
     </div>
 
     <!-- ========================================
+         実績画面（戦績）
+         ======================================== -->
+    <div id="stats-screen" class="screen">
+        <header class="shop-header">
+            <h2 class="shop-title"><span class="material-icons">query_stats</span> 戦績・実績</h2>
+        </header>
+
+        <main class="shop-content">
+            <div id="stats-container" class="stats-container">
+                <!-- 動的に表示 -->
+            </div>
+        </main>
+
+        <footer class="shop-footer">
+            <button id="stats-back-btn" class="btn-nav" style="flex: 1;">
+                <span class="material-icons">menu_book</span>
+                図鑑に戻る
+            </button>
+        </footer>
+    </div>
+
+
+    <!-- ========================================
+          ガチャ専用演出画面
+          ======================================== -->
+    <div id="gacha-screen" class="screen">
+        <div class="gacha-bg">
+            <div class="gacha-particles" id="gacha-particles"></div>
+            <div class="gacha-light-rays"></div>
+        </div>
+
+        <div class="gacha-stage">
+            <div id="gacha-machine-container" class="gacha-machine-container">
+                <!-- ガチャマシンのビジュアル -->
+                <div class="gacha-machine">
+                    <div class="machine-glass">
+                        <div class="capsule-container" id="capsule-container"></div>
+                    </div>
+                    <div class="machine-body">
+                        <div class="machine-handle" id="gacha-handle">
+                            <span class="material-icons">autorenew</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="gacha-result-display" class="gacha-result-display hidden">
+                <div class="result-header">GACHA RESULT</div>
+                <div id="gacha-items-container" class="gacha-items-container"></div>
+                <div class="result-footer">
+                    <button id="gacha-close-btn" class="btn-main">閉じる</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================
          スクリプト読み込み
          ======================================== -->
     <script src="data/gameData.js"></script>
     <script src="js/SaveManager.js"></script>
     <script src="js/GameState.js"></script>
     <script src="js/FishingGame.js"></script>
-    <script src="js/CasinoManager.js"></script>
     <script src="js/ShopManager.js"></script>
+    <script src="js/CasinoManager.js"></script>
+    <script src="js/MissionManager.js"></script>
     <script src="js/EncyclopediaManager.js"></script>
     <script src="js/UIManager.js"></script>
     <script src="js/main.js"></script>

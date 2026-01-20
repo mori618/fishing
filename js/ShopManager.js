@@ -22,6 +22,11 @@ const ShopManager = {
         } else {
             UIManager.showScreen('shop');
             this.renderShop();
+
+            // 初心者ミッション判定: 街へ行く
+            if (category === 'town') {
+                MissionManager.checkMission('go_town');
+            }
         }
     },
 
@@ -782,35 +787,37 @@ const ShopManager = {
         if (!config) return;
 
         const cost = count === 10 ? config.ten : config.single;
+        const resCheck = GameState.canDrawGacha(cost, count);
 
-        if (GameState.money < cost) {
-            UIManager.showMessage('お金が足りません！');
+        if (!resCheck.can) {
+            UIManager.showMessage('リソースが足りません！');
             return;
         }
 
-        // お金を消費
-        GameState.money -= cost;
-        UIManager.updateMoney();
-        const moneyDisplay = document.getElementById('shop-money-display');
-        if (moneyDisplay) moneyDisplay.textContent = `¥${GameState.money.toLocaleString()}`;
-        const casinoMoney = document.getElementById('casino-money-display');
-        if (casinoMoney) casinoMoney.textContent = `¥${GameState.money.toLocaleString()}`;
+        // コイン消費の場合は確認を出す
+        if (resCheck.method === 'money') {
+            const confirmed = confirm(`チケットがありません。${cost.toLocaleString()} G を消費してガチャを引きますか？`);
+            if (!confirmed) return;
+        }
 
-        // 抽選実行
+        // 抽選実行 (リソース消費の前に抽選を行い、結果を演出に渡す)
         const results = [];
         for (let i = 0; i < count; i++) {
             results.push(this.lottery(config.rates));
         }
 
+        // リソース消費
+        GameState.consumeGachaResources(cost, count);
+        UIManager.updateStatus(); // お金・チケット表示更新
+
+        // ガチャ専用画面へ切り替え
+        UIManager.showScreen('gacha');
+
         // ガチャ演出開始
-        UIManager.showSlotAnimation(results, () => {
-            UIManager.showGachaResult(results, () => {
-                if (UIManager.currentScreen === 'casino') {
-                    CasinoManager.render();
-                } else {
-                    ShopManager.renderShop();
-                }
-            });
+        UIManager.startGachaPerformance(results, () => {
+            // 演出完了後の処理は UIManager 内で完結させるが、
+            // もしショップの更新が必要ならここで行う
+            this.renderShop();
         });
     },
 
@@ -1066,6 +1073,9 @@ const ShopManager = {
             const count = GameState.getEquippedSkillCount(skillId);
             UIManager.showMessage(`${skill.name}を装備しました！(計${count}個)`);
             this.renderShop();
+
+            // 初心者ミッション判定: スキルを装備する
+            MissionManager.checkMission('equip_skill');
         } else {
             // 失敗理由を簡易表示 (スロット一杯など)
             if (GameState.equippedSkills.length >= GameState.getSkillSlots()) {
@@ -1096,6 +1106,9 @@ const ShopManager = {
             UIManager.showMessage(`${bait.name}を購入しました！`);
             this.renderShop();
             UIManager.updateMoney();
+
+            // 初心者ミッション判定: 餌を買う
+            MissionManager.checkMission('buy_bait');
         }
     },
 

@@ -34,7 +34,18 @@ const SaveManager = {
             encyclopedia: {},       // 図鑑データ { fishId: { count: 0, hasSpecial: false } }
             statistics: {
                 totalFishCaught: 0,
+                caughtByRank: { 'D': 0, 'C': 0, 'B': 0, 'A': 0, 'S': 0, 'SS': 0 },
+                totalTreasure: 0,
+                totalSkills: 0,
                 totalMoneyEarned: 0,
+                totalCoinsEarned: 0,
+                casinoTotalWin: 0,
+                casinoTotalLoss: 0,
+                gachaTickets: 0,
+                currentMissionIndex: 0,
+                missionProgress: 0,
+                dynamicMissions: null,
+                dynamicMissionCompletedCount: 0,
                 biggestFish: null
             }
         };
@@ -75,7 +86,18 @@ const SaveManager = {
                 encyclopedia: { ...gameState.encyclopedia },
                 statistics: {
                     totalFishCaught: gameState.totalFishCaught,
+                    caughtByRank: { ...gameState.caughtByRank },
+                    totalTreasure: gameState.totalTreasure,
+                    totalSkills: gameState.totalSkills,
                     totalMoneyEarned: gameState.totalMoneyEarned,
+                    totalCoinsEarned: gameState.totalCoinsEarned,
+                    casinoTotalWin: gameState.casinoTotalWin,
+                    casinoTotalLoss: gameState.casinoTotalLoss,
+                    gachaTickets: gameState.gachaTickets,
+                    currentMissionIndex: gameState.currentMissionIndex,
+                    missionProgress: gameState.missionProgress,
+                    dynamicMissions: gameState.dynamicMissions,
+                    dynamicMissionCompletedCount: gameState.dynamicMissionCompletedCount,
                     biggestFish: gameState.biggestFish,
                     // フィーバー状態も保存
                     fever: { ...gameState.fever }

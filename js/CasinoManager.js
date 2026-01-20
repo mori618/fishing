@@ -463,6 +463,12 @@ const CasinoManager = {
             this.setMessage("痛み分けか。次で決めるぜ。");
         }
 
+        if (moneyChange > 0) {
+            GameState.casinoTotalWin += moneyChange;
+        } else if (moneyChange < 0) {
+            GameState.casinoTotalLoss += Math.abs(moneyChange);
+        }
+
         GameState.money += moneyChange;
         this.updateChinchiroUI();
         UIManager.updateMoney(); // Global UI update
