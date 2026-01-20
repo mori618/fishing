@@ -44,6 +44,8 @@ const SaveManager = {
                 gachaTickets: 0,
                 currentMissionIndex: 0,
                 missionProgress: 0,
+                beginnerMissionCompleted: [],
+                beginnerMissionProgress: {},
                 dynamicMissions: null,
                 dynamicMissionCompletedCount: 0,
                 biggestFish: null
@@ -93,9 +95,12 @@ const SaveManager = {
                     totalCoinsEarned: gameState.totalCoinsEarned,
                     casinoTotalWin: gameState.casinoTotalWin,
                     casinoTotalLoss: gameState.casinoTotalLoss,
+                    campaignTotalWin: 0, // 予備
                     gachaTickets: gameState.gachaTickets,
-                    currentMissionIndex: gameState.currentMissionIndex,
-                    missionProgress: gameState.missionProgress,
+                    currentMissionIndex: gameState.currentMissionIndex, // 互換用
+                    missionProgress: gameState.missionProgress,         // 互換用
+                    beginnerMissionCompleted: [...gameState.beginnerMissionCompleted],
+                    beginnerMissionProgress: { ...gameState.beginnerMissionProgress },
                     dynamicMissions: gameState.dynamicMissions,
                     dynamicMissionCompletedCount: gameState.dynamicMissionCompletedCount,
                     biggestFish: gameState.biggestFish,
@@ -105,7 +110,7 @@ const SaveManager = {
             };
 
             localStorage.setItem(this.SAVE_KEY, JSON.stringify(saveData));
-            console.log('💾 ゲームデータを保存しました:', saveData.saveDate);
+            console.log('💾 ゲームデータを保存しました:', saveData.saveDate, 'Mission:', saveData.statistics.currentMissionIndex);
             return true;
         } catch (error) {
             console.error('❌ セーブに失敗しました:', error);
@@ -133,7 +138,7 @@ const SaveManager = {
             }
 
             const data = JSON.parse(savedData);
-            console.log('📂 セーブデータを読み込みました:', data.saveDate);
+            console.log('📂 セーブデータを読み込みました:', data.saveDate, 'Mission:', data.statistics?.currentMissionIndex);
 
             // バージョンチェック・マイグレーション
             if (data.version !== this.VERSION) {

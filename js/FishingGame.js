@@ -188,9 +188,9 @@ const FishingGame = {
                 return { ...targetPool[0] };
             }
         }
-
+        // 餌ごとの出現確率DCBAS
         const spawnWeights = {
-            'D': { D: 0.8, C: 0.2, S: 0.01 },
+            'D': { D: 0.9, C: 0.1, S: 0.01 },
             'C': { C: 0.8, D: 0.2, B: 0.1 },
             'B': { B: 0.8, C: 0.2, D: 0.1, A: 0.05 },
             'A': { A: 0.6, B: 0.4, C: 0.2, S: 0.05 },

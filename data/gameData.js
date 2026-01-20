@@ -1135,9 +1135,9 @@ const RARITY_WEIGHTS = {
 // ガチャ設定
 // ========================================
 const GACHA_CONFIG = {
-    BRONZE: { single: 1000, ten: 9000, rates: { tier1: 85, tier2: 14, tier3: 1, special: 0 } },
-    SILVER: { single: 8000, ten: 72000, rates: { tier1: 15, tier2: 75, tier3: 10, special: 0.1 } },
-    GOLD: { single: 30000, ten: 250000, rates: { tier1: 0, tier2: 20, tier3: 75, special: 5 } }
+    BRONZE: { single: 1000, ten: 9000, ticket: 1, rates: { tier1: 85, tier2: 14, tier3: 1, special: 0 } },
+    SILVER: { single: 8000, ten: 72000, ticket: 8, rates: { tier1: 15, tier2: 75, tier3: 10, special: 0.1 } },
+    GOLD: { single: 30000, ten: 250000, ticket: 30, rates: { tier1: 0, tier2: 20, tier3: 75, special: 5 } }
 };
 
 // ========================================

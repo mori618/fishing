@@ -4094,6 +4094,8 @@ body {
     .floating-status-left {
         left: 10px;
         top: 10px;
+        transform: scale(0.6);
+        transform-origin: top left;
     }
 
     .floating-status-right {
@@ -4542,4 +4544,249 @@ body {
 .dynamic-mission-item.ticket-reward .mission-desc {
     color: #ffd700;
     font-weight: bold;
+}
+
+/* Floating Status & Help Button */
+.floating-status-right {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    z-index: 100;
+    pointer-events: auto;
+}
+
+.btn-help {
+    width: 48px;
+    height: 48px;
+    border-radius: 50% !important;
+    background: rgba(0, 0, 0, 0.4) !important;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.btn-help .material-icons {
+    font-size: 28px;
+}
+
+/* Mission List Styles */
+.mission-item-row {
+    display: flex;
+    align-items: center;
+    font-size: 0.95rem;
+    margin-bottom: 6px;
+    line-height: 1.4;
+    text-align: left;
+    width: 100%;
+}
+.mission-icon-small {
+    font-size: 1.3rem;
+    margin-right: 8px;
+    color: #ffd700;
+    flex-shrink: 0;
+}
+
+/* 報酬ポップアップ */
+.reward-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.reward-popup-overlay.show {
+    opacity: 1;
+}
+.reward-popup {
+    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+    border: 2px solid #ffd700;
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    transform: scale(0.8);
+    transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+    min-width: 280px;
+}
+.reward-popup-overlay.show .reward-popup {
+    transform: scale(1);
+}
+.reward-title {
+    color: #ffd700;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 16px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+.reward-icon-container {
+    font-size: 4rem;
+    margin-bottom: 12px;
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+}
+.reward-name {
+    color: #fff;
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+}
+.reward-close-btn {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 8px 24px;
+    border-radius: 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.reward-close-btn:hover {
+    background: #1d4ed8;
+}
+
+/* ガチャボタンレイアウト */
+.gacha-buttons-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    margin-top: 12px;
+}
+.gacha-button-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+.gacha-group-label {
+    font-size: 0.85rem;
+    color: #a0aec0;
+    min-width: 80px;
+}
+.btn-ticket {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+.btn-ticket:hover:not(.disabled) {
+    filter: brightness(1.1);
+}
+.btn-ticket.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.item-ticket-cost {
+    color: #a78bfa;
+    font-size: 0.85rem;
+    margin-top: 4px;
+}
+
+/* ========================================
+   霑ｽ蜉縺ｮ繝｢繝舌う繝ｫ繝ｬ繧ｹ繝昴Φ繧ｷ繝門ｯｾ蠢・   ======================================== */
+@media (max-width: 768px) {
+    /* 驥｣繧顔ｫｿ蜷阪・繝・く繧ｹ繝育怐逡･蟇ｾ蠢・*/
+    .rod-badge {
+        max-width: 80px !important;
+        overflow: hidden !important;
+    }
+
+    .rod-name {
+        font-size: 10px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: 70px !important;
+        display: block !important;
+    }
+
+    .rod-stars .material-icons {
+        font-size: 12px !important;
+    }
+
+    .rod-stars {
+        flex-wrap: nowrap !important;
+    }
+
+    /* 驥｣繧顔ｫｿ縺ｮ繝｢繝舌う繝ｫ菴咲ｽｮ隱ｿ謨ｴ */
+    .fishing-rod-view {
+        right: 5% !important;
+        bottom: -80px !important;
+        transform-origin: 95% 100% !important;
+        transform: scale(0.65) !important;
+    }
+
+    .rod-shaft {
+        height: 350px !important;
+    }
+
+    /* 驥｣繧顔ｫｿ繧｢繝九Γ繝ｼ繧ｷ繝ｧ繝ｳ - 繝｢繝舌う繝ｫ逕ｨ縺ｫ隱ｿ謨ｴ */
+    .fishing-rod-view.idle {
+        transform: scale(0.65) rotate(25deg) translateY(50px) !important;
+    }
+
+    .fishing-rod-view.waiting {
+        transform: scale(0.65) rotate(-5deg) !important;
+    }
+
+    .fishing-rod-view.nibble {
+        transform: scale(0.65) rotate(-5deg) !important;
+    }
+
+    .fishing-rod-view.hit {
+        transform: scale(0.65) rotate(-15deg) translateY(10px) !important;
+    }
+
+    .fishing-rod-view.strike {
+        transform: scale(0.65) rotate(15deg) translateY(-5px) !important;
+    }
+
+    .fishing-rod-view.battle {
+        transform: scale(0.65) rotate(-15deg) translateY(10px) !important;
+    }
+
+    .fishing-rod-view.casting {
+        animation: rodCastMobile 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
+    }
+
+    .fishing-rod-view.success {
+        animation: rodSuccessMobile 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
+    }
+}
+
+@keyframes rodCastMobile {
+    0% {
+        transform: scale(0.65) rotate(45deg) translateY(100px);
+    }
+    30% {
+        transform: scale(0.65) rotate(60deg) translateY(150px);
+    }
+    40% {
+        transform: scale(0.65) rotate(60deg) translateY(150px);
+    }
+    100% {
+        transform: scale(0.65) rotate(-10deg) translateY(0);
+    }
+}
+
+@keyframes rodSuccessMobile {
+    0% {
+        transform: scale(0.65) rotate(-15deg) translateY(10px);
+    }
+    40% {
+        transform: scale(0.65) rotate(-20deg) translateY(15px);
+    }
+    100% {
+        transform: scale(0.65) rotate(10deg) translateY(20px) translateX(10px);
+    }
 }

@@ -482,7 +482,7 @@ const UIManager = {
                 <h2 class="gauge-battle-title">キャッチング中！</h2>
                 <div class="fish-info">
                     <span class="fish-name rarity-${fish.rarity}"></span>
-                    <span class="fish-power">パワー: ${fish.power}</span>
+                    <span class="fish-power">${fish.power}</span>
                 </div>
                 <div class="gauge-container">
                     <div class="gauge-bar">
@@ -935,7 +935,7 @@ const UIManager = {
         // パワー表示も更新
         const powerDisplay = document.getElementById('power-display');
         if (powerDisplay) {
-            powerDisplay.textContent = `パワー: ${GameState.getTotalPower()}`;
+            powerDisplay.textContent = `${GameState.getTotalPower()} P`;
         }
     },
 
@@ -1350,10 +1350,16 @@ const UIManager = {
         if (!missionDisplay || !missionText) return;
 
         // 初心者ミッションの場合
-        const beginnerText = MissionManager.getCurrentMissionText();
-        if (beginnerText !== null) {
+        const beginnerTexts = MissionManager.getCurrentMissionTexts();
+        if (beginnerTexts !== null) {
             missionDisplay.classList.remove('dynamic-mode');
-            missionText.innerHTML = beginnerText;
+
+            // 3つのミッションをリスト表示
+            let html = '';
+            beginnerTexts.forEach(text => {
+                html += `<div class="mission-item-row"><span class="material-icons mission-icon-small">check_circle_outline</span> ${text}</div>`;
+            });
+            missionText.innerHTML = html;
             return;
         }
 
@@ -1421,6 +1427,73 @@ const UIManager = {
             // FIXME: ここで回すのは ShopManager 経由が良いが、
             // 演出中のハンドルクリックを「確定」などの操作に割り当てることも可能
         });
+    },
+    // ========================================
+    // 報酬獲得ポップアップ
+    // ========================================
+    showRewardPopup(title, items, missionName = '') {
+        console.log('🎉 showRewardPopup called:', title, items, missionName);
+        // アイテム形式: { icon: '💰', name: '50G' }
+        const overlay = document.createElement('div');
+        overlay.className = 'reward-popup-overlay';
+
+        // メインコンテンツ生成
+        let itemsHtml = '';
+        items.forEach(item => {
+            itemsHtml += `
+                <div class="reward-item">
+                    <div class="reward-icon-container">${item.icon}</div>
+                    <div class="reward-name">${item.name}</div>
+                </div>
+            `;
+        });
+
+        // ミッション名の表示
+        const missionNameHtml = missionName ? `<div class="reward-mission-name">${missionName}</div>` : '';
+
+        overlay.innerHTML = `
+            <div class="reward-popup">
+                <div class="reward-title">${title}</div>
+                ${missionNameHtml}
+                <div class="reward-content">
+                    ${itemsHtml}
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+
+        // アニメーション用
+        requestAnimationFrame(() => {
+            overlay.classList.add('show');
+        });
+
+        // 閉じる処理
+        const close = () => {
+            overlay.classList.remove('show');
+            setTimeout(() => overlay.remove(), 300);
+        };
+
+        // 自動消去（2.5秒後）
+        const autoCloseTimer = setTimeout(close, 2500);
+
+        // タップでも閉じる（イベント伝播を止める）
+        overlay.addEventListener('click', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            clearTimeout(autoCloseTimer);
+            close();
+        });
+
+        // スペースキーでも閉じる
+        const handleKeydown = (e) => {
+            if (e.code === 'Space' || e.key === ' ') {
+                e.preventDefault();
+                close();
+                document.removeEventListener('keydown', handleKeydown);
+            }
+        };
+        document.addEventListener('keydown', handleKeydown);
     }
 };
 
@@ -1466,6 +1539,101 @@ statsStyles.textContent = `
     }
 `;
 document.head.appendChild(statsStyles);
+
+// 報酬ポップアップ用CSS
+const rewardPopupStyles = document.createElement('style');
+rewardPopupStyles.textContent = `
+    .reward-popup-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+    .reward-popup-overlay.show {
+        opacity: 1;
+    }
+    .reward-popup {
+        background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+        border: 3px solid #ffd700;
+        border-radius: 20px;
+        padding: 32px 40px;
+        text-align: center;
+        transform: scale(0.8);
+        transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        box-shadow: 0 0 30px rgba(255, 215, 0, 0.4), 0 10px 40px rgba(0,0,0,0.5);
+        min-width: 280px;
+        max-width: 90%;
+    }
+    .reward-popup-overlay.show .reward-popup {
+        transform: scale(1);
+    }
+    .reward-title {
+        color: #ffd700;
+        font-size: 1.6rem;
+        font-weight: bold;
+        margin-bottom: 20px;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+        letter-spacing: 2px;
+    }
+    .reward-content {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .reward-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .reward-icon-container {
+        font-size: 3rem;
+        margin-bottom: 8px;
+        filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.6));
+        animation: rewardBounce 0.5s ease-out;
+    }
+    @keyframes rewardBounce {
+        0% { transform: scale(0); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+    .reward-name {
+        color: #fff;
+        font-size: 1.1rem;
+        font-weight: bold;
+    }
+    .reward-close-btn {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white;
+        border: none;
+        padding: 12px 32px;
+        border-radius: 25px;
+        font-size: 1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+    }
+    .reward-close-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(37, 99, 235, 0.6);
+    }
+    .reward-mission-name {
+        color: #e0e7ff;
+        font-size: 1.1rem;
+        margin-bottom: 16px;
+    }
+`;
+document.head.appendChild(rewardPopupStyles);
 
 // グローバルに公開
 if (typeof window !== 'undefined') {

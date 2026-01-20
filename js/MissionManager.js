@@ -10,59 +10,64 @@ const MissionManager = {
     MISSIONS: [
         {
             id: 'help',
-            text: 'ヘルプ（？）ボタンを押す',
-            rewardText: '報酬: 次のミッションへ',
+            text: 'ヘルプ（？）ボタンを押してみよう',
+            rewardText: '報酬: 50G + 次のミッションへ',
             check: (type) => type === 'help_click',
             reward: () => { }
         },
         {
             id: 'catch_1',
-            text: '魚を1匹釣る',
-            rewardText: '報酬: 次のミッションへ',
+            text: '魚を1匹釣ろう',
+            rewardText: '報酬: 50G + 次のミッションへ',
             check: (type) => type === 'catch_success',
             reward: () => { }
         },
         {
             id: 'go_town',
-            text: '街へ行く',
-            rewardText: '報酬: 次のミッションへ',
+            text: '街へ行こう',
+            rewardText: '報酬: 50G + 次のミッションへ',
             check: (type) => type === 'go_town',
             reward: () => { }
         },
         {
+            id: 'sell_fish',
+            text: '魚を売ろう',
+            rewardText: '報酬: 50G + 次のミッションへ',
+            check: (type) => type === 'sell_fish',
+            reward: () => { }
+        },
+        {
             id: 'buy_bait',
-            text: '餌を1つ買う',
-            rewardText: '報酬: 次のミッションへ',
+            text: '餌を買おう',
+            rewardText: '報酬: 50G + 次のミッションへ',
             check: (type) => type === 'buy_bait',
             reward: () => { }
         },
         {
             id: 'catch_with_bait',
-            text: '餌を変更して魚を釣る',
-            rewardText: '報酬: スキル「釣りパワー増加I」',
+            text: '餌を変更して魚を釣ろう',
+            rewardText: '報酬: 50G + スキル「釣りパワー増加I」',
             check: (type, data) => type === 'catch_success' && data.baitId !== 'bait_d',
             reward: () => {
                 GameState.gainGachaResult('power_up_1');
-                UIManager.showMessage('ミッション達成！報酬: 釣りパワー増加I を獲得！');
             }
         },
         {
             id: 'equip_skill',
-            text: 'スキルを装備する',
-            rewardText: '報酬: 次のミッションへ',
+            text: 'スキルを装備しよう',
+            rewardText: '報酬: 50G + 次のミッションへ',
             check: (type) => type === 'equip_skill',
             reward: () => { }
         },
         {
             id: 'catch_3',
-            text: '魚を3匹釣る',
-            rewardText: '最終報酬: ガチャチケット5枚',
+            text: '魚を3匹釣ろう',
+            rewardText: '最終報酬: 50G + ガチャチケット5枚',
             check: (type) => type === 'catch_success',
             requiredCount: 3,
             reward: () => {
                 GameState.gachaTickets += 5;
                 UIManager.updateStatus();
-                UIManager.showMessage('初心者ミッション制覇！報酬: ガチャチケット5枚を獲得！');
             }
         }
     ],
@@ -76,97 +81,147 @@ const MissionManager = {
         ],
         B: [
             { id: 'rank_fish', textFn: (t, p) => `${p}ランクの魚を${t}匹釣る`, minTarget: 5, maxTarget: 10, baseReward: 800, rankList: ['D', 'C', 'B', 'A', 'S'] },
-            { id: 'freq_common', textFn: (t) => `出現頻度「たくさん釣れる」の魚を${t}匹釣る`, minTarget: 5, maxTarget: 10, baseReward: 600, freq: 'たくさん釣れる' },
-            { id: 'freq_uncommon', textFn: (t) => `出現頻度「あまり釣れない」の魚を${t}匹釣る`, minTarget: 2, maxTarget: 5, baseReward: 1000, freq: 'あまり釣れない' },
-            { id: 'freq_rare', textFn: (t) => `出現頻度「なかなか釣れない」の魚を${t}匹釣る`, minTarget: 1, maxTarget: 3, baseReward: 1500, freq: 'なかなか釣れない' }
+            { id: 'freq_common', textFn: (t) => `たくさん釣れる魚を${t}匹釣る`, minTarget: 5, maxTarget: 10, baseReward: 600, freq: 'たくさん釣れる' },
+            { id: 'freq_uncommon', textFn: (t) => `あまり釣れない魚を${t}匹釣る`, minTarget: 2, maxTarget: 5, baseReward: 1000, freq: 'あまり釣れない' },
+            { id: 'freq_rare', textFn: (t) => `なかなか釣れない魚を${t}匹釣る`, minTarget: 1, maxTarget: 3, baseReward: 1500, freq: 'なかなか釣れない' }
         ],
         C: [
             { id: 'fever', textFn: () => 'フィーバーに入る', minTarget: 1, maxTarget: 1, baseReward: 1000 },
             { id: 'treasure', textFn: (t) => `宝箱を${t}回釣る`, minTarget: 1, maxTarget: 1, baseReward: 800 },
             { id: 'earn_money', textFn: (t) => `${t.toLocaleString()}コイン手に入れる`, minTarget: 500, maxTarget: 10000, baseReward: 500, valueOptions: [500, 1000, 2000, 5000, 10000] },
-            { id: 'red_gauge', textFn: (t) => `ゲージバトルで赤ゲージで${t}回止める`, minTarget: 3, maxTarget: 5, baseReward: 700 },
+            { id: 'red_gauge', textFn: (t) => `赤ゲージで${t}回止める`, minTarget: 3, maxTarget: 5, baseReward: 700 },
             { id: 'use_bait', textFn: (t, p) => `${p}ランクの餌を${t}個使用する`, minTarget: 5, maxTarget: 10, baseReward: 600, rankList: ['D', 'C', 'B', 'A', 'S'] },
             { id: 'complete_missions', textFn: (t) => `ミッションを${t}個達成する`, minTarget: 3, maxTarget: 5, baseReward: 1200 }
         ]
     },
 
     // ========================================
+    // アクティブな初心者ミッションを取得
+    // ========================================
+    getActiveBeginnerMissions() {
+        const completed = GameState.beginnerMissionCompleted || [];
+        // まだ完了していないミッションを抽出
+        const incomplete = this.MISSIONS.filter(m => !completed.includes(m.id));
+        // 最大3つまで返す
+        return incomplete.slice(0, 3);
+    },
+
+    // ========================================
     // 初心者ミッションの進捗確認
     // ========================================
     checkMission(type, data = {}) {
-        // 初心者ミッションがまだ残っている場合
-        const index = GameState.currentMissionIndex;
-        if (index < this.MISSIONS.length) {
-            const mission = this.MISSIONS[index];
+        // アクティブなミッションがあるか確認
+        const activeMissions = this.getActiveBeginnerMissions();
 
-            if (mission.check(type, data)) {
-                if (mission.requiredCount) {
-                    GameState.missionProgress++;
-                    UIManager.updateMissionUI();
+        if (activeMissions.length > 0) {
+            let progressUpdated = false;
 
-                    if (GameState.missionProgress >= mission.requiredCount) {
-                        this.completeMission();
+            activeMissions.forEach(mission => {
+                if (mission.check(type, data)) {
+                    // ミッション条件に合致
+                    if (mission.requiredCount) {
+                        // カウントが必要な場合
+                        const current = GameState.beginnerMissionProgress[mission.id] || 0;
+                        const next = current + 1;
+                        GameState.beginnerMissionProgress[mission.id] = next;
+                        progressUpdated = true;
+
+                        if (next >= mission.requiredCount) {
+                            this.completeMission(mission.id);
+                        }
+                    } else {
+                        // 即完了の場合
+                        this.completeMission(mission.id);
                     }
-                } else {
-                    this.completeMission();
                 }
+            });
+
+            if (progressUpdated) {
+                UIManager.updateMissionUI();
+                SaveManager.save(GameState);
             }
-            return; // 初心者ミッション判定のみで終了
+            // 動的ミッションと併行する可能性も考慮し、returnしない
         }
 
-        // 動的ミッションの判定
+        // 動的ミッションの判定（初心者ミッション終了後）
         if (this.isDynamicMissionActive()) {
             this.checkDynamicMission(type, data);
         }
     },
 
     // 初心者ミッション達成処理
-    completeMission() {
-        const index = GameState.currentMissionIndex;
-        const mission = this.MISSIONS[index];
+    completeMission(missionId) {
+        const mission = this.MISSIONS.find(m => m.id === missionId);
+        if (!mission) return;
+
+        // 完了済みに追加
+        if (!GameState.beginnerMissionCompleted.includes(missionId)) {
+            GameState.beginnerMissionCompleted.push(missionId);
+        }
+
+        const rewards = [
+            { icon: '💰', name: '50G' }
+        ];
+
+        // 共通報酬: 50G
+        GameState.addMoney(50);
+
+        // ミッションごとの追加報酬を確認
+        if (mission.rewardText.includes('スキル')) {
+            rewards.push({ icon: '✨', name: 'スキル獲得' });
+        } else if (mission.rewardText.includes('チケット')) {
+            rewards.push({ icon: '🎫', name: 'ガチャチケット' });
+        }
 
         mission.reward();
 
-        GameState.currentMissionIndex++;
-        GameState.missionProgress = 0;
+        // 以前のトースト表示を削除し、ポップアップを表示
+        UIManager.showRewardPopup('ミッションクリア！', rewards, mission.text);
+        // UIManager.showMessage(`ミッション達成！ ${mission.text} (+50G)`);
 
-        UIManager.updateMissionUI();
-
-        if (index < this.MISSIONS.length - 1 && !mission.rewardText.includes('獲得')) {
-            UIManager.showMessage(`ミッション達成！: ${mission.text}`);
-        }
+        // ミッション進捗データのクリーンアップ（完了したので不要）
+        delete GameState.beginnerMissionProgress[missionId];
 
         // 初心者ミッション全達成時、動的ミッションを初期化
-        if (GameState.currentMissionIndex >= this.MISSIONS.length) {
+        if (GameState.beginnerMissionCompleted.length >= this.MISSIONS.length) {
+            // 念のため currentMissionIndex も最大にしておく（互換性やフラグとして）
+            GameState.currentMissionIndex = this.MISSIONS.length;
             this.initDynamicMissions();
         }
 
+        UIManager.updateMissionUI();
         SaveManager.save(GameState);
     },
 
-    // 現在のミッションテキストを取得
-    getCurrentMissionText() {
-        const index = GameState.currentMissionIndex;
-        if (index >= this.MISSIONS.length) {
-            // 動的ミッションのテキストを返す
-            return null; // 動的ミッションはUI側で別途処理
+    // 現在のミッションテキストリストを取得
+    getCurrentMissionTexts() {
+        const activeMissions = this.getActiveBeginnerMissions();
+
+        if (activeMissions.length === 0) {
+            return null; // 初心者ミッション完了
         }
 
-        const mission = this.MISSIONS[index];
-        let text = mission.text;
-
-        if (mission.requiredCount) {
-            text += ` (${GameState.missionProgress}/${mission.requiredCount})`;
-        }
-
-        return text;
+        return activeMissions.map(mission => {
+            let text = mission.text;
+            if (mission.requiredCount) {
+                const current = GameState.beginnerMissionProgress[mission.id] || 0;
+                text += ` (${current}/${mission.requiredCount})`;
+            }
+            return text;
+        });
     },
 
     // ========================================
     // 動的ミッションシステム
     // ========================================
+    // ========================================
+    // 動的ミッションシステム
+    // ========================================
     isDynamicMissionActive() {
-        return GameState.currentMissionIndex >= this.MISSIONS.length && GameState.dynamicMissions !== null;
+        // 全ての初心者ミッションが完了しているか
+        const isBeginnerComplete = (GameState.beginnerMissionCompleted && GameState.beginnerMissionCompleted.length >= this.MISSIONS.length) || GameState.currentMissionIndex >= this.MISSIONS.length;
+
+        return isBeginnerComplete && GameState.dynamicMissions !== null;
     },
 
     initDynamicMissions() {
@@ -281,6 +336,7 @@ const MissionManager = {
                     this.completeDynamicMission(slot);
                 } else {
                     UIManager.updateMissionUI();
+                    SaveManager.save(GameState); // 進捗を保存
                 }
             }
         });

@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 FishingGame.init();
                 UIManager.showScreen('fishing');
                 UIManager.updateFeverVisuals(); // フィーバー表示復元
+                UIManager.updateMissionUI();    // ミッション表示更新
                 console.log('📂 セーブデータから再開しました');
             }
         });
@@ -58,6 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
             FishingGame.abort();
 
             UIManager.showScreen('shop');
+            MissionManager.checkMission('go_town');
         });
     }
 
