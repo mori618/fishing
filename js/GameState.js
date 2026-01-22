@@ -326,6 +326,20 @@ const GameState = {
     },
 
     // ========================================
+    // パワーのスキル補正を取得
+    // ========================================
+    getPowerBonus() {
+        let bonus = 0;
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'power_boost') {
+                bonus += skill.effect.value;
+            }
+        }
+        return bonus;
+    },
+
+    // ========================================
     // ゲージ速度のスキル補正を取得
     // ========================================
     getGaugeSlowBonus() {
@@ -798,6 +812,57 @@ const GameState = {
     },
 
     // ========================================
+    // スキル管理
+    // ========================================
+    // 指定したスキルを所持数分カウントして返す (オーバーロード的利用)
+    getSkillCount(skillId) {
+        return this.skillInventory[skillId] || 0;
+    },
+
+    // 指定したスキルの装備数を返す
+    getEquippedSkillCount(skillId) {
+        return this.equippedSkills.filter(id => id === skillId).length;
+    },
+
+    // スキルが装備可能かチェック
+    canEquipSkill(skillId) {
+        // 1. 所持しているか？ (装備中の数 < 所持数)
+        const owned = this.getSkillCount(skillId);
+        const equipped = this.getEquippedSkillCount(skillId);
+        if (owned <= equipped) return { can: false, reason: '所持数が足りません' };
+
+        // 2. スロットに空きがあるか？
+        const maxSlots = this.getSkillSlots();
+        if (this.equippedSkills.length >= maxSlots) return { can: false, reason: 'スロットが一杯です' };
+
+        return { can: true };
+    },
+
+    // スキルを装備
+    equipSkill(skillId) {
+        const check = this.canEquipSkill(skillId);
+        if (!check.can) return check;
+
+        this.equippedSkills.push(skillId);
+        // オートセーブ
+        SaveManager.save(this);
+        console.log(`⚔️ スキル装備: ${skillId}`);
+        return { can: true };
+    },
+
+    // スキルを解除
+    unequipSkill(skillId) {
+        const index = this.equippedSkills.indexOf(skillId);
+        if (index === -1) return { can: false, reason: '装備していません' };
+
+        this.equippedSkills.splice(index, 1);
+        // オートセーブ
+        SaveManager.save(this);
+        console.log(`🛡️ スキル解除: ${skillId}`);
+        return { can: true };
+    },
+
+    // ========================================
     // 空（背景）の購入
     // ========================================
     buySky(skyId) {
@@ -924,61 +989,7 @@ const GameState = {
         return (this.skillInventory[skillId] || 0) > 0;
     },
 
-    // ========================================
-    // 現在のスキルの所持数を取得
-    // ========================================
-    getSkillCount(skillId) {
-        return this.skillInventory[skillId] || 0;
-    },
 
-    // ========================================
-    // 現在装備中の特定スキルの数を取得
-    // ========================================
-    getEquippedSkillCount(skillId) {
-        return this.equippedSkills.filter(id => id === skillId).length;
-    },
-
-    // ========================================
-    // スキルの装着
-    // ========================================
-    equipSkill(skillId) {
-        // 所持数チェック
-        const ownedCount = this.getSkillCount(skillId);
-        const equippedCount = this.getEquippedSkillCount(skillId);
-
-        if (equippedCount >= ownedCount) {
-            return false;
-        }
-
-        // スロット空きチェック
-        if (this.equippedSkills.length >= this.getSkillSlots()) {
-            return false;
-        }
-
-        this.equippedSkills.push(skillId);
-
-        // オートセーブ
-        SaveManager.save(this);
-
-        return true;
-    },
-
-    // ========================================
-    // スキルの取り外し
-    // ========================================
-    unequipSkill(skillId) {
-        const index = this.equippedSkills.indexOf(skillId);
-        if (index === -1) {
-            return false;
-        }
-
-        this.equippedSkills.splice(index, 1);
-
-        // オートセーブ
-        SaveManager.save(this);
-
-        return true;
-    },
 
     // ========================================
     // 餌の購入

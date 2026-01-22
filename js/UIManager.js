@@ -142,6 +142,8 @@ const UIManager = {
             EncyclopediaManager.render();
         } else if (screenId === 'stats') {
             this.renderStats();
+        } else if (screenId === 'skills') {
+            SkillInventoryManager.render();
         } else if (screenId === 'gacha') {
             this.prepareGachaScreen();
         }

@@ -438,7 +438,7 @@ const ShopManager = {
                     <span class="material-icons">backpack</span> 所持スキル
                 </button>
                 <button class="shop-tab ${!isSkill ? 'active' : ''}" onclick="ShopManager.switchTab('gacha')">
-                    <span class="material-icons">auto_awesome</span> ガチャ
+                    <span class="material-icons">auto_awesome</span> スキルガチャ
                 </button>
             </div>
         `;
@@ -560,7 +560,7 @@ const ShopManager = {
         tiers.forEach(tier => {
             const data = config[tier.id];
             const ticketCost = data.ticket;
-            const ticketCost10 = data.ticket * 10;
+            const ticketCost10 = data.ticket * 9;
 
             const canTicket1 = tickets >= ticketCost;
             const canTicket10 = tickets >= ticketCost10;
@@ -568,34 +568,50 @@ const ShopManager = {
             const canMoney10 = money >= data.ten;
 
             html += `
-                <div class="shop-item gacha-item" style="border-left: 4px solid ${tier.color}">
-                    <div class="item-info">
-                        <div class="item-name" style="color: ${tier.color}">${tier.name}</div>
-                        <div class="item-desc">${tier.desc}</div>
-                        <div class="item-ticket-cost">🎫 ${ticketCost}枚 / 回</div>
-                    </div>
-                    <div class="gacha-buttons-container">
-                        <div class="gacha-button-group">
-                            <div class="gacha-group-label">🎫 チケット</div>
-                            <button class="btn btn-ticket ${!canTicket1 ? 'disabled' : ''}" 
-                                    onclick="ShopManager.drawGacha('${tier.id}', 1, 'ticket')" ${!canTicket1 ? 'disabled' : ''}>
-                                単発 (${ticketCost}枚)
-                            </button>
-                            <button class="btn btn-ticket ${!canTicket10 ? 'disabled' : ''}" 
-                                    onclick="ShopManager.drawGacha('${tier.id}', 10, 'ticket')" ${!canTicket10 ? 'disabled' : ''}>
-                                10連 (${ticketCost10}枚)
-                            </button>
+                <div class="shop-item gacha-item" style="border-left: 4px solid ${tier.color}; display: flex; flex-direction: column; gap: 15px; padding: 15px; background: rgba(0,0,0,0.4);">
+                    <div class="item-info" style="border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 5px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                            <div class="item-name" style="color: ${tier.color}; font-size: 1.2em; font-weight: bold;">${tier.name}</div>
                         </div>
-                        <div class="gacha-button-group">
-                            <div class="gacha-group-label">💰 コイン</div>
-                            <button class="btn btn-buy ${!canMoney1 ? 'disabled' : ''}" 
-                                    onclick="ShopManager.drawGacha('${tier.id}', 1, 'money')" ${!canMoney1 ? 'disabled' : ''}>
-                                単発 ¥${data.single.toLocaleString()}
-                            </button>
-                            <button class="btn btn-buy ${!canMoney10 ? 'disabled' : ''}" 
-                                    onclick="ShopManager.drawGacha('${tier.id}', 10, 'money')" ${!canMoney10 ? 'disabled' : ''}>
-                                10連 ¥${data.ten.toLocaleString()}
-                            </button>
+                    </div>
+                    
+                    <div class="gacha-actions-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <!-- チケット払い -->
+                        <div class="pay-method-group" style="background: rgba(100,200,255,0.05); padding: 10px; border-radius: 8px;">
+                            <div class="group-header" style="text-align: center; color: #8ecae6; font-weight: bold; font-size: 0.85em; margin-bottom: 8px; border-bottom: 1px solid rgba(142,202,230,0.3); padding-bottom: 4px;">
+                                <span class="material-icons" style="font-size: 14px; vertical-align: middle;">confirmation_number</span> チケット
+                            </div>
+                            <div style="display: grid; gap: 8px;">
+                                <button class="btn btn-ticket ${!canTicket1 ? 'disabled' : ''}" 
+                                        style="width: 100%; justify-content: center; font-size: 0.9em;"
+                                        onclick="ShopManager.drawGacha('${tier.id}', 1, 'ticket')" ${!canTicket1 ? 'disabled' : ''}>
+                                    単発 (${ticketCost}枚)
+                                </button>
+                                <button class="btn btn-ticket ${!canTicket10 ? 'disabled' : ''}" 
+                                        style="width: 100%; justify-content: center; font-size: 0.9em;"
+                                        onclick="ShopManager.drawGacha('${tier.id}', 10, 'ticket')" ${!canTicket10 ? 'disabled' : ''}>
+                                    10連 (${ticketCost10}枚)
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- マネー払い -->
+                        <div class="pay-method-group" style="background: rgba(255,215,0,0.05); padding: 10px; border-radius: 8px;">
+                            <div class="group-header" style="text-align: center; color: #ffb703; font-weight: bold; font-size: 0.85em; margin-bottom: 8px; border-bottom: 1px solid rgba(255,183,3,0.3); padding-bottom: 4px;">
+                                <span class="material-icons" style="font-size: 14px; vertical-align: middle;">monetization_on</span> コイン
+                            </div>
+                            <div style="display: grid; gap: 8px;">
+                                <button class="btn btn-buy ${!canMoney1 ? 'disabled' : ''}" 
+                                        style="width: 100%; justify-content: center; font-size: 0.9em;"
+                                        onclick="ShopManager.drawGacha('${tier.id}', 1, 'money')" ${!canMoney1 ? 'disabled' : ''}>
+                                    単発 ¥${data.single.toLocaleString()}
+                                </button>
+                                <button class="btn btn-buy ${!canMoney10 ? 'disabled' : ''}" 
+                                        style="width: 100%; justify-content: center; font-size: 0.9em;"
+                                        onclick="ShopManager.drawGacha('${tier.id}', 10, 'money')" ${!canMoney10 ? 'disabled' : ''}>
+                                    10連 ¥${data.ten.toLocaleString()}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -617,8 +633,19 @@ const ShopManager = {
     },
 
     // ========================================
-    // リサイクル（エコ・ボックス）UI描画
+    // スキルショップ（冒険者の道場）の描画
     // ========================================
+    renderSkillShop() {
+        const container = document.getElementById('shop-items');
+        // SkillInventoryManagerに描画を委譲（コンテナを渡す）
+        SkillInventoryManager.init(container);
+        
+        // スキルスロット情報（上部ボックス）更新
+        this.renderSkillSlotInfo();
+
+        // サブタブを描画（これがないとタブ切り替えができなくなる）
+        this.renderSubTabs(document.getElementById('shop-tabs-container'));
+    },
     renderRecycleUI() {
         const container = document.getElementById('recycle-section');
         if (!container) return;
@@ -904,83 +931,7 @@ const ShopManager = {
     // ========================================
     // スキルショップ
     // ========================================
-    // ========================================
-    // スキル一覧（所持スキル）
-    // ========================================
-    renderSkillShop() {
-        const container = document.getElementById('shop-items');
-        container.innerHTML = '';
 
-        // 所持しているスキルのみ抽出して表示
-        const ownedSkills = GAME_DATA.SKILLS.filter(skill => GameState.getSkillCount(skill.id) > 0);
-
-        if (ownedSkills.length === 0) {
-            container.innerHTML = `
-                <div class="no-items-message" style="text-align:center; padding: 40px; color: #888;">
-                    <span class="material-icons" style="font-size: 48px; margin-bottom: 10px;">backpack</span><br>
-                    スキルを所持していません。<br>
-                    ガチャでスキルを獲得しましょう！
-                </div>
-            `;
-        } else {
-            ownedSkills.forEach(skill => {
-                const ownedCount = GameState.getSkillCount(skill.id);
-                const equippedCount = GameState.getEquippedSkillCount(skill.id);
-
-                // 装備可能か: 所持数 > 装備数 かつ スロットに空きがある
-                const canEquip = (ownedCount > equippedCount) &&
-                    (GameState.equippedSkills.length < GameState.getSkillSlots());
-
-                const item = document.createElement('div');
-                item.className = `shop-item ${equippedCount > 0 ? 'equipped' : ''}`;
-
-                let actionHtml = '';
-
-                // 装備ボタン
-                actionHtml += `
-                    <div class="skill-actions">
-                        <button class="btn btn-equip ${canEquip ? '' : 'disabled'}" 
-                            onclick="ShopManager.equipSkill('${skill.id}')" ${canEquip ? '' : 'disabled'}>
-                            装備
-                        </button>
-                `;
-
-                // 解除ボタン
-                if (equippedCount > 0) {
-                    actionHtml += `
-                        <button class="btn btn-unequip" onclick="ShopManager.unequipSkill('${skill.id}')">
-                            外す
-                        </button>
-                    `;
-                }
-
-                actionHtml += '</div>';
-
-                item.innerHTML = `
-                    <div class="item-info">
-                        <div class="item-name">
-                            ${skill.name} 
-                            <span class="skill-count">所持: ${ownedCount}</span>
-                            ${equippedCount > 0 ? `<span class="equipped-badge">装備中:${equippedCount}</span>` : ''}
-                        </div>
-                        <div class="item-desc">${skill.description}</div>
-                        <div class="item-tier">Tier ${skill.tier}</div>
-                    </div>
-                    <div class="item-action-container">
-                        ${actionHtml}
-                    </div>
-                `;
-
-                container.appendChild(item);
-            });
-        }
-
-        // スキルスロット情報
-        this.renderSkillSlotInfo();
-
-        // サブタブを描画
-        this.renderSubTabs();
-    },
 
     // ========================================
     // スキルスロット情報
@@ -992,13 +943,120 @@ const ShopManager = {
         const slots = GameState.getSkillSlots();
         const equipped = GameState.equippedSkills.length;
 
+        // アクティブな効果を収集
+        const effects = [];
+        
+        const power = GameState.getPowerBonus();
+        if (power > 0) effects.push({ label: 'パワー', val: `+${power}` });
+
+        const price = GameState.getPriceBonus();
+        if (price > 0) effects.push({ label: '売値', val: `+${Math.round(price * 100)}%` });
+
+        const slow = GameState.getGaugeSlowBonus();
+        if (slow > 0) effects.push({ label: 'ゲージ速度', val: `-${Math.round(slow * 100)}%` });
+
+        const catchB = GameState.getCatchBonus();
+        if (catchB > 0) effects.push({ label: '捕獲率', val: `+${Math.round(catchB * 100)}%` });
+
+        const rare = GameState.getRareBonus();
+        if (rare > 0) effects.push({ label: 'レア率', val: `+${Math.round(rare * 100)}%` });
+
+        const hitWin = GameState.getHitWindowMultiplier();
+        if (hitWin > 1.0) effects.push({ label: 'HIT幅', val: `x${hitWin.toFixed(2)}` });
+
+        const waitRed = GameState.getWaitTimeReduction();
+        if (waitRed > 0) effects.push({ label: '待ち時間', val: `-${Math.round(waitRed * 100)}%` });
+
+        const baitSave = GameState.getBaitSaveChance();
+        if (baitSave > 0) effects.push({ label: '餌節約', val: `${Math.round(baitSave * 100)}%` });
+
+        const redZone = GameState.getRedZoneBonus();
+        if (redZone > 0) effects.push({ label: '赤ゾーン', val: `+${redZone}` });
+
+        const titleC = GameState.getTitleChanceMultiplier();
+        if (titleC > 1.0) effects.push({ label: '称号率', val: `x${titleC.toFixed(2)}` });
+
+        const bigGame = GameState.getBigGameBonus();
+        if (bigGame > 1.0) effects.push({ label: '大物率', val: `x${bigGame.toFixed(2)}` });
+
+        const treasureC = GameState.getTreasureChanceBonus();
+        if (treasureC > 0) effects.push({ label: '宝箱率', val: `+${Math.round(treasureC * 100)}%` });
+
+        const doubleC = GameState.getMultiCatch2Chance();
+        if (doubleC > 0) effects.push({ label: '2匹釣り', val: `${Math.round(doubleC * 100)}%` });
+
+        const tripleC = GameState.getMultiCatch3Chance();
+        if (tripleC > 0) effects.push({ label: '3匹釣り', val: `${Math.round(tripleC * 100)}%` });
+
+        const amp = GameState.getSkillAmplifier();
+        if (amp > 1.0) effects.push({ label: 'スキル効果', val: `x${amp.toFixed(2)}` });
+
+        // 追加の欠落していた効果
+        const nibble = GameState.getNibbleFixCount();
+        if (nibble) effects.push({ label: '予兆固定', val: `${nibble}回` });
+
+        const second = GameState.getSecondChanceRate();
+        if (second > 0) effects.push({ label: '起死回生', val: `${Math.round(second * 100)}%` });
+
+        const tQuant = GameState.getTreasureQuantityMultiplier();
+        if (tQuant > 1.0) effects.push({ label: '宝箱量', val: `x${tQuant.toFixed(2)}` });
+
+        const tQual = GameState.getTreasureQualityMultiplier();
+        if (tQual > 1.0) effects.push({ label: '宝箱質', val: `x${tQual.toFixed(2)}` });
+
+        const fCharge = GameState.getFeverChargeBonus();
+        if (fCharge > 0) effects.push({ label: '情熱', val: `+${Math.round(fCharge * 100)}%` });
+
+        const fLong = GameState.getFeverLongBonus();
+        if (fLong > 0) effects.push({ label: '熱狂', val: `+${Math.round(fLong * 100)}%` });
+
+        const sun = GameState.getFeverBiasBonus('sun');
+        if (sun > 0) effects.push({ label: '太陽加護', val: `+${Math.round(sun * 100)}%` });
+
+        const moon = GameState.getFeverBiasBonus('moon');
+        if (moon > 0) effects.push({ label: '月加護', val: `+${Math.round(moon * 100)}%` });
+
+        if (GameState.hasPerfectMaster()) effects.push({ label: '達人の針', val: '有効' });
+
+        const boat = GameState.getBoatEventBonus();
+        if (boat > 0) effects.push({ label: '船イベント', val: `+${Math.round(boat * 100)}%` });
+
+        const bird = GameState.getBirdEventBonus();
+        if (bird > 0) effects.push({ label: '鳥イベント', val: `+${Math.round(bird * 100)}%` });
+
+        const missionR = GameState.getMissionRewardModifier();
+        if (missionR > 1.0) effects.push({ label: '報酬ボーナス', val: `x${missionR.toFixed(2)}` });
+        
+        let effectsHtml = '';
+        if (effects.length > 0) {
+            effectsHtml = `
+                <div style="display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-start;">
+                    ${effects.map(e => `
+                        <span class="effect-badge" style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-size: 11px; white-space: nowrap;">
+                            ${e.label} <span style="color: #ffd700;">${e.val}</span>
+                        </span>
+                    `).join('')}
+                </div>
+            `;
+        } else {
+             effectsHtml = '<span style="color:#888; font-size:11px;">なし</span>';
+        }
+
         container.innerHTML = `
-            <h3>スキルスロット</h3>
-            <div class="slot-info">
-                使用中: <strong>${equipped}</strong> / ${slots}
+            <div style="display: grid; grid-template-columns: 1fr 3fr; gap: 10px; align-items: start;">
+                <div style="text-align: left;">
+                    <h3 style="margin: 0 0 5px 0; font-size: 13px; color: #aaa;">スキルスロット</h3>
+                    <div class="slot-info">
+                        使用中: <strong style="${equipped >= slots ? 'color: #ff6b6b;' : ''}">${equipped}</strong> / ${slots}
+                    </div>
+                </div>
+                <div style="text-align: left; border-left: 1px solid rgba(255,255,255,0.2); padding-left: 10px;">
+                    <h3 style="margin: 0 0 5px 0; font-size: 13px; color: #aaa;">発動中の効果</h3>
+                    ${effectsHtml}
+                </div>
             </div>
             ${slots === 0
-                ? '<p class="hint">釣り竿を強化して<span class="material-icons">star</span>を増やすとスキルが装備できます</p>'
+                ? '<p class="hint" style="margin-top: 5px;">釣り竿を強化して<span class="material-icons">star</span>を増やすとスキルが装備できます</p>'
                 : ''
             }
         `;

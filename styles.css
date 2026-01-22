@@ -5229,3 +5229,251 @@ body {
     background: rgba(255, 215, 0, 0.1);
     border: 1px solid rgba(255, 215, 0, 0.3);
 }
+
+/* 所持スキル画面用スタイル */
+.inventory-controls {
+    padding: 12px 16px;
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.search-box {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 4px 12px;
+}
+
+.search-box input {
+    background: transparent;
+    border: none;
+    color: white;
+    padding: 8px;
+    width: 100%;
+    outline: none;
+}
+
+.filter-sort-row {
+    display: flex;
+    gap: 8px;
+}
+
+.filter-sort-row select {
+    flex: 1;
+    background: var(--bg-dark);
+    color: white;
+    border: 1px solid var(--border-color);
+    padding: 8px;
+    border-radius: 4px;
+}
+
+.skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+    padding: 4px;
+}
+
+.skill-inst-card {
+    background: linear-gradient(135deg, #4e342e 0%, #3e2723 100%);
+    border: 2px solid #5d4037;
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+    position: relative;
+    transition: transform 0.2s;
+}
+
+.skill-inst-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent-color);
+}
+
+.skill-inst-card .tier-badge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    font-size: 10px;
+    background: rgba(0,0,0,0.5);
+    padding: 2px 6px;
+    border-radius: 10px;
+    color: var(--accent-color);
+}
+
+.skill-inst-card .material-icons {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+.skill-inst-card .name {
+    font-size: 13px;
+    font-weight: bold;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.skill-inst-card .desc {
+    font-size: 10px;
+    color: var(--text-secondary);
+    line-height: 1.2;
+}
+
+.skill-inst-card.rarity-S {
+    border-color: #ffd700;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+.skill-inst-card.rarity-B {
+    border-color: #c0c0c0;
+}
+
+
+/* スキル装備バッジ（カード内） */
+.skill-inst-card.equipped {
+    border-color: #4caf50;
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+}
+
+.status-badge.equipped {
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    background: #4caf50;
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    z-index: 10;
+}
+
+/* モーダルオーバーレイ */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    animation: fadeIn 0.2s;
+}
+
+/* スキル詳細モーダル */
+.skill-detail-modal {
+    background: #2d3748;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 400px;
+    padding: 24px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    border: 2px solid #4a5568;
+    position: relative;
+    animation: slideUp 0.3s;
+}
+
+.skill-detail-modal.rarity-S { border-color: #ffd700; background: linear-gradient(135deg, #2d3748 0%, #3e2723 100%); }
+.skill-detail-modal.rarity-B { border-color: #c0c0c0; }
+.skill-detail-modal.rarity-D { border-color: #cd7f32; }
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #fff;
+}
+
+.tier-badge-large {
+    background: rgba(0,0,0,0.3);
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    color: var(--accent-light);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.modal-body {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.skill-icon-large .material-icons {
+    font-size: 64px;
+    color: var(--accent-color);
+    margin-bottom: 16px;
+    filter: drop-shadow(0 0 10px rgba(255,255,255,0.3));
+}
+
+.skill-desc-large {
+    color: #e2e8f0;
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 16px;
+}
+
+.skill-effect-detail {
+    background: rgba(0,0,0,0.2);
+    padding: 12px;
+    border-radius: 8px;
+    display: inline-block;
+}
+
+.effect-tag {
+    color: #48bb78;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.btn-close-text {
+    background: transparent;
+    border: none;
+    color: #a0aec0;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-secondary {
+    background: #4a5568;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-secondary:hover {
+    background: #2d3748;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
