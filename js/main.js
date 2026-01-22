@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 FishingGame.init();
                 UIManager.showScreen('fishing');
                 UIManager.updateFeverVisuals(); // フィーバー表示復元
+                UIManager.updateMissionUI();    // ミッション表示更新
                 console.log('📂 セーブデータから再開しました');
             }
         });
@@ -58,7 +59,21 @@ document.addEventListener('DOMContentLoaded', () => {
             FishingGame.abort();
 
             UIManager.showScreen('shop');
+            MissionManager.checkMission('go_town');
         });
+    }
+
+    // ヘルプボタン
+    const helpBtn = document.getElementById('help-btn');
+    if (helpBtn) {
+        helpBtn.addEventListener('click', () => {
+            UIManager.openHelp();
+        });
+    }
+    
+    // ヘルプ機能の初期化
+    if (UIManager.initHelp) {
+        UIManager.initHelp();
     }
 
 

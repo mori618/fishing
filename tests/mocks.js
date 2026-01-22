@@ -65,7 +65,7 @@ class ElementMock {
     addEventListener(event, callback) {
         // No-op for now
     }
-    
+
     remove() {
         // No-op
     }
@@ -90,7 +90,8 @@ const documentMock = {
         return new ElementMock(tagName);
     },
     body: new ElementMock('BODY'),
-    addEventListener: () => {}
+    head: new ElementMock('HEAD'),
+    addEventListener: () => { }
 };
 
 // Console Spy (optional, to suppress or capture logs)
@@ -108,10 +109,10 @@ module.exports = {
         globalContext.document = documentMock;
         globalContext.localStorage = new LocalStorageMock();
         globalContext.console = consoleMock;
-        globalContext.navigator = { vibrate: () => {} };
-        globalContext.location = { reload: () => {} };
+        globalContext.navigator = { vibrate: () => { } };
+        globalContext.location = { reload: () => { } };
         globalContext.alert = (msg) => { console.log('[Alert]', msg); };
-        
+
         // Mock UI Manager if needed, or let real one load but mock its DOM interactions
         // For now, we rely on the DOM mocks to handle UIManager's calls.
     }

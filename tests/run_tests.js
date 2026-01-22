@@ -48,6 +48,8 @@ loadScript('data/gameData.js');
 loadScript('js/SaveManager.js');
 loadScript('js/GameState.js');
 loadScript('js/EncyclopediaManager.js');
+loadScript('js/MissionManager.js');
+loadScript('js/CasinoManager.js');
 // loadScript('js/UIManager.js'); // UIManager might cause issues if it tries to run code immediately.
 // We'll load a mocked UIManager or load it if safe.
 // Let's try loading it but we might need to overwrite UIManager in the sandbox if it relies heavily on DOM on init.
@@ -68,6 +70,17 @@ try {
     vm.runInContext(testSuiteCode, sandbox, { filename: 'test_suite.js' });
 } catch (e) {
     console.error(`Error running test suite:`, e);
+    process.exit(1);
+}
+
+// Load Gacha & Mission Tests
+const gachaTestPath = path.join(__dirname, 'test_gacha_mission.js');
+const gachaTestCode = fs.readFileSync(gachaTestPath, 'utf8');
+
+try {
+    vm.runInContext(gachaTestCode, sandbox, { filename: 'test_gacha_mission.js' });
+} catch (e) {
+    console.error(`Error running gacha/mission tests:`, e);
     process.exit(1);
 }
 

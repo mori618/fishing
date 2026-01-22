@@ -56,7 +56,25 @@ const GameState = {
     // 統計情報
     // ========================================
     totalFishCaught: 0,
+    caughtByRank: { 'D': 0, 'C': 0, 'B': 0, 'A': 0, 'S': 0, 'SS': 0 },
+    totalTreasure: 0,
+    totalSkills: 0,
     totalMoneyEarned: 0,
+    totalCoinsEarned: 0, // 売却などで獲得した純粋な利益累計
+    casinoTotalWin: 0,
+    casinoTotalLoss: 0,
+    gachaTickets: 0,
+    currentMissionIndex: 0, // 現在のミッション番号 (廃止予定/互換用)
+    missionProgress: 0,     // カウントが必要なミッションの進捗 (廃止予定/互換用)
+
+    // 新しいミッション管理
+    beginnerMissionCompleted: [], // 完了したミッションIDのリスト
+    beginnerMissionProgress: {},  // ミッションIDごとの進捗 { "catch_3": 1 }
+
+    // 動的ミッションデータ
+    dynamicMissions: null,   // { A: {...}, B: {...}, C: {...} }
+    dynamicMissionCompletedCount: 0, // 達成ミッション数（C枠の「ミッションをN個達成する」用）
+
     biggestFish: null,
 
     // ========================================
@@ -98,7 +116,7 @@ const GameState = {
 
             this.rodRankIndex = saveData.rod.rankIndex;
 
-            // ----------------------------------------
+            // ----------------新形式データ
             // 竿レベルの移行ロジック
             // ----------------------------------------
             if (saveData.rod.rodStarLevels) {
@@ -140,8 +158,62 @@ const GameState = {
                 this.skillInventory = {};
             }
 
-            this.totalFishCaught = saveData.statistics.totalFishCaught;
-            this.totalMoneyEarned = saveData.statistics.totalMoneyEarned;
+            this.totalFishCaught = saveData.statistics.totalFishCaught || 0;
+            this.caughtByRank = saveData.statistics.caughtByRank || { 'D': 0, 'C': 0, 'B': 0, 'A': 0, 'S': 0, 'SS': 0 };
+            this.totalTreasure = saveData.statistics.totalTreasure || 0;
+            this.totalSkills = saveData.statistics.totalSkills || 0;
+            this.totalMoneyEarned = saveData.statistics.totalMoneyEarned || 0;
+            this.totalCoinsEarned = saveData.statistics.totalCoinsEarned || 0;
+            this.casinoTotalWin = saveData.statistics.casinoTotalWin || 0;
+            this.casinoTotalLoss = saveData.statistics.casinoTotalLoss || 0;
+            this.gachaTickets = saveData.statistics.gachaTickets || 0;
+            console.log('Load Mission Index:', saveData.statistics.currentMissionIndex);
+            this.currentMissionIndex = saveData.statistics.currentMissionIndex ?? 0;
+            this.gachaTickets = saveData.statistics.gachaTickets || 0;
+
+            // --- ミッションデータの移行と復元 ---
+            this.currentMissionIndex = saveData.statistics.currentMissionIndex ?? 0; // 旧データ保持用
+
+            // 新しいミッションデータ構造
+            this.beginnerMissionCompleted = saveData.statistics.beginnerMissionCompleted || [];
+            this.beginnerMissionProgress = saveData.statistics.beginnerMissionProgress || {};
+
+            // 旧データからの移行: currentMissionIndex があり、かつ新データが空の場合
+            if (this.currentMissionIndex > 0 && this.beginnerMissionCompleted.length === 0) {
+                // MissionManagerがまだロードされていない可能性があるため、インデックスベースで仮IDを生成するか、
+                // あるいは単純に数値で管理していたものをIDリストに変換する必要がある。
+                // ここではMissionManager.MISSIONSのIDが ["help", "catch_1", "go_town", ...] であると仮定して処理するが、
+                // GameState単体ではIDを知り得ないため、本来はMissionManager側でマイグレーションすべきかもしれない。
+                // しかし、簡便のため、MissionManagerがロード済みであることを期待するか、
+                // または後でMissionManager初期化時に修正する。
+                // 
+                // 安全策: ここでは空のままにしておき、MissionManager.migrate() のようなメソッドで後で処理するフックを用意するか、
+                // 単純に定義済みのIDリストをハードコードして移行する。
+
+                const legacyMissionIds = ['help', 'catch_1', 'go_town', 'buy_bait', 'catch_with_bait', 'equip_skill', 'catch_3'];
+
+                // 完了済みミッションを追加
+                for (let i = 0; i < this.currentMissionIndex; i++) {
+                    if (i < legacyMissionIds.length) {
+                        this.beginnerMissionCompleted.push(legacyMissionIds[i]);
+                    }
+                }
+
+                // 現在進行中のミッションの進捗を移行
+                if (this.currentMissionIndex < legacyMissionIds.length) {
+                    const currentId = legacyMissionIds[this.currentMissionIndex];
+                    if (saveData.statistics.missionProgress > 0) {
+                        this.beginnerMissionProgress[currentId] = saveData.statistics.missionProgress;
+                    }
+                }
+
+                console.log('🔄 ミッションデータを新形式に移行しました:', this.beginnerMissionCompleted, this.beginnerMissionProgress);
+            }
+
+            this.missionProgress = saveData.statistics.missionProgress ?? 0; // 旧互換用
+
+            this.dynamicMissions = saveData.statistics.dynamicMissions ?? null;
+            this.dynamicMissionCompletedCount = saveData.statistics.dynamicMissionCompletedCount ?? 0;
             this.biggestFish = saveData.statistics.biggestFish;
 
             // 図鑑データを復元
@@ -197,6 +269,11 @@ const GameState = {
         this.money += amount;
         if (amount > 0) {
             this.totalMoneyEarned += amount;
+            this.totalCoinsEarned += amount;
+            // コイン獲得ミッション判定
+            if (typeof MissionManager !== 'undefined') {
+                MissionManager.checkMission('money_earned', { amount: amount });
+            }
         }
     },
 
@@ -506,6 +583,64 @@ const GameState = {
     },
 
     // ========================================
+    // ミッション目標数の修正値を取得
+    // ========================================
+    getMissionTargetModifier() {
+        let modifier = 1.0;
+
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (!skill) continue;
+
+            if (skill.effect.type === 'stoic') {
+                modifier *= skill.effect.targetMult;
+            } else if (skill.effect.type === 'casual') {
+                modifier *= skill.effect.targetMult;
+            }
+        }
+
+        return modifier;
+    },
+
+    // ========================================
+    // ミッション報酬の修正値を取得
+    // ========================================
+    getMissionRewardModifier() {
+        let modifier = 1.0;
+
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (!skill) continue;
+
+            if (skill.effect.type === 'mission_reward') {
+                modifier *= skill.effect.value;
+            } else if (skill.effect.type === 'stoic') {
+                modifier *= skill.effect.rewardMult;
+            } else if (skill.effect.type === 'casual') {
+                modifier *= skill.effect.rewardMult;
+            }
+        }
+
+        return modifier;
+    },
+
+    // ========================================
+    // スキル増幅率を取得（増幅の心得）
+    // ========================================
+    getSkillAmplifier() {
+        let amplifier = 1.0;
+
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'skill_amplifier') {
+                amplifier += skill.effect.value;
+            }
+        }
+
+        return amplifier;
+    },
+
+    // ========================================
     // 魚をインベントリに追加
     // ========================================
     addFish(fish) {
@@ -534,6 +669,11 @@ const GameState = {
 
         this.totalFishCaught++;
 
+        // ランク統計の更新
+        if (this.caughtByRank[fish.rarity] !== undefined) {
+            this.caughtByRank[fish.rarity]++;
+        }
+
         // 最大の魚を更新
         if (!this.biggestFish || fish.power > this.biggestFish.power) {
             this.biggestFish = { name: fish.name, power: fish.power };
@@ -556,6 +696,7 @@ const GameState = {
 
         if (category === 'skill') {
             this.skillInventory[id] = (this.skillInventory[id] || 0) + 1;
+            this.totalSkills++;
         } else if (category === 'skin') {
             if (!this.unlockedSkins.includes(id)) {
                 this.unlockedSkins.push(id);
@@ -573,6 +714,27 @@ const GameState = {
     // ========================================
     // 所持魚をすべて売却
     // ========================================
+    // ========================================
+    // ガチャリソース管理
+    // ========================================
+    canDrawGacha(cost, count) {
+        // チケットで足りるかチェック
+        if (this.gachaTickets >= count) return { can: true, method: 'ticket' };
+        // コインで足りるかチェック
+        if (this.money >= cost) return { can: true, method: 'money' };
+        return { can: false };
+    },
+
+    consumeGachaResources(cost, count) {
+        if (this.gachaTickets >= count) {
+            this.gachaTickets -= count;
+            return 'ticket';
+        } else {
+            this.money -= cost;
+            return 'money';
+        }
+    },
+
     sellAllFish() {
         const priceBonus = this.getPriceBonus();
         let totalEarned = 0;
@@ -584,7 +746,16 @@ const GameState = {
 
         this.money += totalEarned;
         this.totalMoneyEarned += totalEarned;
+        this.totalCoinsEarned += totalEarned;
+        this.totalCoinsEarned += totalEarned;
         this.inventory = [];
+
+        // ミッション判定: 魚を売る
+        if (typeof MissionManager !== 'undefined') {
+            MissionManager.checkMission('sell_fish');
+            // お金を稼ぐミッション用
+            MissionManager.checkMission('money_earned', { amount: totalEarned });
+        }
 
         // オートセーブ
         SaveManager.save(this);
@@ -730,6 +901,7 @@ const GameState = {
 
         // 所持数を加算
         this.skillInventory[skillId] = (this.skillInventory[skillId] || 0) + 1;
+        this.totalSkills++;
 
         // オートセーブ
         SaveManager.save(this);

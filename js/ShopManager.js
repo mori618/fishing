@@ -9,6 +9,7 @@ const ShopManager = {
     currentTab: 'skill',
     currentStyleTab: 'gear',
     recycleSelectedSkills: [],
+    isDrawingGacha: false, // ガチャ連打防止フラグ
 
     // ========================================
     // カテゴリ切り替え
@@ -22,6 +23,11 @@ const ShopManager = {
         } else {
             UIManager.showScreen('shop');
             this.renderShop();
+
+            // 初心者ミッション判定: 街へ行く
+            if (category === 'town') {
+                MissionManager.checkMission('go_town');
+            }
         }
     },
 
@@ -542,6 +548,9 @@ const ShopManager = {
 
         // ガチャ設定からボタンを生成
         const config = GAME_DATA.GACHA_CONFIG;
+        const tickets = GameState.gachaTickets;
+        const money = GameState.money;
+
         const tiers = [
             { id: 'BRONZE', name: 'ブロンズガチャ', color: '#cd7f32', desc: 'Tier1 (85%), Tier2 (14%), Tier3 (1%)' },
             { id: 'SILVER', name: 'シルバーガチャ', color: '#c0c0c0', desc: 'Tier1 (15%), Tier2 (75%), Tier3 (10%)' },
@@ -550,25 +559,44 @@ const ShopManager = {
 
         tiers.forEach(tier => {
             const data = config[tier.id];
-            const money = GameState.money;
-            const singleAffordable = money >= data.single;
-            const tenAffordable = money >= data.ten;
+            const ticketCost = data.ticket;
+            const ticketCost10 = data.ticket * 10;
+
+            const canTicket1 = tickets >= ticketCost;
+            const canTicket10 = tickets >= ticketCost10;
+            const canMoney1 = money >= data.single;
+            const canMoney10 = money >= data.ten;
 
             html += `
                 <div class="shop-item gacha-item" style="border-left: 4px solid ${tier.color}">
                     <div class="item-info">
                         <div class="item-name" style="color: ${tier.color}">${tier.name}</div>
                         <div class="item-desc">${tier.desc}</div>
+                        <div class="item-ticket-cost">🎫 ${ticketCost}枚 / 回</div>
                     </div>
-                    <div class="item-action-container">
-                        <button class="btn btn-buy ${!singleAffordable ? 'disabled' : ''}" 
-                                onclick="ShopManager.drawGacha('${tier.id}', 1)">
-                            単発 ¥${data.single.toLocaleString()}
-                        </button>
-                        <button class="btn btn-buy ${!tenAffordable ? 'disabled' : ''}" 
-                                onclick="ShopManager.drawGacha('${tier.id}', 10)">
-                            10連 ¥${data.ten.toLocaleString()}
-                        </button>
+                    <div class="gacha-buttons-container">
+                        <div class="gacha-button-group">
+                            <div class="gacha-group-label">🎫 チケット</div>
+                            <button class="btn btn-ticket ${!canTicket1 ? 'disabled' : ''}" 
+                                    onclick="ShopManager.drawGacha('${tier.id}', 1, 'ticket')" ${!canTicket1 ? 'disabled' : ''}>
+                                単発 (${ticketCost}枚)
+                            </button>
+                            <button class="btn btn-ticket ${!canTicket10 ? 'disabled' : ''}" 
+                                    onclick="ShopManager.drawGacha('${tier.id}', 10, 'ticket')" ${!canTicket10 ? 'disabled' : ''}>
+                                10連 (${ticketCost10}枚)
+                            </button>
+                        </div>
+                        <div class="gacha-button-group">
+                            <div class="gacha-group-label">💰 コイン</div>
+                            <button class="btn btn-buy ${!canMoney1 ? 'disabled' : ''}" 
+                                    onclick="ShopManager.drawGacha('${tier.id}', 1, 'money')" ${!canMoney1 ? 'disabled' : ''}>
+                                単発 ¥${data.single.toLocaleString()}
+                            </button>
+                            <button class="btn btn-buy ${!canMoney10 ? 'disabled' : ''}" 
+                                    onclick="ShopManager.drawGacha('${tier.id}', 10, 'money')" ${!canMoney10 ? 'disabled' : ''}>
+                                10連 ¥${data.ten.toLocaleString()}
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -777,40 +805,65 @@ const ShopManager = {
     // ========================================
     // ガチャ実行 (通常)
     // ========================================
-    drawGacha(tierKey, count) {
+    drawGacha(tierKey, count, paymentMethod) {
+        // 連打防止
+        if (this.isDrawingGacha) return;
+
         const config = GAME_DATA.GACHA_CONFIG[tierKey];
         if (!config) return;
 
-        const cost = count === 10 ? config.ten : config.single;
+        const ticketCost = config.ticket * count;
+        const moneyCost = count === 10 ? config.ten : config.single;
 
-        if (GameState.money < cost) {
-            UIManager.showMessage('お金が足りません！');
-            return;
+        // 支払い方法による検証
+        if (paymentMethod === 'ticket') {
+            if (GameState.gachaTickets < ticketCost) {
+                UIManager.showMessage('チケットが足りません！');
+                return;
+            }
+        } else if (paymentMethod === 'money') {
+            if (GameState.money < moneyCost) {
+                UIManager.showMessage('お金が足りません！');
+                return;
+            }
+        } else {
+            // 旧互換性（paymentMethodが無い場合）
+            const resCheck = GameState.canDrawGacha(moneyCost, count);
+            if (!resCheck.can) {
+                UIManager.showMessage('リソースが足りません！');
+                return;
+            }
+            paymentMethod = resCheck.method;
         }
 
-        // お金を消費
-        GameState.money -= cost;
-        UIManager.updateMoney();
-        const moneyDisplay = document.getElementById('shop-money-display');
-        if (moneyDisplay) moneyDisplay.textContent = `¥${GameState.money.toLocaleString()}`;
-        const casinoMoney = document.getElementById('casino-money-display');
-        if (casinoMoney) casinoMoney.textContent = `¥${GameState.money.toLocaleString()}`;
+        // 連打防止フラグを立てる
+        this.isDrawingGacha = true;
 
-        // 抽選実行
+        // 抽選実行 (リソース消費の前に抽選を行い、結果を演出に渡す)
         const results = [];
         for (let i = 0; i < count; i++) {
             results.push(this.lottery(config.rates));
         }
 
+        // リソース消費
+        if (paymentMethod === 'ticket') {
+            GameState.gachaTickets -= ticketCost;
+        } else {
+            GameState.money -= moneyCost;
+        }
+        UIManager.updateStatus(); // お金・チケット表示更新
+
+        // 消費後すぐにセーブ
+        SaveManager.save(GameState);
+
+        // ガチャ専用画面へ切り替え
+        UIManager.showScreen('gacha');
+
         // ガチャ演出開始
-        UIManager.showSlotAnimation(results, () => {
-            UIManager.showGachaResult(results, () => {
-                if (UIManager.currentScreen === 'casino') {
-                    CasinoManager.render();
-                } else {
-                    ShopManager.renderShop();
-                }
-            });
+        UIManager.startGachaPerformance(results, () => {
+            // 演出完了後の処理
+            this.isDrawingGacha = false;
+            this.renderShop();
         });
     },
 
@@ -1066,6 +1119,9 @@ const ShopManager = {
             const count = GameState.getEquippedSkillCount(skillId);
             UIManager.showMessage(`${skill.name}を装備しました！(計${count}個)`);
             this.renderShop();
+
+            // 初心者ミッション判定: スキルを装備する
+            MissionManager.checkMission('equip_skill');
         } else {
             // 失敗理由を簡易表示 (スロット一杯など)
             if (GameState.equippedSkills.length >= GameState.getSkillSlots()) {
@@ -1096,6 +1152,9 @@ const ShopManager = {
             UIManager.showMessage(`${bait.name}を購入しました！`);
             this.renderShop();
             UIManager.updateMoney();
+
+            // 初心者ミッション判定: 餌を買う
+            MissionManager.checkMission('buy_bait');
         }
     },
 

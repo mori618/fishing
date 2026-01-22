@@ -4094,6 +4094,8 @@ body {
     .floating-status-left {
         left: 10px;
         top: 10px;
+        transform: scale(0.6);
+        transform-origin: top left;
     }
 
     .floating-status-right {
@@ -4165,6 +4167,7 @@ body {
         padding: 4px;
     }
 }
+
 /* 複数釣りバッジ */
 .multi-catch-badge {
     position: absolute;
@@ -4177,13 +4180,884 @@ body {
     padding: 6px 14px;
     border-radius: 50px;
     border: 3px solid white;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     z-index: 20;
     transform: rotate(15deg);
     animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 @keyframes popIn {
-    0% { transform: scale(0) rotate(-30deg); }
-    100% { transform: scale(1) rotate(15deg); }
+    0% {
+        transform: scale(0) rotate(-30deg);
+    }
+
+    100% {
+        transform: scale(1) rotate(15deg);
+    }
+}
+
+/* ========================================
+   ガチャ専用画面 (#gacha-screen)
+   ======================================== */
+#gacha-screen {
+    background: #000;
+    overflow: hidden;
+    position: relative;
+}
+
+.gacha-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, #1e293b 0%, #000 100%);
+    z-index: 1;
+}
+
+.gacha-light-rays {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(from 0deg,
+            transparent 0deg,
+            rgba(255, 215, 0, 0.1) 20deg,
+            transparent 40deg);
+    transform: translate(-50%, -50%);
+    animation: rotateRays 20s linear infinite;
+    z-index: 2;
+}
+
+@keyframes rotateRays {
+    from {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+
+    to {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+.gacha-stage {
+    position: relative;
+    z-index: 10;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    perspective: 1000px;
+}
+
+.gacha-machine-container {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gacha-machine {
+    width: 240px;
+    height: 320px;
+    background: linear-gradient(135deg, #ef4444 0%, #991b1b 100%);
+    border: 8px solid #3e2723;
+    border-radius: 40px 40px 20px 20px;
+    position: relative;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), inset 0 2px 10px rgba(255, 255, 255, 0.3);
+}
+
+.machine-glass {
+    width: 180px;
+    height: 160px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 4px solid #3e2723;
+    border-radius: 30px;
+    margin: 20px auto;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 0 30px rgba(255, 255, 255, 0.1);
+}
+
+.capsule-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.gacha-capsule {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+.machine-body {
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.machine-handle {
+    width: 80px;
+    height: 80px;
+    background: #ffd700;
+    border: 6px solid #b45309;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #b45309;
+    transition: transform 0.2s;
+}
+
+.machine-handle .material-icons {
+    font-size: 40px;
+    color: #451a03;
+}
+
+.machine-handle.spinning {
+    animation: spinHandle 0.5s ease-in-out;
+}
+
+@keyframes spinHandle {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* ガチャ結果表示 */
+.gacha-result-display {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 400px;
+    background: var(--bg-card);
+    border: 4px solid var(--accent-color);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 0 100px rgba(255, 215, 0, 0.3);
+    z-index: 100;
+    animation: resultPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes resultPop {
+    from {
+        transform: translate(-50%, -50%) scale(0.5);
+        opacity: 0;
+    }
+
+    to {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+}
+
+.result-header {
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--accent-color);
+    margin-bottom: 20px;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 1);
+}
+
+.gacha-items-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    max-height: 50vh;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.gacha-result-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+    position: relative;
+    transition: transform 0.2s;
+}
+
+.gacha-result-card:hover {
+    transform: scale(1.05);
+}
+
+.gacha-result-card.is-new::after {
+    content: 'NEW!';
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ef4444;
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.gacha-result-card .item-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+.gacha-result-card .item-name {
+    font-size: 0.9rem;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.gacha-result-card .owned-count {
+    font-size: 0.75rem;
+    color: #aaa;
+}
+
+.result-footer {
+    margin-top: 24px;
+    display: flex;
+    justify-content: center;
+}
+
+.gacha-particles {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+/* ========================================
+   初心者ミッションUI
+   ======================================== */
+.mission-display {
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid var(--accent-color);
+    border-radius: var(--radius-md);
+    padding: 8px 12px;
+    margin-top: 10px;
+    max-width: 200px;
+    box-shadow: var(--shadow-sm);
+    animation: slideInLeft 0.5s ease-out;
+    pointer-events: none;
+    z-index: 100;
+}
+
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.mission-label {
+    font-size: 10px;
+    font-weight: 900;
+    color: var(--accent-color);
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+
+.mission-text {
+    font-size: 12px;
+    font-weight: bold;
+    color: #fff;
+    line-height: 1.4;
+}
+
+/* ヘルプボタン */
+.btn-help {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: #fff !important;
+}
+
+.btn-help:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* ========================================
+   動的ミッションUI
+   ======================================== */
+.mission-display.dynamic-mode {
+    max-width: 280px;
+    padding: 10px;
+}
+
+.dynamic-mission-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 0;
+    font-size: 11px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dynamic-mission-item:last-child {
+    border-bottom: none;
+}
+
+.dynamic-mission-item .slot-label {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 10px;
+    min-width: 18px;
+    text-align: center;
+}
+
+.dynamic-mission-item .mission-desc {
+    flex: 1;
+    color: #fff;
+}
+
+.dynamic-mission-item .reward-icon {
+    font-size: 14px;
+}
+
+/* チケット報酬時の特別スタイル */
+.dynamic-mission-item.ticket-reward {
+    background: linear-gradient(90deg, rgba(255, 215, 0, 0.2), transparent);
+    border-radius: 4px;
+    padding: 4px 6px;
+}
+
+.dynamic-mission-item.ticket-reward .slot-label {
+    background: linear-gradient(135deg, #ffd700, #ffb300);
+    color: #3e2723;
+}
+
+.dynamic-mission-item.ticket-reward .mission-desc {
+    color: #ffd700;
+    font-weight: bold;
+}
+
+/* Floating Status & Help Button */
+.floating-status-right {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    z-index: 100;
+    pointer-events: auto;
+}
+
+.btn-help {
+    width: 48px;
+    height: 48px;
+    border-radius: 50% !important;
+    background: rgba(0, 0, 0, 0.4) !important;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.btn-help .material-icons {
+    font-size: 28px;
+}
+
+/* Mission List Styles */
+.mission-item-row {
+    display: flex;
+    align-items: center;
+    font-size: 0.95rem;
+    margin-bottom: 6px;
+    line-height: 1.4;
+    text-align: left;
+    width: 100%;
+}
+.mission-icon-small {
+    font-size: 1.3rem;
+    margin-right: 8px;
+    color: #ffd700;
+    flex-shrink: 0;
+}
+
+/* 報酬ポップアップ */
+.reward-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.reward-popup-overlay.show {
+    opacity: 1;
+}
+.reward-popup {
+    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+    border: 2px solid #ffd700;
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    transform: scale(0.8);
+    transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+    min-width: 280px;
+}
+.reward-popup-overlay.show .reward-popup {
+    transform: scale(1);
+}
+.reward-title {
+    color: #ffd700;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 16px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+.reward-icon-container {
+    font-size: 4rem;
+    margin-bottom: 12px;
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+}
+.reward-name {
+    color: #fff;
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+}
+.reward-close-btn {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 8px 24px;
+    border-radius: 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.reward-close-btn:hover {
+    background: #1d4ed8;
+}
+
+/* ガチャボタンレイアウト */
+.gacha-buttons-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    margin-top: 12px;
+}
+.gacha-button-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+.gacha-group-label {
+    font-size: 0.85rem;
+    color: #a0aec0;
+    min-width: 80px;
+}
+.btn-ticket {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+.btn-ticket:hover:not(.disabled) {
+    filter: brightness(1.1);
+}
+.btn-ticket.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.item-ticket-cost {
+    color: #a78bfa;
+    font-size: 0.85rem;
+    margin-top: 4px;
+}
+
+/* ========================================
+   霑ｽ蜉縺ｮ繝｢繝舌う繝ｫ繝ｬ繧ｹ繝昴Φ繧ｷ繝門ｯｾ蠢・   ======================================== */
+@media (max-width: 768px) {
+    /* 驥｣繧顔ｫｿ蜷阪・繝・く繧ｹ繝育怐逡･蟇ｾ蠢・*/
+    .rod-badge {
+        max-width: 80px !important;
+        overflow: hidden !important;
+    }
+
+    .rod-name {
+        font-size: 10px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: 70px !important;
+        display: block !important;
+    }
+
+    .rod-stars .material-icons {
+        font-size: 12px !important;
+    }
+
+    .rod-stars {
+        flex-wrap: nowrap !important;
+    }
+
+    /* 驥｣繧顔ｫｿ縺ｮ繝｢繝舌う繝ｫ菴咲ｽｮ隱ｿ謨ｴ */
+    .fishing-rod-view {
+        right: 5% !important;
+        bottom: -80px !important;
+        transform-origin: 95% 100% !important;
+        transform: scale(0.65) !important;
+    }
+
+    .rod-shaft {
+        height: 350px !important;
+    }
+
+    /* 驥｣繧顔ｫｿ繧｢繝九Γ繝ｼ繧ｷ繝ｧ繝ｳ - 繝｢繝舌う繝ｫ逕ｨ縺ｫ隱ｿ謨ｴ */
+    .fishing-rod-view.idle {
+        transform: scale(0.65) rotate(25deg) translateY(50px) !important;
+    }
+
+    .fishing-rod-view.waiting {
+        transform: scale(0.65) rotate(-5deg) !important;
+    }
+
+    .fishing-rod-view.nibble {
+        transform: scale(0.65) rotate(-5deg) !important;
+    }
+
+    .fishing-rod-view.hit {
+        transform: scale(0.65) rotate(-15deg) translateY(10px) !important;
+    }
+
+    .fishing-rod-view.strike {
+        transform: scale(0.65) rotate(15deg) translateY(-5px) !important;
+    }
+
+    .fishing-rod-view.battle {
+        transform: scale(0.65) rotate(-15deg) translateY(10px) !important;
+    }
+
+    .fishing-rod-view.casting {
+        animation: rodCastMobile 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
+    }
+
+    .fishing-rod-view.success {
+        animation: rodSuccessMobile 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
+    }
+}
+
+@keyframes rodCastMobile {
+    0% {
+        transform: scale(0.65) rotate(45deg) translateY(100px);
+    }
+    30% {
+        transform: scale(0.65) rotate(60deg) translateY(150px);
+    }
+    40% {
+        transform: scale(0.65) rotate(60deg) translateY(150px);
+    }
+    100% {
+        transform: scale(0.65) rotate(-10deg) translateY(0);
+    }
+}
+
+@keyframes rodSuccessMobile {
+    0% {
+        transform: scale(0.65) rotate(-15deg) translateY(10px);
+    }
+    40% {
+        transform: scale(0.65) rotate(-20deg) translateY(15px);
+    }
+    100% {
+        transform: scale(0.65) rotate(10deg) translateY(20px) translateX(10px);
+    }
+}
+
+/* ========================================
+   ヘルプモーダルスタイル
+   ======================================== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+    display: none;
+}
+
+.help-modal-content {
+    background: var(--bg-card);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    width: 90%;
+    max-width: 600px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-lg);
+    animation: modalSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    color: var(--text-primary);
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.modal-header h2 {
+    font-size: 1.25rem;
+    color: var(--accent-yellow);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: color 0.2s;
+    padding: 4px;
+}
+
+.btn-close:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+}
+
+.help-tabs {
+    display: flex;
+    gap: 4px;
+    padding: var(--spacing-md) var(--spacing-md) 0;
+    background: rgba(0, 0, 0, 0.1);
+    overflow-x: auto;
+}
+
+.help-tab {
+    flex: 1;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border: none;
+    color: var(--text-secondary);
+    border-radius: 8px 8px 0 0;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.help-tab.active {
+    background: var(--primary-dark);
+    color: white;
+}
+
+.help-tab:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.help-body {
+    padding: var(--spacing-lg);
+    overflow-y: auto;
+    flex: 1;
+}
+
+.help-section {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.help-section.active {
+    display: block;
+}
+
+.help-section h3 {
+    font-size: 1.1rem;
+    color: var(--ocean-surface);
+    margin-bottom: var(--spacing-md);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 4px;
+}
+
+/* 釣りの手順 */
+.help-step {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 12px;
+    border-radius: 8px;
+}
+
+.step-num {
+    background: var(--accent-yellow);
+    color: var(--bg-dark);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.step-text strong {
+    display: block;
+    color: var(--text-light);
+    margin-bottom: 4px;
+    font-size: 1rem;
+}
+
+.step-text p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0;
+}
+
+.help-info-box {
+    background: rgba(14, 165, 233, 0.15);
+    border: 1px solid rgba(14, 165, 233, 0.3);
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+.help-info-box small {
+    display: block;
+    color: var(--ocean-surface);
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+/* リストスタイル */
+.help-list, .help-simple-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.help-list li {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    align-items: flex-start;
+}
+
+.help-list .icon {
+    font-size: 1.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.help-list strong {
+    display: block;
+    color: var(--accent-yellow);
+    margin-bottom: 2px;
+}
+
+.help-list p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.help-simple-list li {
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    padding-left: 8px;
+    border-left: 3px solid var(--accent-yellow);
+}
+
+.help-simple-list strong {
+    color: var(--text-light);
+}
+
+/* スキル定義リスト */
+.skill-example dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px 16px;
+    margin: 0;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 16px;
+    border-radius: 8px;
+}
+
+.skill-example dt {
+    font-weight: bold;
+    color: var(--rarity-B);
+    grid-column: 1;
+}
+
+.skill-example dd {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    grid-column: 2;
+}
+
+.skill-example h4 {
+    margin: 0 0 10px 0;
+    font-size: 0.95rem;
+    color: var(--text-light);
 }

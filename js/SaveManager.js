@@ -34,7 +34,20 @@ const SaveManager = {
             encyclopedia: {},       // 図鑑データ { fishId: { count: 0, hasSpecial: false } }
             statistics: {
                 totalFishCaught: 0,
+                caughtByRank: { 'D': 0, 'C': 0, 'B': 0, 'A': 0, 'S': 0, 'SS': 0 },
+                totalTreasure: 0,
+                totalSkills: 0,
                 totalMoneyEarned: 0,
+                totalCoinsEarned: 0,
+                casinoTotalWin: 0,
+                casinoTotalLoss: 0,
+                gachaTickets: 0,
+                currentMissionIndex: 0,
+                missionProgress: 0,
+                beginnerMissionCompleted: [],
+                beginnerMissionProgress: {},
+                dynamicMissions: null,
+                dynamicMissionCompletedCount: 0,
                 biggestFish: null
             }
         };
@@ -75,7 +88,21 @@ const SaveManager = {
                 encyclopedia: { ...gameState.encyclopedia },
                 statistics: {
                     totalFishCaught: gameState.totalFishCaught,
+                    caughtByRank: { ...gameState.caughtByRank },
+                    totalTreasure: gameState.totalTreasure,
+                    totalSkills: gameState.totalSkills,
                     totalMoneyEarned: gameState.totalMoneyEarned,
+                    totalCoinsEarned: gameState.totalCoinsEarned,
+                    casinoTotalWin: gameState.casinoTotalWin,
+                    casinoTotalLoss: gameState.casinoTotalLoss,
+                    campaignTotalWin: 0, // 予備
+                    gachaTickets: gameState.gachaTickets,
+                    currentMissionIndex: gameState.currentMissionIndex, // 互換用
+                    missionProgress: gameState.missionProgress,         // 互換用
+                    beginnerMissionCompleted: [...gameState.beginnerMissionCompleted],
+                    beginnerMissionProgress: { ...gameState.beginnerMissionProgress },
+                    dynamicMissions: gameState.dynamicMissions,
+                    dynamicMissionCompletedCount: gameState.dynamicMissionCompletedCount,
                     biggestFish: gameState.biggestFish,
                     // フィーバー状態も保存
                     fever: { ...gameState.fever }
@@ -83,7 +110,7 @@ const SaveManager = {
             };
 
             localStorage.setItem(this.SAVE_KEY, JSON.stringify(saveData));
-            console.log('💾 ゲームデータを保存しました:', saveData.saveDate);
+            console.log('💾 ゲームデータを保存しました:', saveData.saveDate, 'Mission:', saveData.statistics.currentMissionIndex);
             return true;
         } catch (error) {
             console.error('❌ セーブに失敗しました:', error);
@@ -111,7 +138,7 @@ const SaveManager = {
             }
 
             const data = JSON.parse(savedData);
-            console.log('📂 セーブデータを読み込みました:', data.saveDate);
+            console.log('📂 セーブデータを読み込みました:', data.saveDate, 'Mission:', data.statistics?.currentMissionIndex);
 
             // バージョンチェック・マイグレーション
             if (data.version !== this.VERSION) {

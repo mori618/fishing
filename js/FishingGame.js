@@ -188,9 +188,9 @@ const FishingGame = {
                 return { ...targetPool[0] };
             }
         }
-
+        // 餌ごとの出現確率DCBAS
         const spawnWeights = {
-            'D': { D: 0.8, C: 0.2, S: 0.01 },
+            'D': { D: 0.9, C: 0.1, S: 0.01 },
             'C': { C: 0.8, D: 0.2, B: 0.1 },
             'B': { B: 0.8, C: 0.2, D: 0.1, A: 0.05 },
             'A': { A: 0.6, B: 0.4, C: 0.2, S: 0.05 },
@@ -713,6 +713,9 @@ const FishingGame = {
             // ログ出力
             console.log(`📊 キャッチ判定: ランク差${rankDiff}(${baseRate * 100}%) - パワー罰則${(powerPenalty * 100).toFixed(1)}% = ${(catchRate * 100).toFixed(1)}% (Min 5%)`);
 
+            // 赤ゲージ停止のミッション判定
+            MissionManager.checkMission('red_gauge_stop');
+
         } else {
             // 赤以外は従来通りの設定値
             catchRate = config.catchRate.min +
@@ -809,6 +812,9 @@ const FishingGame = {
                 UIManager.showMessage('💨 フィーバー終了...', 3000);
             }
 
+            GameState.totalTreasure++;
+            // 宝箱取得のミッション判定
+            MissionManager.checkMission('treasure_caught');
             this.processTreasureChest(this.currentFish);
             return;
         }
@@ -831,10 +837,21 @@ const FishingGame = {
             GameState.addFish(this.currentFish);
         }
 
+        // 初心者ミッション判定 + 動的ミッション判定（魚情報付き）
+        MissionManager.checkMission('catch_success', {
+            baitId: GameState.baitType,
+            rarity: this.currentFish.rarity,
+            frequency: this.currentFish.frequency
+        });
+
         // 餌を消費
         if (GameState.baitType) {
+            const baitData = GAME_DATA.BAITS.find(b => b.id === GameState.baitType);
+            const baitRank = baitData ? baitData.rank : 'D';
             GameState.useBait(true);
             UIManager.updateBaitInfo();
+            // 餌使用のミッション判定
+            MissionManager.checkMission('use_bait', { rank: baitRank });
         }
 
         // ========================================
@@ -845,6 +862,8 @@ const FishingGame = {
 
         if (feverResult.message === 'start') {
             UIManager.showMessage(`🔥 ${feverResult.type === 'sun' ? 'おたから' : 'おさかな'}フィーバー開始！`, 3000);
+            // フィーバー開始ミッション判定
+            MissionManager.checkMission('fever_start');
         } else if (feverResult.message === 'end') {
             UIManager.showMessage('💨 フィーバー終了...', 3000);
         }

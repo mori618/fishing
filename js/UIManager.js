@@ -140,6 +140,10 @@ const UIManager = {
             ShopManager.renderShop();
         } else if (screenId === 'encyclopedia') {
             EncyclopediaManager.render();
+        } else if (screenId === 'stats') {
+            this.renderStats();
+        } else if (screenId === 'gacha') {
+            this.prepareGachaScreen();
         }
     },
 
@@ -478,7 +482,7 @@ const UIManager = {
                 <h2 class="gauge-battle-title">キャッチング中！</h2>
                 <div class="fish-info">
                     <span class="fish-name rarity-${fish.rarity}"></span>
-                    <span class="fish-power">パワー: ${fish.power}</span>
+                    <span class="fish-power">${fish.power}</span>
                 </div>
                 <div class="gauge-container">
                     <div class="gauge-bar">
@@ -852,8 +856,14 @@ const UIManager = {
     // ========================================
     // ステータス表示更新
     // ========================================
+    // ステータスの更新 (お金・チケット)
     updateStatus() {
         this.updateMoney();
+        // チケット表示があれば更新
+        const ticketDisplay = document.getElementById('gacha-ticket-display');
+        if (ticketDisplay) {
+            ticketDisplay.textContent = GameState.gachaTickets;
+        }
         this.updateInventory();
         this.updateRodInfo();
         this.updateBaitInfo();
@@ -925,7 +935,7 @@ const UIManager = {
         // パワー表示も更新
         const powerDisplay = document.getElementById('power-display');
         if (powerDisplay) {
-            powerDisplay.textContent = `パワー: ${GameState.getTotalPower()}`;
+            powerDisplay.textContent = `${GameState.getTotalPower()} P`;
         }
     },
 
@@ -1206,10 +1216,502 @@ const UIManager = {
             toast.classList.remove('show');
             setTimeout(() => toast.remove(), 300);
         }, duration);
+    },
+
+    // ========================================
+    // 実績画面のレンダリング
+    // ========================================
+    renderStats() {
+        const container = document.getElementById('stats-container');
+        if (!container) return;
+
+        const stats = {
+            '累計釣り上げ数': `${GameState.totalFishCaught} 匹`,
+            '累計宝箱取得数': `${GameState.totalTreasure} 個`,
+            '累計獲得スキル数': `${GameState.totalSkills} 個`,
+            '累計獲得コイン': `${GameState.totalCoinsEarned.toLocaleString()} G`,
+            '最大釣り上げサイズ': GameState.biggestFish ? `${GameState.biggestFish.name} (${GameState.biggestFish.power})` : 'なし',
+            'カジノ累計勝利額': `${GameState.casinoTotalWin.toLocaleString()} G`,
+            'カジノ累計敗北額': `${GameState.casinoTotalLoss.toLocaleString()} G`,
+            'ガシャチケット所持数': `${GameState.gachaTickets} 枚`
+        };
+
+        const rankStats = GameState.caughtByRank;
+        const ranksHtml = Object.entries(rankStats).map(([rank, count]) => `
+            <div class="stat-row">
+                <span class="stat-label rank-label rarity-${rank}">Rank ${rank}</span>
+                <span class="stat-value">${count} 匹</span>
+            </div>
+        `).join('');
+
+        let html = '<div class="stats-group"><h3>総合統計</h3>';
+        for (const [label, value] of Object.entries(stats)) {
+            html += `
+                <div class="stat-row">
+                    <span class="stat-label">${label}</span>
+                    <span class="stat-value">${value}</span>
+                </div>
+            `;
+        }
+        html += '</div>';
+
+        html += '<div class="stats-group"><h3>ランク別釣り上げ数</h3>';
+        html += ranksHtml;
+        html += '</div>';
+
+        container.innerHTML = html;
+    },
+
+    // ========================================
+    // ガチャ演出と結果表示
+    // ========================================
+    prepareGachaScreen() {
+        const handle = document.getElementById('gacha-handle');
+        const machineContainer = document.getElementById('gacha-machine-container');
+        const resultDisplay = document.getElementById('gacha-result-display');
+
+        machineContainer.classList.remove('hidden');
+        resultDisplay.classList.add('hidden');
+        handle.classList.remove('spinning');
+
+        // カプセルをランダムに配置
+        const capsuleContainer = document.getElementById('capsule-container');
+        capsuleContainer.innerHTML = '';
+        const colors = ['#f87171', '#60a5fa', '#34d399', '#fbbf24', '#a78bfa'];
+        for (let i = 0; i < 20; i++) {
+            const cap = document.createElement('div');
+            cap.className = 'gacha-capsule';
+            cap.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            cap.style.left = Math.random() * 150 + 'px';
+            cap.style.top = Math.random() * 130 + 'px';
+            capsuleContainer.appendChild(cap);
+        }
+    },
+
+    startGachaPerformance(results, onComplete) {
+        const handle = document.getElementById('gacha-handle');
+        const machineContainer = document.getElementById('gacha-machine-container');
+        const resultDisplay = document.getElementById('gacha-result-display');
+
+        // ハンドルを回す
+        handle.classList.add('spinning');
+
+        // 演出ウェイト
+        setTimeout(() => {
+            handle.classList.remove('spinning');
+
+            // マシンを隠して結果を表示
+            machineContainer.classList.add('hidden');
+            resultDisplay.classList.remove('hidden');
+
+            this.renderGachaResults(results);
+
+            // 閉じるボタン
+            const closeBtn = document.getElementById('gacha-close-btn');
+            closeBtn.onclick = () => {
+                this.showScreen('shop'); // ショップに戻る
+                if (onComplete) onComplete();
+            };
+        }, 1500);
+    },
+
+    renderGachaResults(results) {
+        const container = document.getElementById('gacha-items-container');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        results.forEach(item => {
+            // ガチャ結果を GameState に反映（所持数追加）
+            GameState.gainGachaResult(item);
+
+            const ownedCount = GameState.getSkillCount(item.id);
+
+            const card = document.createElement('div');
+            card.className = `gacha-result-card rarity-${item.rarity || 'C'} ${item.isNew ? 'is-new' : ''}`;
+
+            card.innerHTML = `
+                <div class="item-icon">
+                    <span class="material-icons">${item.icon || 'auto_awesome'}</span>
+                </div>
+                <div class="item-name">${item.name}</div>
+                <div class="owned-count">所持: ${ownedCount}</div>
+            `;
+            container.appendChild(card);
+        });
+    },
+
+    // ========================================
+    // ミッションUIの更新
+    // ========================================
+    updateMissionUI() {
+        const missionDisplay = document.getElementById('mission-display');
+        const missionText = document.getElementById('mission-text');
+        if (!missionDisplay || !missionText) return;
+
+        // 初心者ミッションの場合
+        const beginnerTexts = MissionManager.getCurrentMissionTexts();
+        if (beginnerTexts !== null) {
+            missionDisplay.classList.remove('dynamic-mode');
+
+            // 3つのミッションをリスト表示
+            let html = '';
+            beginnerTexts.forEach(text => {
+                html += `<div class="mission-item-row"><span class="material-icons mission-icon-small">check_circle_outline</span> ${text}</div>`;
+            });
+            missionText.innerHTML = html;
+            return;
+        }
+
+        // 動的ミッションの場合
+        if (MissionManager.isDynamicMissionActive()) {
+            missionDisplay.classList.add('dynamic-mode');
+            const missions = GameState.dynamicMissions;
+            let html = '';
+            ['A', 'B', 'C'].forEach(slot => {
+                const m = missions[slot];
+                if (!m) return;
+                const isTicket = m.reward.type === 'ticket';
+                const progressText = `${m.current}/${m.target}`;
+                html += `
+                    <div class="dynamic-mission-item ${isTicket ? 'ticket-reward' : ''}">
+                        <span class="slot-label">${slot}</span>
+                        <span class="mission-desc">${m.text} (${progressText})</span>
+                        ${isTicket ? '<span class="reward-icon">🎫</span>' : ''}
+                    </div>
+                `;
+            });
+            missionText.innerHTML = html;
+        } else {
+            missionText.textContent = '全てのミッションを達成しました！';
+        }
+    },
+
+    // = ::::::::::::::::::::::::::::::::::::::::
+    // ヘルプの表示
+    // ::::::::::::::::::::::::::::::::::::::::
+    showHelp() {
+        this.showMessage('ヘルプ: 画面をタップしてキャストし、タイミングよくタップして魚を釣りましょう！');
+        MissionManager.checkMission('help_click');
+    },
+
+    // UIの初期化
+    init() {
+        // スタート画面の初期化
+        this.initStartScreen();
+
+        // ミッションUIの初期更新
+        this.updateMissionUI();
+
+        // ボタンのイベントリスナー設定
+        document.getElementById('encyclopedia-back-btn')?.addEventListener('click', () => {
+            this.showScreen('fishing'); // 釣り画面に戻る
+        });
+
+        document.getElementById('stats-back-btn')?.addEventListener('click', () => {
+            this.showScreen('encyclopedia');
+        });
+
+        document.getElementById('help-btn')?.addEventListener('click', () => {
+            this.showHelp();
+        });
+
+        // ガチャ画面のハンドルクリックでも回せるようにする
+        document.getElementById('gacha-handle')?.addEventListener('click', () => {
+            // すでに回っているか結果表示中なら無視
+            const handle = document.getElementById('gacha-handle');
+            if (handle.classList.contains('spinning')) return;
+            const resultDisplay = document.getElementById('gacha-result-display');
+            if (!resultDisplay.classList.contains('hidden')) return;
+
+            // FIXME: ここで回すのは ShopManager 経由が良いが、
+            // 演出中のハンドルクリックを「確定」などの操作に割り当てることも可能
+        });
+    },
+    // ========================================
+    // 報酬獲得ポップアップ
+    // ========================================
+    showRewardPopup(title, items, missionName = '') {
+        console.log('🎉 showRewardPopup called:', title, items, missionName);
+        // アイテム形式: { icon: '💰', name: '50G' }
+        const overlay = document.createElement('div');
+        overlay.className = 'reward-popup-overlay';
+
+        // メインコンテンツ生成
+        let itemsHtml = '';
+        items.forEach(item => {
+            itemsHtml += `
+                <div class="reward-item">
+                    <div class="reward-icon-container">${item.icon}</div>
+                    <div class="reward-name">${item.name}</div>
+                </div>
+            `;
+        });
+
+        // ミッション名の表示
+        const missionNameHtml = missionName ? `<div class="reward-mission-name">${missionName}</div>` : '';
+
+        overlay.innerHTML = `
+            <div class="reward-popup">
+                <div class="reward-title">${title}</div>
+                ${missionNameHtml}
+                <div class="reward-content">
+                    ${itemsHtml}
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+
+        // アニメーション用
+        requestAnimationFrame(() => {
+            overlay.classList.add('show');
+        });
+
+        // 閉じる処理
+        const close = () => {
+            overlay.classList.remove('show');
+            setTimeout(() => overlay.remove(), 300);
+        };
+
+        // 自動消去（2.5秒後）
+        const autoCloseTimer = setTimeout(close, 2500);
+
+        // タップでも閉じる（イベント伝播を止める）
+        overlay.addEventListener('click', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            clearTimeout(autoCloseTimer);
+            close();
+        });
+
+        // スペースキーでも閉じる
+        const handleKeydown = (e) => {
+            if (e.code === 'Space' || e.key === ' ') {
+                e.preventDefault();
+                close();
+                document.removeEventListener('keydown', handleKeydown);
+            }
+        };
+        document.addEventListener('keydown', handleKeydown);
+    },
+
+    // ========================================
+    // ヘルプ画面
+    // ========================================
+    openHelp() {
+        const modal = document.getElementById('help-modal');
+        if (modal) {
+            modal.style.display = 'flex'; // フレックス表示を確実に
+            // requestAnimationFrameで少し遅らせてopacityを適用（transition有効化のため）
+            requestAnimationFrame(() => {
+                modal.classList.remove('hidden');
+            });
+            
+            // デフォルトタブをリセット（または前回の状態を記憶するか？今回はリセットで）
+            this.switchHelpTab('help-fishing');
+        }
+    },
+
+    closeHelp() {
+        const modal = document.getElementById('help-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+            // transition完了後にdisplay:noneにする（cssで pointer-events:none にしてるのでそのままでもいいが、念のため）
+            setTimeout(() => {
+                if (modal.classList.contains('hidden')) {
+                    modal.style.display = 'none';
+                }
+            }, 300);
+        }
+    },
+
+    switchHelpTab(targetId) {
+        // タブのアクティブ切り替え
+        document.querySelectorAll('.help-tab').forEach(tab => {
+            if (tab.dataset.target === targetId) {
+                tab.classList.add('active');
+            } else {
+                tab.classList.remove('active');
+            }
+        });
+
+        // コンテンツの表示切り替え
+        document.querySelectorAll('.help-section').forEach(section => {
+            if (section.id === targetId) {
+                section.classList.add('active');
+            } else {
+                section.classList.remove('active');
+            }
+        });
+    },
+
+    initHelp() {
+        // 閉じるボタン
+        const closeBtn = document.getElementById('help-close-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => this.closeHelp());
+        }
+
+        // タブ切り替え
+        document.querySelectorAll('.help-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                this.switchHelpTab(e.target.dataset.target);
+            });
+        });
+
+        // モーダル外クリックで閉じる
+        const modal = document.getElementById('help-modal');
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    this.closeHelp();
+                }
+            });
+        }
     }
 };
+
+// CSSを動的に追加（stats-container用）
+const statsStyles = document.createElement('style');
+statsStyles.textContent = `
+    .stats-container {
+        padding: 16px;
+        color: var(--text-primary);
+    }
+    .stats-group {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .stats-group h3 {
+        margin-top: 0;
+        margin-bottom: 12px;
+        color: #ffd700;
+        font-size: 1.1rem;
+        border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+        padding-bottom: 4px;
+    }
+    .stat-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .stat-row:last-child {
+        border-bottom: none;
+    }
+    .stat-label {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+    .stat-value {
+        font-weight: bold;
+        color: var(--text-primary);
+    }
+`;
+document.head.appendChild(statsStyles);
+
+// 報酬ポップアップ用CSS
+const rewardPopupStyles = document.createElement('style');
+rewardPopupStyles.textContent = `
+    .reward-popup-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+    .reward-popup-overlay.show {
+        opacity: 1;
+    }
+    .reward-popup {
+        background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+        border: 3px solid #ffd700;
+        border-radius: 20px;
+        padding: 32px 40px;
+        text-align: center;
+        transform: scale(0.8);
+        transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        box-shadow: 0 0 30px rgba(255, 215, 0, 0.4), 0 10px 40px rgba(0,0,0,0.5);
+        min-width: 280px;
+        max-width: 90%;
+    }
+    .reward-popup-overlay.show .reward-popup {
+        transform: scale(1);
+    }
+    .reward-title {
+        color: #ffd700;
+        font-size: 1.6rem;
+        font-weight: bold;
+        margin-bottom: 20px;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+        letter-spacing: 2px;
+    }
+    .reward-content {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .reward-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .reward-icon-container {
+        font-size: 3rem;
+        margin-bottom: 8px;
+        filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.6));
+        animation: rewardBounce 0.5s ease-out;
+    }
+    @keyframes rewardBounce {
+        0% { transform: scale(0); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+    .reward-name {
+        color: #fff;
+        font-size: 1.1rem;
+        font-weight: bold;
+    }
+    .reward-close-btn {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white;
+        border: none;
+        padding: 12px 32px;
+        border-radius: 25px;
+        font-size: 1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+    }
+    .reward-close-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(37, 99, 235, 0.6);
+    }
+    .reward-mission-name {
+        color: #e0e7ff;
+        font-size: 1.1rem;
+        margin-bottom: 16px;
+    }
+`;
+document.head.appendChild(rewardPopupStyles);
 
 // グローバルに公開
 if (typeof window !== 'undefined') {
     window.UIManager = UIManager;
 }
+UIManager.init();

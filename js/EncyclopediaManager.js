@@ -97,11 +97,15 @@ const EncyclopediaManager = {
         if (progressDisplay) {
             // 通常種と称号付きの進捗を分けて表示
             progressDisplay.innerHTML = `
-                <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+                <div style="display: flex; gap: 20px; justify-content: center; align-items: center; flex-wrap: wrap;">
                     <span>通常種: ${caughtNormalCount} / ${totalNormalEntries}</span>
                     <span style="color: #ffd700; font-weight: bold; text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);">
                         ヌシ種: ${caughtSpecialCount}
                     </span>
+                    <button class="btn-main" style="padding: 4px 12px; font-size: 12px; margin-left: 10px;" onclick="UIManager.showScreen('stats')">
+                        <span class="material-icons" style="font-size: 16px; vertical-align: middle;">query_stats</span>
+                        戦績・実績を見る
+                    </button>
                 </div>
             `;
         }
