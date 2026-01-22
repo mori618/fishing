@@ -143,98 +143,77 @@
     <div id="help-modal" class="modal-overlay hidden">
         <div class="modal-content help-modal-content">
             <div class="modal-header">
-                <h2><span class="material-icons">help</span> 遊び方ガイド</h2>
+                <h2><span class="material-icons">auto_stories</span> 冒険の手引き</h2>
                 <button id="help-close-btn" class="btn-close"><span class="material-icons">close</span></button>
             </div>
             
             <div class="help-tabs">
                 <button class="help-tab active" data-target="help-fishing">釣り</button>
-                <button class="help-tab" data-target="help-town">町・店</button>
-                <button class="help-tab" data-target="help-skills">スキル</button>
-                <button class="help-tab" data-target="help-mission">ミッション</button>
+                <button class="help-tab" data-target="help-town">町・施設</button>
+                <button class="help-tab" data-target="help-growth">成長・要素</button>
+                <button class="help-tab" data-target="help-mission">任務</button>
             </div>
 
             <div class="help-body">
-                <!-- 釣りの遊び方 -->
                 <div id="help-fishing" class="help-section active">
-                    <h3>🎣 釣りの基本</h3>
-                    <div class="help-step">
-                        <span class="step-num">1</span>
-                        <div class="step-text">
-                            <strong>キャスト (投げる)</strong>
-                            <p>画面をタップするとウキを投げます。<br>※餌がないと投げられません。</p>
+                    <div class="help-hero-image">
+                        <span class="material-icons">phishing</span>
+                    </div>
+                    <h3>🎣 釣りの流れ</h3>
+                    <div class="help-step-container">
+                        <div class="help-step-card">
+                            <div class="step-num">1</div>
+                            <div class="step-text"><strong>キャスト</strong>画面タップでウキを投入！</div>
+                        </div>
+                        <div class="help-step-card">
+                            <div class="step-num">2</div>
+                            <div class="step-text"><strong>ヒット</strong>「！」が出たら即座にタップ！</div>
+                        </div>
+                        <div class="help-step-card">
+                            <div class="step-num">3</div>
+                            <div class="step-text"><strong>バトル</strong>赤ゾーンで止めて釣り上げろ！</div>
                         </div>
                     </div>
-                    <div class="help-step">
-                        <span class="step-num">2</span>
-                        <div class="step-text">
-                            <strong>ヒット待機</strong>
-                            <p>ウキが揺れている間は待ちます。<br>「！」マークが出たと同時にタップ！</p>
-                        </div>
-                    </div>
-                    <div class="help-step">
-                        <span class="step-num">3</span>
-                        <div class="step-text">
-                            <strong>バトル & 釣り上げ</strong>
-                            <p>魚のパワーが自分より高いと「ゲージバトル」発生！<br>左右に動くバーを<span style="color:var(--color-danger)">赤色のゾーン</span>で止めて釣り上げよう。</p>
-                        </div>
-                    </div>
-                    <div class="help-info-box">
-                        <small>💡 <strong>ヒント:</strong> 装備を強化すると、より強い魚が釣れるようになります。</small>
+                    <div class="help-info-box gold">
+                        <small>💡 <strong>コツ:</strong> 強い魚ほどバトルゲージが速くなります。竿を強化して挑みましょう。</small>
                     </div>
                 </div>
 
-                <!-- 町・店の説明 -->
                 <div id="help-town" class="help-section">
-                    <h3>🏘️ 町でできること</h3>
-                    <ul class="help-list">
-                        <li>
-                            <span class="icon">🐟</span>
-                            <strong>魚市場</strong>
-                            <p>釣った魚を売ってお金に換えよう。</p>
-                        </li>
-                        <li>
-                            <span class="icon">🎣</span>
-                            <strong>釣具店</strong>
-                            <p>新しい竿や、性能の良い餌を購入できます。</p>
-                        </li>
-                        <li>
-                            <span class="icon">🔮</span>
-                            <strong>スキルショップ</strong>
-                            <p>特殊な効果を持つスキルを習得・強化できます。</p>
-                        </li>
-                         <li>
-                            <span class="icon">🎰</span>
-                            <strong>カジノ</strong>
-                            <p>お金を増やしたり、レアな景品をゲットできるかも？</p>
-                        </li>
-                    </ul>
-                </div>
-
-                <!-- スキルの説明 -->
-                <div id="help-skills" class="help-section">
-                    <h3>⚡ スキルの使い方</h3>
-                    <p>スキルは持っているだけで効果を発揮する「パッシブスキル」が主です。</p>
-                    <div class="skill-example">
-                        <h4>代表的なスキル</h4>
-                        <dl>
-                            <dt>達人の針</dt>
-                            <dd>ゲージバトルで赤ゾーン成功率アップ！</dd>
-                            <dt>忍耐力</dt>
-                            <dd>魚がヒットするまでの待ち時間を短縮。</dd>
-                            <dt>値切りの極意</dt>
-                            <dd>ショップでの買い物が安くなる。</dd>
-                        </dl>
+                    <h3>🏘️ 町の施設案内</h3>
+                    <div class="help-grid">
+                        <div class="grid-item">
+                            <div class="item-icon"><span class="material-icons">storefront</span></div>
+                            <div class="item-info"><strong>釣具店</strong><p>強力な竿や効率の良い餌を購入できます。</p></div>
+                        </div>
+                        <div class="grid-item">
+                            <div class="item-icon"><span class="material-icons">auto_fix_high</span></div>
+                            <div class="item-info"><strong>スキル店</strong><p>釣りを有利にするパッシブスキルを習得！</p></div>
+                        </div>
+                        <div class="grid-item">
+                            <div class="item-icon"><span class="material-icons">casino</span></div>
+                            <div class="item-info"><strong>カジノ</strong><p>運を味方に。レアな景品やガシャ券を狙おう。</p></div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- ミッションの説明 -->
+                <div id="help-growth" class="help-section">
+                    <h3>✨ 重要な成長要素</h3>
+                    <div class="feature-card">
+                        <h4>🌞 フィーバーシステム</h4>
+                        <p>釣りを続けると太陽や月のレベルが上昇！最大になるとレア魚の出現率が大幅アップする「フィーバー」が発動します。</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🏆 魚ランク (D〜S)</h4>
+                        <p>魚にはランクがあり、高ランクほど高く売れます。図鑑を埋めてコンプリートを目指しましょう！</p>
+                    </div>
+                </div>
+
                 <div id="help-mission" class="help-section">
-                    <h3>📜 ミッションについて</h3>
-                    <p>画面左側に表示されるミッションをクリアすると、報酬がもらえます。</p>
+                    <h3>📜 冒険の証</h3>
                     <ul class="help-simple-list">
-                        <li>🔰 <strong>初心者ミッション:</strong> ゲームの基本を覚えるためのミッション。</li>
-                        <li>📅 <strong>デイリーミッション:</strong> 毎日更新されるミッション。お金やガチャチケットが貰えます。</li>
+                        <li><strong>初心者ミッション:</strong> 基本操作を学び、序盤の資金を確保しましょう。</li>
+                        <li><strong>ダイアリー任務:</strong> 毎日更新される目標。ガシャチケットが手に入ります。</li>
                     </ul>
                 </div>
             </div>
@@ -341,10 +320,9 @@
         </footer>
     </div>
 
-
     <!-- ========================================
-          ガチャ専用演出画面
-          ======================================== -->
+         ガチャ専用演出画面
+         ======================================== -->
     <div id="gacha-screen" class="screen">
         <div class="gacha-bg">
             <div class="gacha-particles" id="gacha-particles"></div>
@@ -387,6 +365,7 @@
     <script src="js/CasinoManager.js"></script>
     <script src="js/MissionManager.js"></script>
     <script src="js/EncyclopediaManager.js"></script>
+    <script src="js/SkillInventoryManager.js"></script>
     <script src="js/UIManager.js"></script>
     <script src="js/main.js"></script>
 </body>
