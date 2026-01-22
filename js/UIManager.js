@@ -1494,6 +1494,81 @@ const UIManager = {
             }
         };
         document.addEventListener('keydown', handleKeydown);
+    },
+
+    // ========================================
+    // ヘルプ画面
+    // ========================================
+    openHelp() {
+        const modal = document.getElementById('help-modal');
+        if (modal) {
+            modal.style.display = 'flex'; // フレックス表示を確実に
+            // requestAnimationFrameで少し遅らせてopacityを適用（transition有効化のため）
+            requestAnimationFrame(() => {
+                modal.classList.remove('hidden');
+            });
+            
+            // デフォルトタブをリセット（または前回の状態を記憶するか？今回はリセットで）
+            this.switchHelpTab('help-fishing');
+        }
+    },
+
+    closeHelp() {
+        const modal = document.getElementById('help-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+            // transition完了後にdisplay:noneにする（cssで pointer-events:none にしてるのでそのままでもいいが、念のため）
+            setTimeout(() => {
+                if (modal.classList.contains('hidden')) {
+                    modal.style.display = 'none';
+                }
+            }, 300);
+        }
+    },
+
+    switchHelpTab(targetId) {
+        // タブのアクティブ切り替え
+        document.querySelectorAll('.help-tab').forEach(tab => {
+            if (tab.dataset.target === targetId) {
+                tab.classList.add('active');
+            } else {
+                tab.classList.remove('active');
+            }
+        });
+
+        // コンテンツの表示切り替え
+        document.querySelectorAll('.help-section').forEach(section => {
+            if (section.id === targetId) {
+                section.classList.add('active');
+            } else {
+                section.classList.remove('active');
+            }
+        });
+    },
+
+    initHelp() {
+        // 閉じるボタン
+        const closeBtn = document.getElementById('help-close-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => this.closeHelp());
+        }
+
+        // タブ切り替え
+        document.querySelectorAll('.help-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                this.switchHelpTab(e.target.dataset.target);
+            });
+        });
+
+        // モーダル外クリックで閉じる
+        const modal = document.getElementById('help-modal');
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    this.closeHelp();
+                }
+            });
+        }
     }
 };
 

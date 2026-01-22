@@ -63,6 +63,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ヘルプボタン
+    const helpBtn = document.getElementById('help-btn');
+    if (helpBtn) {
+        helpBtn.addEventListener('click', () => {
+            UIManager.openHelp();
+        });
+    }
+    
+    // ヘルプ機能の初期化
+    if (UIManager.initHelp) {
+        UIManager.initHelp();
+    }
+
 
 
     // ========================================

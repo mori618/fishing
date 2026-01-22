@@ -4790,3 +4790,274 @@ body {
         transform: scale(0.65) rotate(10deg) translateY(20px) translateX(10px);
     }
 }
+
+/* ========================================
+   ヘルプモーダルスタイル
+   ======================================== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+    display: none;
+}
+
+.help-modal-content {
+    background: var(--bg-card);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    width: 90%;
+    max-width: 600px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-lg);
+    animation: modalSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    color: var(--text-primary);
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.modal-header h2 {
+    font-size: 1.25rem;
+    color: var(--accent-yellow);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: color 0.2s;
+    padding: 4px;
+}
+
+.btn-close:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+}
+
+.help-tabs {
+    display: flex;
+    gap: 4px;
+    padding: var(--spacing-md) var(--spacing-md) 0;
+    background: rgba(0, 0, 0, 0.1);
+    overflow-x: auto;
+}
+
+.help-tab {
+    flex: 1;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border: none;
+    color: var(--text-secondary);
+    border-radius: 8px 8px 0 0;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.help-tab.active {
+    background: var(--primary-dark);
+    color: white;
+}
+
+.help-tab:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.help-body {
+    padding: var(--spacing-lg);
+    overflow-y: auto;
+    flex: 1;
+}
+
+.help-section {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.help-section.active {
+    display: block;
+}
+
+.help-section h3 {
+    font-size: 1.1rem;
+    color: var(--ocean-surface);
+    margin-bottom: var(--spacing-md);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 4px;
+}
+
+/* 釣りの手順 */
+.help-step {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 12px;
+    border-radius: 8px;
+}
+
+.step-num {
+    background: var(--accent-yellow);
+    color: var(--bg-dark);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.step-text strong {
+    display: block;
+    color: var(--text-light);
+    margin-bottom: 4px;
+    font-size: 1rem;
+}
+
+.step-text p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0;
+}
+
+.help-info-box {
+    background: rgba(14, 165, 233, 0.15);
+    border: 1px solid rgba(14, 165, 233, 0.3);
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+.help-info-box small {
+    display: block;
+    color: var(--ocean-surface);
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+/* リストスタイル */
+.help-list, .help-simple-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.help-list li {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    align-items: flex-start;
+}
+
+.help-list .icon {
+    font-size: 1.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.help-list strong {
+    display: block;
+    color: var(--accent-yellow);
+    margin-bottom: 2px;
+}
+
+.help-list p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.help-simple-list li {
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    padding-left: 8px;
+    border-left: 3px solid var(--accent-yellow);
+}
+
+.help-simple-list strong {
+    color: var(--text-light);
+}
+
+/* スキル定義リスト */
+.skill-example dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px 16px;
+    margin: 0;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 16px;
+    border-radius: 8px;
+}
+
+.skill-example dt {
+    font-weight: bold;
+    color: var(--rarity-B);
+    grid-column: 1;
+}
+
+.skill-example dd {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    grid-column: 2;
+}
+
+.skill-example h4 {
+    margin: 0 0 10px 0;
+    font-size: 0.95rem;
+    color: var(--text-light);
+}
