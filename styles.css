@@ -1885,6 +1885,9 @@ body {
     flex: 1;
     overflow-y: auto;
     padding: var(--spacing-md);
+    /* スクロールバー非表示 */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
 }
 
 .upgrade-section {
@@ -2067,6 +2070,9 @@ body {
     max-width: 400px;
     max-height: 80vh;
     overflow-y: auto;
+    /* スクロールバー非表示 */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
 }
 
 .gacha-items-grid {
@@ -2839,6 +2845,9 @@ body {
     margin-bottom: var(--spacing-md);
     padding: 4px;
     /* スクロールバー用 */
+    /* スクロールバー非表示 */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
 }
 
 .recycle-item {
@@ -4375,6 +4384,9 @@ body {
     gap: 12px;
     max-height: 50vh;
     overflow-y: auto;
+    /* スクロールバー非表示 */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
     padding: 10px;
 }
 
@@ -4877,39 +4889,71 @@ body {
 
 .help-tabs {
     display: flex;
-    gap: 4px;
-    padding: var(--spacing-md) var(--spacing-md) 0;
-    background: rgba(0, 0, 0, 0.1);
+    gap: 0;
+    padding: 0 var(--spacing-md);
+    background: transparent;
     overflow-x: auto;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    /* スクロールバー非表示 */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+}
+
+.help-tabs::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
 }
 
 .help-tab {
     flex: 1;
-    padding: 8px 12px;
-    background: rgba(0, 0, 0, 0.3);
+    min-width: 80px;
+    padding: 12px 16px;
+    background: transparent;
     border: none;
+    border-bottom: 3px solid transparent;
     color: var(--text-secondary);
-    border-radius: 8px 8px 0 0;
+    border-radius: 0;
     font-size: 0.9rem;
     font-weight: bold;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s;
     white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: relative;
+    opacity: 0.7;
 }
 
 .help-tab.active {
-    background: var(--primary-dark);
-    color: white;
+    background: transparent;
+    color: var(--accent-yellow);
+    border-bottom: 3px solid var(--accent-yellow);
+    opacity: 1;
 }
 
 .help-tab:hover:not(.active) {
     background: rgba(255, 255, 255, 0.05);
+    opacity: 1;
+}
+
+.help-modal-content {
+    background: linear-gradient(135deg, #3e2723 0%, #2d1b18 100%) !important;
+    border: 3px solid #5d4037 !important;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .help-body {
     padding: var(--spacing-lg);
     overflow-y: auto;
-    flex: 1;
+    flex: 1; /* 残りの高さを埋める */
+    /* スクロールバー非表示 */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+}
+
+.help-body::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
 }
 
 .help-section {
@@ -5060,4 +5104,128 @@ body {
     margin: 0 0 10px 0;
     font-size: 0.95rem;
     color: var(--text-light);
+}
+
+/* ========================================
+   ブラッシュアップ用追加スタイル
+   ======================================== */
+
+.help-modal-content {
+    background: linear-gradient(135deg, #3e2723 0%, #2d1b18 100%) !important;
+    border: 3px solid #5d4037 !important;
+    overflow: hidden;
+}
+
+/* ヒーローイメージ領域 */
+.help-hero-image {
+    width: 100%;
+    height: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.help-hero-image .material-icons {
+    font-size: 48px;
+    color: var(--accent-yellow);
+    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.5));
+}
+
+/* ステップカード */
+.help-step-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.help-step-card {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.help-step-card .step-num {
+    background: var(--accent-yellow);
+    color: #3e2723;
+    font-weight: 900;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* グリッドレイアウト（施設案内用） */
+.help-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.grid-item {
+    display: flex;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.grid-item .item-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--secondary-dark);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-yellow);
+}
+
+.grid-item strong {
+    color: var(--accent-yellow);
+    display: block;
+    font-size: 0.95rem;
+}
+
+.grid-item p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* 特徴カード（フィーバーなど） */
+.feature-card {
+    background: linear-gradient(90deg, rgba(255, 215, 0, 0.1), transparent);
+    border-left: 3px solid var(--accent-yellow);
+    padding: 12px;
+    margin-bottom: 12px;
+    border-radius: 0 8px 8px 0;
+}
+
+.feature-card h4 {
+    margin: 0 0 4px 0;
+    color: var(--accent-yellow);
+    font-size: 1rem;
+}
+
+.feature-card p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+/* 情報ボックスの強調 */
+.help-info-box.gold {
+    background: rgba(255, 215, 0, 0.1);
+    border: 1px solid rgba(255, 215, 0, 0.3);
 }
