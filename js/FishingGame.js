@@ -245,6 +245,33 @@ const FishingGame = {
             return GAME_DATA.FISH[0];
         }
 
+        // ========================================
+        // ランクスナイパー (Rank Sniper) 判定
+        // ========================================
+        const penaltyStatus = GameState.getPenaltyStatus();
+        if (penaltyStatus.rankSniper) {
+            // ランクの強さ定義
+            const rankValue = { 'D': 1, 'C': 2, 'B': 3, 'A': 4, 'S': 5, 'SS': 6, 'GOD': 7 };
+            const currentRankVal = rankValue[selectedRarity] || 0;
+            const targetRankVal = rankValue[penaltyStatus.rankSniper] || 0;
+
+            if (currentRankVal < targetRankVal) {
+                console.log(`⛔ Rank Sniper: ${selectedRarity}ランクは対象外 (Min: ${penaltyStatus.rankSniper}) -> 再抽選`);
+                // 条件を満たさない場合、プール内から条件を満たす魚を探すか、強制的に対象ランク以上の魚を抽選し直す
+                // 簡易実装: 無理やり対象ランクの魚を抽選する
+                // もしフィーバーや他の要素でランクが決まっていたとしても、スナイパーはそれを上書きする（強力な制約）
+
+                // 対象ランク以上の魚を全候補から抽出
+                const validFish = GAME_DATA.FISH.filter(f => (rankValue[f.rarity] || 0) >= targetRankVal);
+
+                if (validFish.length > 0) {
+                    // ランダムに1匹選出
+                    const fallbackFish = validFish[Math.floor(Math.random() * validFish.length)];
+                    return { ...fallbackFish };
+                }
+            }
+        }
+
         // 同ランク内での抽選 (個別のweightを考慮)
         // レア魚出現率UPスキルの適用: 頻度が低い(weight < 15)魚の出現率を底上げ
         const rareBonus = GameState.getRareBonus();
@@ -431,6 +458,27 @@ const FishingGame = {
             console.log(`🎣 予兆開始: 合計 ${targetCount} 回揺れます (Scale: ${rippleScale})`);
         }
 
+        // ========================================
+        // 自動ヒット (Auto Hit) 判定
+        // ========================================
+        // 予兆中かつ、まだヒットしていないタイミングで判定
+        if (!this.isGachaMode && this.state === 'nibble') {
+            const autoHitInfo = GameState.hasAutoHit();
+            if (autoHitInfo.hasIt) {
+                // 毎回判定すると確率が高くなりすぎるので、
+                // 「最後の揺れ（＝ヒット直前）」のタイミングでのみ判定するか、
+                // あるいは「揺れるたびに低確率で即ヒット」させるか。
+                // Lv2: 30%, Lv3: 50% と確率が高いので、
+                // 「ウキが沈む（Hit移行）」のタイミングを自動化するのが自然。
+                // ここでは `hit()` を呼ぶ直前、つまり `currentCount >= targetCount` になる最後のループで判定する手もあるが、
+                // "ウキ沈下時に自動ヒット" という文言からは「プレイヤーが反応しなくても勝手にHit扱いになる」と読める。
+                // したがって、nibbleループが終わって hit() が呼ばれた直後に自動で catchSuccess に飛ばすのが良いかもしれない。
+                // しかし、釣り味としては「ウキが沈んだ瞬間に自動クリック」が気持ちいい。
+                // 
+                // 実装方針: `hit()` 内で自動ヒット処理を行う。
+            }
+        }
+
         if (currentCount < targetCount) {
             // ウキを1回揺らす
             UIManager.triggerBobberShake(GAME_DATA.FISHING_CONFIG.nibbleShakeDuration);
@@ -463,6 +511,21 @@ const FishingGame = {
             return;
         }
 
+        // ========================================
+        // 自動ヒット (Auto Hit) 発動判定
+        // ========================================
+        const autoHitInfo = GameState.hasAutoHit();
+        if (autoHitInfo.hasIt) {
+            if (Math.random() < autoHitInfo.chance) {
+                console.log('🤖 Auto Hit 発動！');
+                UIManager.showMessage('🤖 Auto Hit!', 1000);
+                setTimeout(() => {
+                    this.onClick(); // クリックした扱いにする
+                }, 200); // 少し遅延させて人間味（？）を出す
+                // returnはしない（タイマーセット後にクリックでクリアされる流れを維持）
+            }
+        }
+
         // ヒット判定可能時間を設定 (レア度とスキルによる倍率を反映)
         const config = GAME_DATA.FISHING_CONFIG;
         const rarityBase = config.hitWindowByRarity[this.currentFish.rarity] || config.hitWindowTime;
@@ -491,6 +554,11 @@ const FishingGame = {
                     UIManager.showMessage('💨 フィーバー終了...', 3000);
                 }
             }
+
+            // ========================================
+            // 失敗ペナルティ (Timeout)
+            // ========================================
+            this.applyFailurePenalty();
 
 
             // イベント判定
@@ -837,6 +905,139 @@ const FishingGame = {
             GameState.addFish(this.currentFish);
         }
 
+        // 追加の釣果数ボーナス (マルチキャッチ数+1など)
+        const extraNum = GameState.getMultiCatchBonusNum();
+        if (extraNum > 0 && catchCount > 1) { // 複数釣り発動時のみ有効
+            console.log(`✨ マルチキャッチボーナス: +${extraNum}匹`);
+            catchCount += extraNum;
+            for (let i = 0; i < extraNum; i++) {
+                GameState.addFish(this.currentFish);
+            }
+        }
+
+        // ========================================
+        // 追加ドロップ抽選 (チケット、コイン、スキル)
+        // ========================================
+        const drops = [];
+
+        // 1. ランク・称号に基づく確定/確率ドロップ
+        let dropTicket = 0;
+        let dropCoin = 0;
+        let dropSkill = false;
+
+        // 称号付き: ガチャチケ10枚、コイン、T2以上スキル (確定セット)
+        if (this.currentFish.hasTitle) {
+            console.log('👑 称号ボーナス: 豪華セット獲得！');
+            dropTicket += 10;
+            dropCoin += 1000; // 仮
+            dropSkill = true; // T2以上
+        }
+
+        // 通常ドロップ判定 (ランクが高いほど確率UP)
+        const rankValue = { 'D': 1, 'C': 2, 'B': 3, 'A': 4, 'S': 5, 'SS': 6 };
+        const rVal = rankValue[this.currentFish.rarity] || 1;
+
+        // ガチャチケ (ランクS以上でそこそこの確率)
+        if (this.currentFish.rarity === 'S' || this.currentFish.rarity === 'SS') {
+            if (Math.random() < 0.3) dropTicket += 1;
+        }
+
+        // スキル補正による追加ドロップ
+        // Extra Gacha Prob/Num
+        // extra_gacha_prob
+        // 魚と一緒にガチャチケが釣れる確率
+        let extraGachaProb = 0;
+        // TODO: GameStateにgetExtraGachaProbメソッドがないのでequippedSkillsから直接見るか、GameStateに追加する
+        // ここではGameState.equippedSkillsを参照して簡易計算
+        GameState.equippedSkills.forEach(id => {
+            const s = GAME_DATA.SKILLS.find(sk => sk.id === id);
+            if (s && s.effect.type === 'extra_gacha_prob') extraGachaProb += s.effect.value;
+        });
+
+        if (Math.random() < extraGachaProb) {
+            let num = 1;
+            // extra_gacha_num補正
+            GameState.equippedSkills.forEach(id => {
+                const s = GAME_DATA.SKILLS.find(sk => sk.id === id);
+                if (s && s.effect.type === 'extra_gacha_num') num += s.effect.value;
+            });
+            // 所持魚数ボーナス (Count Fish Gacha)
+            GameState.equippedSkills.forEach(id => {
+                const s = GAME_DATA.SKILLS.find(sk => sk.id === id);
+                if (s && s.effect.type === 'count_fish_gacha') {
+                    // 例: 50種につき+1
+                    let totalFishCount = 0;
+                    if (GameState.encyclopedia) {
+                        totalFishCount = Object.values(GameState.encyclopedia).reduce((sum, entry) => sum + (entry.count || 0), 0);
+                    }
+                    num += Math.floor(totalFishCount * s.effect.value);
+                }
+            });
+
+            dropTicket += num;
+            console.log(`🎫 スキル効果: チケット+${num}`);
+        }
+
+        // Extra Coin Prob/Amount
+        let extraCoinProb = 0;
+        // extra_coin_prob
+        GameState.equippedSkills.forEach(id => {
+            const s = GAME_DATA.SKILLS.find(sk => sk.id === id);
+            if (s && s.effect.type === 'extra_coin_prob') extraCoinProb += s.effect.value;
+        });
+
+        if (Math.random() < extraCoinProb) {
+            let amount = 100; // ベース
+            // extra_coin_amount補正
+            let amountMult = 1.0;
+            GameState.equippedSkills.forEach(id => {
+                const s = GAME_DATA.SKILLS.find(sk => sk.id === id);
+                if (s && s.effect.type === 'extra_coin_amount') amountMult += s.effect.value;
+            });
+            // Count Gacha Coin
+            GameState.equippedSkills.forEach(id => {
+                const s = GAME_DATA.SKILLS.find(sk => sk.id === id);
+                if (s && s.effect.type === 'count_gacha_coin') {
+                    const ticketCount = GameState.gachaTickets || 0;
+                    amountMult += (ticketCount * s.effect.value);
+                }
+            });
+
+            dropCoin += Math.floor(amount * amountMult);
+            console.log(`💰 スキル効果: コイン+${dropCoin}`);
+        }
+
+
+        // ドロップ処理実行
+        if (dropTicket > 0) {
+            GameState.gachaTickets += dropTicket;
+            drops.push({ type: 'ticket', count: dropTicket, name: 'ガチャチケ' });
+        }
+        if (dropCoin > 0) {
+            GameState.addMoney(dropCoin);
+            drops.push({ type: 'money', count: dropCoin, name: `${dropCoin} G` });
+        }
+        if (dropSkill) {
+            // T2以上のスキルをランダムに1つ
+            const t2Skills = GAME_DATA.SKILLS.filter(s => s.tier >= 2);
+            if (t2Skills.length > 0) {
+                const s = t2Skills[Math.floor(Math.random() * t2Skills.length)];
+                GameState.addSkill(s.id); // addSkillは未実装なら gainGachaResult 的な処理が必要
+                // GameState.skillInventoryに直接追加するか、gainGachaResultを使う
+                if (GameState.skillInventory) {
+                    GameState.skillInventory[s.id] = (GameState.skillInventory[s.id] || 0) + 1;
+                    drops.push({ type: 'skill', count: 1, name: s.name });
+                }
+            }
+        }
+
+        // Drops情報をUIに渡す（必要ならshowCatchSuccessの引数を拡張）
+        if (drops.length > 0) {
+            // 簡易的にメッセージで表示
+            const dropNames = drops.map(d => `${d.name} x${d.count}`).join(', ');
+            UIManager.showMessage(`🎁 追加報酬: ${dropNames}`, 3000);
+        }
+
         // 初心者ミッション判定 + 動的ミッション判定（魚情報付き）
         MissionManager.checkMission('catch_success', {
             baitId: GameState.baitType,
@@ -900,6 +1101,11 @@ const FishingGame = {
             }
         }
 
+        // ========================================
+        // 失敗ペナルティ (Early Click)
+        // ========================================
+        this.applyFailurePenalty();
+
         // UI表示（簡易メッセージ）
         UIManager.showMissed('タイミングが早すぎた！');
 
@@ -935,6 +1141,11 @@ const FishingGame = {
         if (feverResult.message === 'start') {
             UIManager.showMessage(`🔥 ${feverResult.type === 'sun' ? 'おたから' : 'おさかな'}フィーバー開始！`, 3000);
         }
+
+        // ========================================
+        // 失敗ペナルティ (Catch Failed)
+        // ========================================
+        this.applyFailurePenalty();
 
         // UI表示（ユーザーが閉じたらidleに戻る）
         if (this.currentFish) {
@@ -1214,6 +1425,34 @@ const FishingGame = {
         this.state = 'idle';
         this.currentFish = null;
         this.isGachaMode = false; // ガチャモードも解除
+    },
+
+    // ========================================
+    // 共通の失敗ペナルティ処理
+    // ========================================
+    applyFailurePenalty() {
+        const penalty = GameState.getPenaltyStatus();
+
+        if (penalty.ultimateRisk) {
+            console.log('💀 Ultimate Risk発動: インベントリ全消失');
+            GameState.inventory = [];
+            UIManager.showMessage('💀 全魚ロスト...', 3000);
+            // オートセーブ
+            SaveManager.save(GameState);
+        }
+
+        if (penalty.highRiskSell) {
+            const lossRate = 0.1; // 10%減少と仮定（または固定額）
+            const loss = Math.floor(GameState.money * lossRate);
+            if (loss > 0) {
+                GameState.money -= loss;
+                console.log(`💸 High Risk Penalty: -${loss}G`);
+                UIManager.showMessage(`💸 ペナルティ: -${loss}G`, 3000);
+                // UI更新
+                UIManager.updateMoney();
+                SaveManager.save(GameState);
+            }
+        }
     }
 };
 

@@ -298,13 +298,32 @@ const GameState = {
         const stars = this.rodStars; // Getterを使用
         let power = rod.basePower + (rod.starPowerBonus * stars);
 
-        // スキルボーナスを加算
+        // スキルボーナスを加算 (固定値)
         for (const skillId of this.equippedSkills) {
             const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'power_boost') {
+            if (!skill) continue;
+
+            if (skill.effect.type === 'power_boost') {
                 power += skill.effect.value;
             }
         }
+
+        // 動的ボーナスを加算 (所持スキル数依存など)
+        power += this.getDynamicPowerBonus();
+
+        // 倍率補正 (Overdrive, Ultimate Risk等)
+        let multiplier = 1.0;
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (!skill) continue;
+
+            if (skill.effect.type === 'overdrive') {
+                multiplier += skill.effect.power;
+            } else if (skill.effect.type === 'ultimate_risk') {
+                multiplier += skill.effect.power; // 通常 +1.0 (100%)
+            }
+        }
+        power = Math.floor(power * multiplier);
 
         // ========================================
         // フィーバーボーナス (月: お魚フィーバー)
@@ -326,6 +345,66 @@ const GameState = {
     },
 
     // ========================================
+    // 動的パワーボーナス (所持数依存)
+    // ========================================
+    getDynamicPowerBonus() {
+        let bonus = 0;
+        // スキル所持数を計算 (全ての所持スキルの個数)
+        let totalOwnedSkills = 0;
+        if (this.skillInventory) {
+            totalOwnedSkills = Object.values(this.skillInventory).reduce((sum, count) => sum + count, 0);
+        }
+
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'count_skill_power') {
+                bonus += totalOwnedSkills * skill.effect.value;
+            }
+        }
+        return Math.floor(bonus);
+    },
+
+    // ========================================
+    // 動的称号出現率補正 (所持魚依存)
+    // ========================================
+    getDynamicTitleChance() {
+        let multiplierAdd = 0; // 加算する倍率
+        // 図鑑の登録魚種数、または魚の総所持数
+        // ここでは「所持魚数（図鑑の合計数）」とします
+        let totalFishCount = 0;
+        if (this.encyclopedia) {
+            totalFishCount = Object.values(this.encyclopedia).reduce((sum, entry) => sum + (entry.count || 0), 0);
+        }
+
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'count_fish_title') {
+                // 例: 0.01% * 100匹 = +1% (倍率ではなく確率加算の可能性もあるが、仕様上は「称号付き出現率UP」なので倍率加算と仮定)
+                // 既存の TitleChanceMultiplier は +1.0 などを返しているため、ここでも加算値を返す
+                multiplierAdd += totalFishCount * skill.effect.value;
+            }
+        }
+        return multiplierAdd;
+    },
+
+    // ========================================
+    // 動的売却倍率補正 (チケット数依存)
+    // ========================================
+    getDynamicSellMultiplier() {
+        let multiplierAdd = 0;
+        const ticketCount = this.gachaTickets || 0;
+
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'count_gacha_sell') {
+                // 例: ticket 10枚 * 0.01 = +0.1 (10%)
+                multiplierAdd += ticketCount * skill.effect.value;
+            }
+        }
+        return multiplierAdd;
+    },
+
+    // ========================================
     // パワーのスキル補正を取得
     // ========================================
     getPowerBonus() {
@@ -344,11 +423,17 @@ const GameState = {
     // ========================================
     getGaugeSlowBonus() {
         let slowBonus = 0;
+        let speedMultiplier = 1.0; // Overdriveなどで速度が上がる場合用
 
         for (const skillId of this.equippedSkills) {
             const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'gauge_slow') {
+            if (!skill) continue;
+
+            if (skill.effect.type === 'gauge_slow') {
                 slowBonus += skill.effect.value;
+            } else if (skill.effect.type === 'overdrive') {
+                // 速度+20% -> slowBonusをマイナスにする（加速）
+                slowBonus -= skill.effect.speed;
             }
         }
 
@@ -363,12 +448,21 @@ const GameState = {
 
         for (const skillId of this.equippedSkills) {
             const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'price_boost') {
+            if (!skill) continue;
+
+            if (skill.effect.type === 'price_boost') {
                 bonus += skill.effect.value;
+            } else if (skill.effect.type === 'high_risk_sell') {
+                bonus += (skill.effect.priceMult - 1.0); // 1.5倍なら +0.5
+            } else if (skill.effect.type === 'quick_hit_penalty') {
+                bonus -= skill.effect.priceReduc; // -20% なら -0.2
             }
         }
 
-        return bonus;
+        // 動的補正を加算
+        bonus += this.getDynamicSellMultiplier();
+
+        return Math.max(bonus, -0.9); // 最低でも1割価格は保証
     },
 
     // ========================================
@@ -395,8 +489,20 @@ const GameState = {
 
         for (const skillId of this.equippedSkills) {
             const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'rare_boost') {
+            if (!skill) continue;
+
+            if (skill.effect.type === 'rare_boost') {
                 bonus += skill.effect.value;
+            } else if (skill.effect.type === 'rank_sniper') {
+                // スナイパーは特定ランク"しか"釣れなくするが、
+                // ここでは出現率ボーナスとしては扱わない（別途ロジックが必要）
+                // あるいは「下位が出なくなる＝上位の相対確率が上がる」？
+                // いったんスキップ
+            } else if (skill.effect.type === 'moon_rare_up') {
+                // 月の加護がある場合のみ
+                if (this.equippedSkills.includes('moon_blessing')) {
+                    bonus += skill.effect.value;
+                }
             }
         }
 
@@ -431,9 +537,18 @@ const GameState = {
         let totalMultiplier = 1.0;
         for (const skillId of this.equippedSkills) {
             const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'hit_window_mult') {
+            if (!skill) continue;
+
+            if (skill.effect.type === 'hit_window_mult') {
                 // 加算方式: 1.5倍なら+0.5を加算
                 totalMultiplier += (skill.effect.value - 1.0);
+            } else if (skill.effect.type === 'quick_hit_penalty') {
+                // 待ち時間短縮だがHitWindowも減る？ 
+                // data定義では `waitReduc` (待ち時間) と `priceReduc`
+                // `quick_hit_penalty` の説明は "ヒット待ち-50% & 売却価格減少" とあるので
+                // ここは HitWindow ではなく WaitTime のはず。
+                // もし "HitWindowも短くなる" ペナルティがあるならここに追加。
+                // data定義を確認すると `waitReduc` なので WaitTimeReduction で処理する。
             }
         }
         return totalMultiplier;
@@ -446,12 +561,16 @@ const GameState = {
         let reduction = 0;
         for (const skillId of this.equippedSkills) {
             const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'wait_time_reduction') {
+            if (!skill) continue;
+
+            if (skill.effect.type === 'wait_time_reduction') {
                 reduction += skill.effect.value;
+            } else if (skill.effect.type === 'quick_hit_penalty') {
+                reduction += skill.effect.waitReduc;
             }
         }
         // 最大100%カット（念のためキャップ）
-        return Math.min(reduction, 1.0);
+        return Math.min(reduction, 0.95); // 95%まで
     },
 
     // ========================================
@@ -508,6 +627,10 @@ const GameState = {
                 totalMultiplier += (skill.effect.value - 1.0);
             }
         }
+
+        // 動的補正を加算
+        totalMultiplier += this.getDynamicTitleChance();
+
         return totalMultiplier;
     },
 
@@ -527,14 +650,101 @@ const GameState = {
     },
 
     // ========================================
+    // ショップ割引率を取得
+    // ========================================
+    getShopDiscount() {
+        let discount = 0;
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'shop_discount') {
+                discount += skill.effect.value;
+            }
+        }
+        return Math.min(discount, 0.9); // 最大90%オフ
+    },
+
+    // ========================================
+    // 強化費用軽減率を取得
+    // ========================================
+    getUpgradeCostModifier() {
+        let reduction = 0;
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'upgrade_discount') {
+                reduction += skill.effect.value;
+            }
+        }
+        return Math.max(0, 1.0 - reduction); // 倍率を返す (0.9 = 10% off)
+    },
+
+    // ========================================
+    // 自動ヒット (Auto Hit) の確認
+    // ========================================
+    hasAutoHit() {
+        let bestChance = 0;
+        let hasIt = false;
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'auto_hit') {
+                hasIt = true;
+                // 重複した場合は一番高い確率を採用
+                if (skill.effect.value > bestChance) {
+                    bestChance = skill.effect.value;
+                }
+            }
+        }
+        return { hasIt, chance: bestChance };
+    },
+
+    // ========================================
+    // ペナルティ・リスク状態の確認
+    // ========================================
+    getPenaltyStatus() {
+        let status = {
+            highRiskSell: false,
+            highRiskPenaltyRate: 0,
+            ultimateRisk: false,
+            rankSniper: null, // "B", "A" etc
+        };
+
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (!skill) continue;
+
+            if (skill.effect.type === 'high_risk_sell') {
+                status.highRiskSell = true;
+                // ペナルティ率は加算（または最大値）
+                status.highRiskPenaltyRate = Math.max(status.highRiskPenaltyRate, skill.effect.penaltyRate);
+            } else if (skill.effect.type === 'ultimate_risk') {
+                status.ultimateRisk = true;
+            } else if (skill.effect.type === 'rank_sniper') {
+                // より厳しい条件（高いランク）で上書き
+                // B < A < S
+                const rankValue = { 'D': 1, 'C': 2, 'B': 3, 'A': 4, 'S': 5 };
+                if (!status.rankSniper || rankValue[skill.effect.minRarity] > rankValue[status.rankSniper]) {
+                    status.rankSniper = skill.effect.minRarity;
+                }
+            }
+        }
+        return status;
+    },
+
+    // ========================================
     // 宝箱出現確率のスキル補正を取得 (加算)
     // ========================================
     getTreasureChanceBonus() {
         let bonus = 0;
         for (const skillId of this.equippedSkills) {
             const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'treasure_boost') {
+            if (!skill) continue;
+
+            if (skill.effect.type === 'treasure_boost') {
                 bonus += skill.effect.value;
+            } else if (skill.effect.type === 'sun_chest_up') {
+                // 太陽の加護がある場合のみ
+                if (this.equippedSkills.includes('sun_blessing')) {
+                    bonus += skill.effect.value;
+                }
             }
         }
         return bonus;
@@ -547,8 +757,15 @@ const GameState = {
         let multiplier = 1.0;
         for (const skillId of this.equippedSkills) {
             const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'treasure_quantity') {
+            if (!skill) continue;
+
+            if (skill.effect.type === 'treasure_quantity') {
                 multiplier += skill.effect.value;
+            } else if (skill.effect.type === 'fever_treasure_boost') {
+                // フィーバー中のみ有効
+                if (this.fever.isActive) {
+                    multiplier += skill.effect.value;
+                }
             }
         }
         return multiplier;
@@ -575,7 +792,11 @@ const GameState = {
         let chance = 0;
         for (const skillId of this.equippedSkills) {
             const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'multi_catch_2') {
+            if (!skill) continue;
+
+            if (skill.effect.type === 'multi_catch_2') {
+                chance += skill.effect.value;
+            } else if (skill.effect.type === 'multi_catch_prob') {
                 chance += skill.effect.value;
             }
         }
@@ -594,6 +815,32 @@ const GameState = {
             }
         }
         return Math.min(chance, 1.0);
+    },
+
+    // ========================================
+    // マルチキャッチ時の追加匹数
+    // ========================================
+    getMultiCatchBonusNum() {
+        let num = 0;
+        // 動的計算: 所持スキル数依存など
+        let totalOwnedSkills = 0;
+        if (this.skillInventory) {
+            totalOwnedSkills = Object.values(this.skillInventory).reduce((sum, count) => sum + count, 0);
+        }
+
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (!skill) continue;
+
+            if (skill.effect.type === 'multi_catch_num') {
+                num += skill.effect.value;
+            } else if (skill.effect.type === 'count_skill_multi') {
+                // 例: 10個につき+1
+                // 値が0.1なら、10個で1.0 -> floorで1
+                num += Math.floor(totalOwnedSkills * skill.effect.value);
+            }
+        }
+        return num;
     },
 
     // ========================================
@@ -627,7 +874,9 @@ const GameState = {
             if (!skill) continue;
 
             if (skill.effect.type === 'mission_reward') {
-                modifier *= skill.effect.value;
+                modifier *= skill.effect.value; // 旧スキル
+            } else if (skill.effect.type === 'mission_reward_up') {
+                modifier += skill.effect.value; // 新スキル (+20% -> 1.2倍)
             } else if (skill.effect.type === 'stoic') {
                 modifier *= skill.effect.rewardMult;
             } else if (skill.effect.type === 'casual') {
@@ -635,7 +884,14 @@ const GameState = {
             }
         }
 
-        return modifier;
+        // 現在のパワーを反映 (パワー100につき+10%のボーナスと仮定)
+        // インフレしすぎないように調整
+        const totalPower = this.getTotalPower();
+        const powerBonus = totalPower / 1000.0; // パワー1000で+1.0倍(2倍)
+
+        modifier += powerBonus;
+
+        return Math.max(modifier, 0.1);
     },
 
     // ========================================
@@ -774,6 +1030,44 @@ const GameState = {
         // オートセーブ
         SaveManager.save(this);
 
+        // 売却時チケットドロップ判定 (sell_ticket_chance)
+        // 1回売却ごとの判定か、魚1匹ごとの判定か？
+        // 文言「売却時に確率で」なら売却アクション1回につき、と読めるが、
+        // 「大量に売るとお得」感を出すなら魚の数に依存させたい。
+        // ここでは「魚1匹につきそれぞれ抽選」だと処理が重い＆大量獲得すぎる可能性。
+        // -> 「一度の売却アクションで、(魚の数/10)回抽選」のようにスケールさせる、
+        // または「売却総額に応じて抽選」などが良い。
+        // シンプルに: 売却した魚の数だけループして判定（確率は低めに設定されている前提）
+
+        let earnedTickets = 0;
+        let ticketChance = 0;
+
+        // スキルから確率取得 (Tier1: 1%, Tier2: ? ...)
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'sell_ticket_chance') {
+                ticketChance += skill.effect.value;
+            }
+        }
+
+        if (ticketChance > 0) {
+            // まとめて計算 (二項分布的近似、または個別に回す)
+            // 個別に回す方が確実
+            let attemptCount = count; // 売った数だけ抽選
+
+            // パフォーマンス考慮: 数が多い場合は近似計算も検討だが、100匹程度ならループでOK
+            for (let i = 0; i < attemptCount; i++) {
+                if (Math.random() < ticketChance) {
+                    earnedTickets++;
+                }
+            }
+
+            if (earnedTickets > 0) {
+                this.gachaTickets += earnedTickets;
+                UIManager.showMessage(`🎫 売却ボーナス: チケット${earnedTickets}枚を獲得！`, 3000);
+            }
+        }
+
         return totalEarned;
     },
 
@@ -782,7 +1076,13 @@ const GameState = {
     // ========================================
     buyRod(rodIndex) {
         const rod = GAME_DATA.RODS[rodIndex];
-        if (!rod || this.money < rod.price) {
+        if (!rod) return false;
+
+        // 割引適用
+        const discount = this.getShopDiscount();
+        const finalPrice = Math.floor(rod.price * (1.0 - discount));
+
+        if (this.money < finalPrice) {
             return false;
         }
 
@@ -791,7 +1091,7 @@ const GameState = {
             return false;
         }
 
-        this.money -= rod.price;
+        this.money -= finalPrice;
         this.unlockedRods.push(rodIndex);
 
         // スキンをアンロック
@@ -867,7 +1167,13 @@ const GameState = {
     // ========================================
     buySky(skyId) {
         const sky = GAME_DATA.SKIES.find(s => s.id === skyId);
-        if (!sky || this.money < sky.price) {
+        if (!sky) return false;
+
+        // 割引適用
+        const discount = this.getShopDiscount();
+        const finalPrice = Math.floor(sky.price * (1.0 - discount));
+
+        if (this.money < finalPrice) {
             return false;
         }
 
@@ -876,7 +1182,7 @@ const GameState = {
             return false;
         }
 
-        this.money -= sky.price;
+        this.money -= finalPrice;
         this.unlockedSkies.push(skyId);
 
         // オートセーブ
@@ -950,7 +1256,12 @@ const GameState = {
     getUpgradeCost() {
         if (this.rodStars >= 5) return null;
         const rod = this.getCurrentRod();
-        return rod.upgradeCosts[this.rodStars];
+        let baseCost = rod.upgradeCosts[this.rodStars];
+
+        // スキルによる割引 (upgrade_discount)
+        const modifier = this.getUpgradeCostModifier(); // 1.0 (等倍) 〜 0.X (割引)
+
+        return Math.floor(baseCost * modifier);
     },
 
     // ========================================
@@ -958,11 +1269,17 @@ const GameState = {
     // ========================================
     buySkill(skillId) {
         const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-        if (!skill || this.money < skill.price) {
+        if (!skill) return false;
+
+        // 割引適用
+        const discount = this.getShopDiscount();
+        const finalPrice = Math.floor(skill.price * (1.0 - discount));
+
+        if (this.money < finalPrice) {
             return false;
         }
 
-        this.money -= skill.price;
+        this.money -= finalPrice;
 
         // 所持数を加算
         this.skillInventory[skillId] = (this.skillInventory[skillId] || 0) + 1;
@@ -1006,13 +1323,17 @@ const GameState = {
         // 要望により「個数を選べる」とあるので、単価計算ロジックが必要。
         // ここでは単純に bait.price は bait.quantity 個分の価格と仮定して、単価を算出します。
         const unitPrice = bait.quantity > 0 ? bait.price / bait.quantity : 0;
-        const totalCost = Math.ceil(unitPrice * amount);
+        const baseTotalCost = Math.ceil(unitPrice * amount);
 
-        if (this.money < totalCost) {
+        // 割引適用
+        const discount = this.getShopDiscount();
+        const finalCost = Math.floor(baseTotalCost * (1.0 - discount));
+
+        if (this.money < finalCost) {
             return false;
         }
 
-        this.money -= totalCost;
+        this.money -= finalCost;
 
         // 餌を追加
         if (this.baitInventory[baitId] === -1) {

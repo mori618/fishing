@@ -297,10 +297,18 @@ const ShopManager = {
                         </button>
                     `;
                 } else {
+                    // 割引計算
+                    const discount = GameState.getShopDiscount(); // 0.1 etc
+                    const finalPrice = Math.floor(sky.price * (1.0 - discount));
+                    const isDiscounted = discount > 0;
+
+                    const canBuy = GameState.money >= finalPrice;
+
                     actionHtml = `
                         <button class="btn btn-buy ${canBuy ? '' : 'disabled'}" 
                             onclick="ShopManager.buySky('${sky.id}')" ${canBuy ? '' : 'disabled'}>
-                            ¥${sky.price.toLocaleString()}
+                            ${isDiscounted ? `<span style="text-decoration:line-through; font-size:0.8em; color:#aaa;">¥${sky.price}</span> ` : ''}
+                            ¥${finalPrice.toLocaleString()}
                         </button>
                     `;
                 }
@@ -484,10 +492,19 @@ const ShopManager = {
                     ? (isEquipped
                         ? '<span class="status equipped">装備中</span>'
                         : `<button class="btn btn-equip" onclick="ShopManager.equipRod(${index})">装備</button>`)
-                    : `<button class="btn btn-buy ${canBuy ? '' : 'disabled'}" 
+                    : (() => {
+                        // 割引計算
+                        const discount = GameState.getShopDiscount();
+                        const finalPrice = Math.floor(rod.price * (1.0 - discount));
+                        const isDiscounted = discount > 0;
+                        const canBuy = !isUnlocked && GameState.money >= finalPrice;
+
+                        return `<button class="btn btn-buy ${canBuy ? '' : 'disabled'}" 
                             onclick="ShopManager.buyRod(${index})" ${canBuy ? '' : 'disabled'}>
-                            ¥${rod.price.toLocaleString()}
-                          </button>`
+                            ${isDiscounted ? `<span style="text-decoration:line-through; font-size:0.8em; color:#aaa;">¥${rod.price}</span> ` : ''}
+                            ¥${finalPrice.toLocaleString()}
+                          </button>`;
+                    })()
                 }
                 </div>
             `;
@@ -639,7 +656,7 @@ const ShopManager = {
         const container = document.getElementById('shop-items');
         // SkillInventoryManagerに描画を委譲（コンテナを渡す）
         SkillInventoryManager.init(container);
-        
+
         // スキルスロット情報（上部ボックス）更新
         this.renderSkillSlotInfo();
 
@@ -945,7 +962,7 @@ const ShopManager = {
 
         // アクティブな効果を収集
         const effects = [];
-        
+
         const power = GameState.getPowerBonus();
         if (power > 0) effects.push({ label: 'パワー', val: `+${power}` });
 
@@ -1026,7 +1043,7 @@ const ShopManager = {
 
         const missionR = GameState.getMissionRewardModifier();
         if (missionR > 1.0) effects.push({ label: '報酬ボーナス', val: `x${missionR.toFixed(2)}` });
-        
+
         let effectsHtml = '';
         if (effects.length > 0) {
             effectsHtml = `
@@ -1039,7 +1056,7 @@ const ShopManager = {
                 </div>
             `;
         } else {
-             effectsHtml = '<span style="color:#888; font-size:11px;">なし</span>';
+            effectsHtml = '<span style="color:#888; font-size:11px;">なし</span>';
         }
 
         container.innerHTML = `
@@ -1084,11 +1101,21 @@ const ShopManager = {
                     </div>
                 </div>
                 <div class="item-action">
-                    <button class="btn btn-buy ${canBuy ? '' : 'disabled'}" 
-                        onclick="ShopManager.buyBait('${bait.id}')" ${canBuy ? '' : 'disabled'}>
-                        ¥${bait.price.toLocaleString()}
-                    </button>
-                </div>
+                    ${(() => {
+                    // 割引計算
+                    const discount = GameState.getShopDiscount();
+                    const finalPrice = Math.floor(bait.price * (1.0 - discount));
+                    const isDiscounted = discount > 0;
+                    const canBuy = GameState.money >= finalPrice; // ここで再チェックが必要（元のcanBuyは定価ベースだった）
+                    // 描画ループ外の canBuy 変数は定価ベースなので、ボタン内のクラスもここで判定する
+
+                    return `<button class="btn btn-buy ${canBuy ? '' : 'disabled'}" 
+                            onclick="ShopManager.buyBait('${bait.id}')" ${canBuy ? '' : 'disabled'}>
+                             ${isDiscounted ? `<span style="text-decoration:line-through; font-size:0.8em; color:#aaa;">¥${bait.price}</span> ` : ''}
+                            ¥${finalPrice.toLocaleString()}
+                        </button>`;
+                })()}
+
             `;
 
             container.appendChild(item);
