@@ -285,6 +285,14 @@ const FishingGame = {
                 // 例: bonus 0.2 (+20%) -> weight * 1.4 
                 effectiveWeight = f.weight * (1 + rareBonus * 2.0);
             }
+
+            // 未登録魚ボーナス (New Fish Finder)
+            const newFishBonus = GameState.getNewFishBonus();
+            const isUnknown = !GameState.encyclopedia[f.id] || GameState.encyclopedia[f.id].count === 0;
+            if (newFishBonus > 1.0 && isUnknown) {
+                effectiveWeight *= newFishBonus;
+                // console.log(`🔍 未登録ボーナス適用: ${f.name} (x${newFishBonus})`);
+            }
             return { fish: f, weight: effectiveWeight };
         });
 
@@ -832,7 +840,10 @@ const FishingGame = {
                     this.catchSuccess();
                 }
             } else {
-                this.catchFailed();
+                // 赤ゲージで止めた場合はペナルティ免除 (成功率の壁で逃げられただけなので)
+                // それ以外の色で止めて失敗した場合はペナルティ対象
+                const skipPenalty = (zone === 'red');
+                this.catchFailed(skipPenalty);
             }
         }, 1000);
     },
@@ -1122,7 +1133,7 @@ const FishingGame = {
     // ========================================
     // 釣り上げ失敗
     // ========================================
-    catchFailed() {
+    catchFailed(skipPenalty = false) {
         // すべてのタイマーとアニメーションをクリア
         this.cleanupTimers();
 
@@ -1145,7 +1156,9 @@ const FishingGame = {
         // ========================================
         // 失敗ペナルティ (Catch Failed)
         // ========================================
-        this.applyFailurePenalty();
+        if (!skipPenalty) {
+            this.applyFailurePenalty();
+        }
 
         // UI表示（ユーザーが閉じたらidleに戻る）
         if (this.currentFish) {

@@ -567,6 +567,9 @@ const GameState = {
                 reduction += skill.effect.value;
             } else if (skill.effect.type === 'quick_hit_penalty') {
                 reduction += skill.effect.waitReduc;
+            } else if (skill.effect.type === 'new_fish_finder') {
+                // 待ち時間ペナルティ (増加) -> reductionを減らす (マイナスになると増える)
+                reduction -= skill.effect.waitIncrease;
             }
         }
         // 最大100%カット（念のためキャップ）
@@ -784,6 +787,22 @@ const GameState = {
         }
         return multiplier;
     },
+
+    // ========================================
+    // 未登録魚出現率のスキル補正を取得 (倍率)
+    // ========================================
+    getNewFishBonus() {
+        let bonus = 1.0;
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'new_fish_finder') {
+                bonus *= skill.effect.value;
+            }
+        }
+        return bonus;
+    },
+
+
 
     // ========================================
     // ダブルキャッチ (2匹釣り) 確率を取得
@@ -1007,6 +1026,7 @@ const GameState = {
 
     sellAllFish() {
         const priceBonus = this.getPriceBonus();
+        const count = this.inventory.length;
         let totalEarned = 0;
 
         for (const fish of this.inventory) {

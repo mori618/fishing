@@ -1005,15 +1005,15 @@ const SKILLS = [
         id: 'high_risk_sell_2',
         name: '闇取引 II',
         description: '売却価格1.5倍 & 釣り失敗時に所持金減少(小)',
-        effect: { type: 'high_risk_sell', priceMult: 1.5, penaltyRate: 0.05 },
+        effect: { type: 'high_risk_sell', priceMult: 1.5, penaltyRate: 0.1 },
         price: 5000,
         tier: 2
     },
     {
         id: 'high_risk_sell_3',
         name: '闇取引 III',
-        description: '売却価格2倍 & 釣り失敗時に所持金減少(大)',
-        effect: { type: 'high_risk_sell', priceMult: 2.0, penaltyRate: 0.1 },
+        description: '売却価格3倍 & 釣り失敗時に所持金減少(大)',
+        effect: { type: 'high_risk_sell', priceMult: 2.0, penaltyRate: 0.3 },
         price: 15000,
         tier: 3
     },
@@ -1108,23 +1108,6 @@ const SKILLS = [
         tier: 3
     },
 
-    // リサイクルブースト (Recycle Boost)
-    {
-        id: 'recycle_boost_2',
-        name: 'リサイクル上手 II',
-        description: 'スキルリサイクル時の上位変換率アップ(小)',
-        effect: { type: 'recycle_boost', value: 1.2 }, // 1.2倍
-        price: 5000,
-        tier: 2
-    },
-    {
-        id: 'recycle_boost_3',
-        name: 'リサイクル上手 III',
-        description: 'スキルリサイクル時の上位変換率アップ(大)',
-        effect: { type: 'recycle_boost', value: 1.5 }, // 1.5倍
-        price: 15000,
-        tier: 3
-    },
 
     // 強化割引 (Upgrade Discount)
     {
@@ -1172,11 +1155,27 @@ const SKILLS = [
 
     // 未登録魚探索 (New Fish Finder)
     {
-        id: 'new_fish_finder',
-        name: '未知への探求',
-        description: '図鑑未登録魚の出現率UP',
-        effect: { type: 'new_fish_finder', value: 2.0 }, // 2倍
-        price: 20000,
+        id: 'new_fish_finder_1',
+        name: '未知への探求 I',
+        description: '未登録魚率UP(小) & 待ち時間+40%',
+        effect: { type: 'new_fish_finder', value: 1.5, waitIncrease: 0.4 },
+        price: 5000,
+        tier: 1
+    },
+    {
+        id: 'new_fish_finder_2',
+        name: '未知への探求 II',
+        description: '未登録魚率UP(中) & 待ち時間+25%',
+        effect: { type: 'new_fish_finder', value: 2.0, waitIncrease: 0.25 },
+        price: 15000,
+        tier: 2
+    },
+    {
+        id: 'new_fish_finder_3',
+        name: '未知への探求 III',
+        description: '未登録魚率UP(大) & 待ち時間+10%',
+        effect: { type: 'new_fish_finder', value: 3.0, waitIncrease: 0.1 },
+        price: 40000,
         tier: 3
     },
 
@@ -1351,7 +1350,7 @@ const SKILLS = [
         id: 'count_fish_gacha',
         name: '魚コレクター (券)',
         description: '所持魚数に応じて追加ガチャチケ数UP',
-        effect: { type: 'count_fish_gacha', value: 0.05 },
+        effect: { type: 'count_fish_gacha', value: 0.1 },
         price: 40000,
         tier: 3
     },
@@ -1367,7 +1366,7 @@ const SKILLS = [
         id: 'count_fish_title',
         name: '魚コレクター (名)',
         description: '所持魚数に応じて称号付き出現率UP',
-        effect: { type: 'count_fish_title', value: 0.01 },
+        effect: { type: 'count_fish_title', value: 0.05 },
         price: 40000,
         tier: 3
     },

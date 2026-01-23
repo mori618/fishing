@@ -668,20 +668,57 @@ const ShopManager = {
         if (!container) return;
 
         const selectedCount = this.recycleSelectedSkills.length;
-        const canExecute = selectedCount === 5;
+
+        // 選択されたスキルのTierチェック（混在不可）
+        let selectedTier = null;
+        let isMixed = false;
+        if (selectedCount > 0) {
+            const firstSkill = GAME_DATA.SKILLS.find(s => s.id === this.recycleSelectedSkills[0]);
+            if (firstSkill) {
+                selectedTier = firstSkill.tier;
+                // 全て同じTierか確認
+                isMixed = !this.recycleSelectedSkills.every(id => {
+                    const s = GAME_DATA.SKILLS.find(sk => sk.id === id);
+                    return s && s.tier === selectedTier;
+                });
+            }
+        }
+
+        // 交換レート判定
+        let exchangeResult = null;
+        if (selectedCount >= 30) {
+            exchangeResult = `Tier ${Math.min(3, selectedTier + 2)} 確定！`; // +2 rank
+        } else if (selectedCount >= 10) {
+            exchangeResult = `Tier ${Math.min(3, selectedTier + 1)} 確定！`; // +1 rank
+        } else if (selectedCount >= 5) {
+            exchangeResult = `Tier ${selectedTier} (同ランク) 確定`;
+        }
+
+        const canExecute = !isMixed && (selectedCount === 5 || selectedCount === 10 || selectedCount === 30);
+
+        let warningMsg = '';
+        if (isMixed) warningMsg = '<span style="color:red; font-size:0.8em;">異なるTierが混ざっています</span>';
+        else if (selectedCount > 0 && !canExecute) warningMsg = '<span style="color:orange; font-size:0.8em;">5個, 10個, 30個のいずれかを選択してください</span>';
 
         let html = `
             <div class="recycle-header">
-                <h3>♻️ エコ・ボックス (リサイクルガチャ)</h3>
-                <p class="recycle-desc">不要なスキル5個で、新しいスキル1個と交換！(Tier1:40% / Tier2:50% / Tier3:10%)</p>
+                <h3>♻️ エコ・ボックス (確定的リサイクル)</h3>
+                <p class="recycle-desc">
+                    同ランクのスキルを集めて上位スキルと交換！<br>
+                    5個: 同ランク1個 / 10個: 1ランクUP / 30個: 2ランクUP
+                </p>
             </div>
             
             <div class="recycle-controls">
                 <div class="recycle-status">
-                    選択中: <span class="select-count ${canExecute ? 'complete' : ''}">${selectedCount}/5</span>
+                    選択中: <span class="select-count ${canExecute ? 'complete' : ''}">${selectedCount}</span>
+                    ${exchangeResult ? `<br><span class="exchange-result">➡ ${exchangeResult}</span>` : ''}
+                    ${warningMsg}
                 </div>
                 <div class="recycle-actions">
-                    <button class="btn btn-mini" onclick="ShopManager.selectBulkRecycle(1)">Tier1を一括選択</button>
+                    <button class="btn btn-mini" onclick="ShopManager.selectBulkRecycle(null, 5)">5個選択</button>
+                    <button class="btn btn-mini" onclick="ShopManager.selectBulkRecycle(null, 10)">10個選択</button>
+                    <button class="btn btn-mini" onclick="ShopManager.selectBulkRecycle(null, 30)">30個選択</button>
                     <button class="btn btn-mini" onclick="ShopManager.recycleSelectedSkills = []; ShopManager.renderShop();">クリア</button>
                 </div>
             </div>
@@ -706,19 +743,24 @@ const ShopManager = {
             html += '<div class="no-skills">リサイクル可能なスキルがありません</div>';
         } else {
             skills.forEach(skill => {
-                // 所持数分だけ個別に表示するのは大変なので、スキルごとに選択数を管理するUIにする
-                // ここではシンプルに「所持数-装備数」分だけ選択可能とする
                 const available = skill.count - skill.equipped;
                 const selected = this.recycleSelectedSkills.filter(id => id === skill.id).length;
                 const isSelected = selected > 0;
 
                 // 選択可能な残り数
                 const remaining = available - selected;
-                const canSelectMore = remaining > 0 && this.recycleSelectedSkills.length < 5;
+
+                // Tier混在防止: 既に選択済みがあり、かつ違うTierなら選択不可にする
+                let disabled = false;
+                if (selectedTier !== null && skill.tier !== selectedTier && !isSelected) {
+                    disabled = true;
+                }
+
+                const canSelectMore = remaining > 0 && this.recycleSelectedSkills.length < 30;
 
                 html += `
-                    <div class="recycle-item tier-${skill.tier} ${isSelected ? 'selected' : ''} ${remaining === 0 ? 'dimmed' : ''}"
-                         onclick="${canSelectMore || isSelected ? `ShopManager.toggleRecycleSelect('${skill.id}')` : ''}">
+                    <div class="recycle-item tier-${skill.tier} ${isSelected ? 'selected' : ''} ${remaining === 0 || disabled ? 'dimmed' : ''}"
+                         onclick="${(canSelectMore || isSelected) && !disabled ? `ShopManager.toggleRecycleSelect('${skill.id}')` : ''}">
                         <div class="recycle-item-icon">
                             <span class="material-icons">auto_awesome</span>
                         </div>
@@ -739,7 +781,7 @@ const ShopManager = {
             <div class="recycle-execute">
                 <button class="btn btn-recycle ${canExecute ? '' : 'disabled'}" 
                         onclick="ShopManager.executeRecycle()" ${canExecute ? '' : 'disabled'}>
-                    ♻️ リサイクル実行！
+                    ♻️ 交換する！
                 </button>
             </div>
         `;
@@ -753,12 +795,23 @@ const ShopManager = {
     toggleRecycleSelect(skillId) {
         const index = this.recycleSelectedSkills.indexOf(skillId);
         const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+
+        // Tierチェック
+        if (this.recycleSelectedSkills.length > 0) {
+            const firstId = this.recycleSelectedSkills[0];
+            const firstSkill = GAME_DATA.SKILLS.find(s => s.id === firstId);
+            if (firstSkill && firstSkill.tier !== skill.tier) {
+                // 違うTierは選択解除のみ許可、追加は不可
+                if (index === -1) return;
+            }
+        }
+
         const owned = GameState.getSkillCount(skillId);
         const equipped = GameState.getEquippedSkillCount(skillId);
         const available = owned - equipped;
         const currentSelected = this.recycleSelectedSkills.filter(id => id === skillId).length;
 
-        if (this.recycleSelectedSkills.length < 5 && currentSelected < available) {
+        if (this.recycleSelectedSkills.length < 30 && currentSelected < available) {
             this.recycleSelectedSkills.push(skillId);
         } else if (currentSelected > 0) {
             // 1つ削除
@@ -774,23 +827,54 @@ const ShopManager = {
     // ========================================
     // 一括選択
     // ========================================
-    selectBulkRecycle(tier) {
+    selectBulkRecycle(tierOrNull, count = 5) {
         this.recycleSelectedSkills = []; // リセット
 
-        const candidates = [];
-        GAME_DATA.SKILLS.forEach(skill => {
-            if (skill.tier === tier) {
-                const owned = GameState.getSkillCount(skill.id);
-                const equipped = GameState.getEquippedSkillCount(skill.id);
-                const available = owned - equipped;
-                for (let i = 0; i < available; i++) {
-                    candidates.push(skill.id);
-                }
-            }
-        });
+        // Tierが指定されていない場合、一番低いTierから候補を探す
+        // あるいは所持数が多いTier
+        let targetTier = 1;
 
-        // 最大5個まで選択
-        for (let i = 0; i < 5 && i < candidates.length; i++) {
+        // 候補検索
+        let candidates = [];
+
+        // Tier 1, 2, 3 の順で、指定個数以上持っているかチェック
+        for (let t = 1; t <= 3; t++) {
+            let tempCandidates = [];
+            GAME_DATA.SKILLS.forEach(skill => {
+                if (skill.tier === t) {
+                    const owned = GameState.getSkillCount(skill.id);
+                    const equipped = GameState.getEquippedSkillCount(skill.id);
+                    const available = owned - equipped;
+                    for (let i = 0; i < available; i++) {
+                        tempCandidates.push(skill.id);
+                    }
+                }
+            });
+
+            if (tempCandidates.length >= count) {
+                candidates = tempCandidates;
+                targetTier = t;
+                break;
+            }
+        }
+
+        // 見つからなければTier1から詰め込む（不足状態）
+        if (candidates.length < count) {
+            // 再検索してとにかく集める
+            GAME_DATA.SKILLS.forEach(skill => {
+                if (skill.tier === 1) { // デフォルトTier1
+                    const owned = GameState.getSkillCount(skill.id);
+                    const equipped = GameState.getEquippedSkillCount(skill.id);
+                    const available = owned - equipped;
+                    for (let i = 0; i < available; i++) {
+                        candidates.push(skill.id);
+                    }
+                }
+            });
+        }
+
+        // 指定個数まで選択
+        for (let i = 0; i < count && i < candidates.length; i++) {
             this.recycleSelectedSkills.push(candidates[i]);
         }
 
@@ -801,10 +885,34 @@ const ShopManager = {
     // リサイクル実行
     // ========================================
     executeRecycle() {
-        if (this.recycleSelectedSkills.length !== 5) {
-            UIManager.showMessage('スキルを5個選択してください');
+        const count = this.recycleSelectedSkills.length;
+        if (count !== 5 && count !== 10 && count !== 30) {
+            UIManager.showMessage('スキルを5個、10個、または30個選択してください');
             return;
         }
+
+        // 入力Tierの特定
+        const firstId = this.recycleSelectedSkills[0];
+        const firstSkill = GAME_DATA.SKILLS.find(s => s.id === firstId);
+        if (!firstSkill) return;
+
+        const inputTier = firstSkill.tier;
+
+        // 混在チェック
+        const isMixed = !this.recycleSelectedSkills.every(id => {
+            const s = GAME_DATA.SKILLS.find(sk => sk.id === id);
+            return s && s.tier === inputTier;
+        });
+
+        if (isMixed) {
+            UIManager.showMessage('同じTierのスキルを選択してください');
+            return;
+        }
+
+        // 出力Tierの決定
+        let outputTier = inputTier;
+        if (count === 10) outputTier = Math.min(3, inputTier + 1);
+        else if (count === 30) outputTier = Math.min(3, inputTier + 2);
 
         // スキル消費
         this.recycleSelectedSkills.forEach(skillId => {
@@ -813,19 +921,39 @@ const ShopManager = {
             }
         });
 
-        // 抽選
-        const result = this.lottery(GAME_DATA.RECYCLE_RATES);
+        // 抽選 (指定Tierの中からランダム)
+        const result = this.pickSkillByTier(outputTier, count === 5 ? null : 'upgrade'); // 同ランク交換の場合は完全ランダム、昇格時は...？
+        // ※ pickSkillByTierの実装に依存するが、ここでは単純に指定Tierから選ぶメソッドと仮定
+        // 既存の pickSkillByTier は 'tier1', 'tier2' 文字列を受け取る実装が多いので確認が必要
+        // 既存コードには pickSkillByTier が見当たらない（前回のview_fileで範囲外だったか、lottery内部で管理されているか）
+        // 下記で self implementation する
 
         // 選択状態リセット
         this.recycleSelectedSkills = [];
-        this.renderShop(); // カウント更新のため再描画
-        UIManager.updateMoney(); // 必要なら
+        this.renderShop();
+        UIManager.updateMoney();
 
-        // ガチャ演出へ (単発扱い)
+        // 獲得処理
+        GameState.gainGachaResult(result);
+
         UIManager.showGachaResult([result], () => {
-            ShopManager.renderShop(); // リサイクルはショップ画面内
+            ShopManager.renderShop();
         });
     },
+
+    // Tier指定でランダムなスキルを1つ選ぶ
+    pickSkillByTier(tierNum) {
+        const pool = GAME_DATA.SKILLS.filter(s => s.tier === tierNum);
+        if (pool.length === 0) return GAME_DATA.SKILLS[0]; // fallback
+
+        const selected = pool[Math.floor(Math.random() * pool.length)];
+        return {
+            ...selected,
+            category: 'skill', // 演出用
+            isNew: !GameState.hasSkill(selected.id)
+        };
+    },
+
 
     // ========================================
     // ガチャ抽選 (汎用)
