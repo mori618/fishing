@@ -1228,21 +1228,28 @@ const ShopManager = {
                         ${bait.quantity}個入り
                     </div>
                 </div>
-                <div class="item-action">
+                <div class="item-action bait-purchase-grid" style="display: flex; gap: 8px; flex-direction: column; min-width: 140px;">
                     ${(() => {
-                    // 割引計算
-                    const discount = GameState.getShopDiscount();
-                    const finalPrice = Math.floor(bait.price * (1.0 - discount));
-                    const isDiscounted = discount > 0;
-                    const canBuy = GameState.money >= finalPrice; // ここで再チェックが必要（元のcanBuyは定価ベースだった）
-                    // 描画ループ外の canBuy 変数は定価ベースなので、ボタン内のクラスもここで判定する
+                        // 割引計算
+                        const discount = GameState.getShopDiscount();
+                        const buttonsHtml = [1, 10].map(multiplier => {
+                            const finalPrice = Math.floor(bait.price * multiplier * (1.0 - discount));
+                            const canBuy = GameState.money >= finalPrice;
+                            const isDiscounted = discount > 0;
+                            const label = multiplier === 1 ? '1セット' : `${multiplier}セット`;
 
-                    return `<button class="btn btn-buy ${canBuy ? '' : 'disabled'}" 
-                            onclick="ShopManager.buyBait('${bait.id}')" ${canBuy ? '' : 'disabled'}>
-                             ${isDiscounted ? `<span style="text-decoration:line-through; font-size:0.8em; color:#aaa;">¥${bait.price}</span> ` : ''}
-                            ¥${finalPrice.toLocaleString()}
-                        </button>`;
-                })()}
+                            return `
+                                <button class="btn btn-buy ${canBuy ? '' : 'disabled'}" 
+                                        style="width: 100%; border-radius: 50px; font-weight: bold; box-shadow: 0 4px 0 #e08e0b;"
+                                        onclick="ShopManager.buyBait('${bait.id}', ${multiplier})" ${canBuy ? '' : 'disabled'}>
+                                    <div style="font-size: 0.9em;">${label}</div>
+                                    <div style="font-size: 1.0em;">¥${finalPrice.toLocaleString()}</div>
+                                </button>
+                            `;
+                        }).join('');
+
+                        return buttonsHtml;
+                    })()}
 
             `;
 
@@ -1359,15 +1366,21 @@ const ShopManager = {
     // ========================================
     // 餌購入
     // ========================================
-    buyBait(baitId) {
+    buyBait(baitId, multiplier = 1) {
         const bait = GAME_DATA.BAITS.find(b => b.id === baitId);
-        if (GameState.buyBait(baitId)) {
-            UIManager.showMessage(`${bait.name}を購入しました！`);
+        if (!bait) return;
+
+        const totalQuantity = bait.quantity * multiplier;
+
+        if (GameState.buyBait(baitId, totalQuantity)) {
+            UIManager.showMessage(`${bait.name}を${totalQuantity}個(${multiplier}セット)購入しました！`);
             this.renderShop();
             UIManager.updateMoney();
 
             // 初心者ミッション判定: 餌を買う
             MissionManager.checkMission('buy_bait');
+        } else {
+            UIManager.showMessage('お金が足りません！');
         }
     },
 

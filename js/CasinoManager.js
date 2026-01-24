@@ -476,6 +476,10 @@ const CasinoManager = {
 
         if (moneyChange > 0) {
             GameState.casinoTotalWin += moneyChange;
+            // ミッション進捗更新（コイン獲得）
+            if (typeof MissionManager !== 'undefined') {
+                MissionManager.checkMission('money_earned', { amount: moneyChange });
+            }
         } else if (moneyChange < 0) {
             GameState.casinoTotalLoss += Math.abs(moneyChange);
         }
