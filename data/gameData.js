@@ -924,6 +924,503 @@ const SKILLS = [
         effect: { type: 'casual', targetMult: 0.5, rewardMult: 1.0 },
         price: 20000,
         tier: 3
+    },
+
+    // ========================================
+    // 新規追加スキル群 (Mission / Risk / Eco / Etc)
+    // ========================================
+
+    // ミッション報酬増 (Mission Reward Up)
+    {
+        id: 'mission_reward_up_1',
+        name: '報酬アップ I',
+        description: 'ミッション報酬+20%',
+        effect: { type: 'mission_reward_up', value: 0.2 },
+        price: 500,
+        tier: 1
+    },
+    {
+        id: 'mission_reward_up_2',
+        name: '報酬アップ II',
+        description: 'ミッション報酬+40%',
+        effect: { type: 'mission_reward_up', value: 0.4 },
+        price: 2000,
+        tier: 2
+    },
+    {
+        id: 'mission_reward_up_3',
+        name: '報酬アップ III',
+        description: 'ミッション報酬+60%',
+        effect: { type: 'mission_reward_up', value: 0.6 },
+        price: 6000,
+        tier: 3
+    },
+
+    // ガチャチケミッション出現率アップ (Gacha Mission Up)
+    {
+        id: 'gacha_mission_up_1',
+        name: 'チケットハンター I',
+        description: 'ガチャチケミッション出現率+10%',
+        effect: { type: 'gacha_mission_up', value: 0.1 },
+        price: 1000,
+        tier: 1
+    },
+    {
+        id: 'gacha_mission_up_2',
+        name: 'チケットハンター II',
+        description: 'ガチャチケミッション出現率+20%',
+        effect: { type: 'gacha_mission_up', value: 0.2 },
+        price: 3500,
+        tier: 2
+    },
+    {
+        id: 'gacha_mission_up_3',
+        name: 'チケットハンター III',
+        description: 'ガチャチケミッション出現率+30%',
+        effect: { type: 'gacha_mission_up', value: 0.3 },
+        price: 9000,
+        tier: 3
+    },
+
+    // オーバードライブ (Overdrive) - ハイリスクハイリターン
+    {
+        id: 'overdrive_2',
+        name: 'オーバードライブ II',
+        description: 'パワー+30% & ゲージ速度+10%',
+        effect: { type: 'overdrive', power: 0.3, speed: 0.1 },
+        price: 4000,
+        tier: 2
+    },
+    {
+        id: 'overdrive_3',
+        name: 'オーバードライブ III',
+        description: 'パワー+50% & ゲージ速度+20%',
+        effect: { type: 'overdrive', power: 0.5, speed: 0.2 },
+        price: 10000,
+        tier: 3
+    },
+
+    // ハイリスク売却 (High Risk Sell)
+    {
+        id: 'high_risk_sell_2',
+        name: '闇取引 II',
+        description: '売却価格1.5倍 & 釣り失敗時に所持金減少(小)',
+        effect: { type: 'high_risk_sell', priceMult: 1.5, penaltyRate: 0.1 },
+        price: 5000,
+        tier: 2
+    },
+    {
+        id: 'high_risk_sell_3',
+        name: '闇取引 III',
+        description: '売却価格3倍 & 釣り失敗時に所持金減少(大)',
+        effect: { type: 'high_risk_sell', priceMult: 2.0, penaltyRate: 0.3 },
+        price: 15000,
+        tier: 3
+    },
+
+    // 早打ちペナルティ (Quick Hit Penalty) - 時短・安売り
+    {
+        id: 'quick_hit_penalty_2',
+        name: '早打ち II',
+        description: 'ヒット待ち-30% & 売却価格-20%',
+        effect: { type: 'quick_hit_penalty', waitReduc: 0.3, priceReduc: 0.2 },
+        price: 3000,
+        tier: 2
+    },
+    {
+        id: 'quick_hit_penalty_3',
+        name: '早打ち III',
+        description: 'ヒット待ち-50% & 売却価格-40%',
+        effect: { type: 'quick_hit_penalty', waitReduc: 0.5, priceReduc: 0.4 },
+        price: 8000,
+        tier: 3
+    },
+
+    // ランクスナイパー (Rank Sniper)
+    {
+        id: 'rank_sniper_2',
+        name: 'ランクスナイパー II',
+        description: 'Bランク(Rare)以上の魚しか釣れなくなる',
+        effect: { type: 'rank_sniper', minRarity: 'B' },
+        price: 6000,
+        tier: 2
+    },
+    {
+        id: 'rank_sniper_3',
+        name: 'ランクスナイパー III',
+        description: 'Aランク(Epic)以上の魚しか釣れなくなる',
+        effect: { type: 'rank_sniper', minRarity: 'A' },
+        price: 20000,
+        tier: 3
+    },
+
+    // アルティメットリスク (Ultimate Risk)
+    {
+        id: 'ultimate_risk',
+        name: '究極の賭け',
+        description: 'パワー+100% & 失敗時に所持魚が0になる',
+        effect: { type: 'ultimate_risk', power: 1.0 },
+        price: 50000,
+        tier: 3
+    },
+
+    // オートヒット (Auto Hit)
+    {
+        id: 'auto_hit_2',
+        name: '自動合わせ II',
+        description: 'ウキ沈下時に30%で自動ヒット',
+        effect: { type: 'auto_hit', chance: 0.3 },
+        price: 8000,
+        tier: 2
+    },
+    {
+        id: 'auto_hit_3',
+        name: '自動合わせ III',
+        description: 'ウキ沈下時に50%で自動ヒット',
+        effect: { type: 'auto_hit', chance: 0.5 },
+        price: 25000,
+        tier: 3
+    },
+
+    // ショップ割引 (Shop Discount)
+    {
+        id: 'shop_discount_1',
+        name: '常連の証 I',
+        description: 'ショップ価格5%割引',
+        effect: { type: 'shop_discount', value: 0.05 },
+        price: 2000,
+        tier: 1
+    },
+    {
+        id: 'shop_discount_2',
+        name: '常連の証 II',
+        description: 'ショップ価格10%割引',
+        effect: { type: 'shop_discount', value: 0.10 },
+        price: 8000,
+        tier: 2
+    },
+    {
+        id: 'shop_discount_3',
+        name: '常連の証 III',
+        description: 'ショップ価格15%割引',
+        effect: { type: 'shop_discount', value: 0.15 },
+        price: 30000,
+        tier: 3
+    },
+
+
+    // 強化割引 (Upgrade Discount)
+    {
+        id: 'upgrade_discount_1',
+        name: '鍛冶屋の友 I',
+        description: '竿の強化費用10%軽減',
+        effect: { type: 'upgrade_discount', value: 0.1 },
+        price: 2000,
+        tier: 1
+    },
+    {
+        id: 'upgrade_discount_2',
+        name: '鍛冶屋の友 II',
+        description: '竿の強化費用20%軽減',
+        effect: { type: 'upgrade_discount', value: 0.2 },
+        price: 8000,
+        tier: 2
+    },
+    {
+        id: 'upgrade_discount_3',
+        name: '鍛冶屋の友 III',
+        description: '竿の強化費用30%軽減',
+        effect: { type: 'upgrade_discount', value: 0.3 },
+        price: 30000,
+        tier: 3
+    },
+
+    // 条件付きレアアップ (Conditional Rare Up)
+    {
+        id: 'moon_rare_up',
+        name: '月光の導き',
+        description: '月の加護装備時のみレア魚率大幅UP',
+        effect: { type: 'moon_rare_up', value: 0.4 }, // +40%
+        price: 40000,
+        tier: 3
+    },
+    {
+        id: 'sun_chest_up',
+        name: '太陽の恵み',
+        description: '太陽の加護装備時のみレア宝箱率大幅UP',
+        effect: { type: 'sun_chest_up', value: 0.4 }, // +40%
+        price: 40000,
+        tier: 3
+    },
+
+    // 未登録魚探索 (New Fish Finder)
+    {
+        id: 'new_fish_finder_1',
+        name: '未知への探求 I',
+        description: '未登録魚率UP(小) & 待ち時間+40%',
+        effect: { type: 'new_fish_finder', value: 1.5, waitIncrease: 0.4 },
+        price: 5000,
+        tier: 1
+    },
+    {
+        id: 'new_fish_finder_2',
+        name: '未知への探求 II',
+        description: '未登録魚率UP(中) & 待ち時間+25%',
+        effect: { type: 'new_fish_finder', value: 2.0, waitIncrease: 0.25 },
+        price: 15000,
+        tier: 2
+    },
+    {
+        id: 'new_fish_finder_3',
+        name: '未知への探求 III',
+        description: '未登録魚率UP(大) & 待ち時間+10%',
+        effect: { type: 'new_fish_finder', value: 3.0, waitIncrease: 0.1 },
+        price: 40000,
+        tier: 3
+    },
+
+    // 売却ガチャチケ (Sell Ticket Chance)
+    {
+        id: 'sell_ticket_chance_1',
+        name: 'ラッキーセール I',
+        description: '売却時に0.5%でガチャチケ獲得',
+        effect: { type: 'sell_ticket_chance', value: 0.005 },
+        price: 3000,
+        tier: 1
+    },
+    {
+        id: 'sell_ticket_chance_2',
+        name: 'ラッキーセール II',
+        description: '売却時に1.0%でガチャチケ獲得',
+        effect: { type: 'sell_ticket_chance', value: 0.01 },
+        price: 10000,
+        tier: 2
+    },
+    {
+        id: 'sell_ticket_chance_3',
+        name: 'ラッキーセール III',
+        description: '売却時に2.0%でガチャチケ獲得',
+        effect: { type: 'sell_ticket_chance', value: 0.02 },
+        price: 30000,
+        tier: 3
+    },
+
+    // カジノハイローラー (Casino High Roller)
+    {
+        id: 'casino_high_roller',
+        name: 'ハイローラー',
+        description: 'カジノ倍率アップ（勝ちも負けも2倍）',
+        effect: { type: 'casino_high_roller', value: 2.0 },
+        price: 50000,
+        tier: 3
+    },
+
+    // マルチ系強化 (Extra / Multi Boosts)
+    {
+        id: 'multi_catch_prob_1',
+        name: '群れ追い I',
+        description: '複数釣れる確率+10%',
+        effect: { type: 'multi_catch_prob', value: 0.1 },
+        price: 2000,
+        tier: 1
+    },
+    {
+        id: 'multi_catch_prob_2',
+        name: '群れ追い II',
+        description: '複数釣れる確率+20%',
+        effect: { type: 'multi_catch_prob', value: 0.2 },
+        price: 8000,
+        tier: 2
+    },
+    {
+        id: 'multi_catch_num_1',
+        name: '大量捕獲 I',
+        description: '複数釣り発動時、釣れる数が+1される',
+        effect: { type: 'multi_catch_num', value: 1 },
+        price: 5000,
+        tier: 1
+    },
+    {
+        id: 'multi_catch_num_2',
+        name: '大量捕獲 II',
+        description: '複数釣り発動時、釣れる数が+2される',
+        effect: { type: 'multi_catch_num', value: 2 },
+        price: 20000,
+        tier: 2
+    },
+
+    // エクストラ系 (Extra Drops)
+    {
+        id: 'extra_gacha_prob_1',
+        name: 'チケットの釣り人 I',
+        description: '魚と一緒にガチャチケが釣れる確率+1%',
+        effect: { type: 'extra_gacha_prob', value: 0.01 },
+        price: 3000,
+        tier: 1
+    },
+    {
+        id: 'extra_gacha_prob_2',
+        name: 'チケットの釣り人 II',
+        description: '魚と一緒にガチャチケが釣れる確率+3%',
+        effect: { type: 'extra_gacha_prob', value: 0.03 },
+        price: 10000,
+        tier: 2
+    },
+    {
+        id: 'extra_gacha_num_1',
+        name: 'チケットボーナス I',
+        description: '追加ガチャチケ獲得時の数+1',
+        effect: { type: 'extra_gacha_num', value: 1 },
+        price: 5000,
+        tier: 1
+    },
+    {
+        id: 'extra_gacha_num_2',
+        name: 'チケットボーナス II',
+        description: '追加ガチャチケ獲得時の数+2',
+        effect: { type: 'extra_gacha_num', value: 2 },
+        price: 20000,
+        tier: 2
+    },
+
+    {
+        id: 'extra_coin_prob_1',
+        name: '小銭拾い I',
+        description: '魚と一緒にコインが釣れる確率+10%',
+        effect: { type: 'extra_coin_prob', value: 0.1 },
+        price: 1000,
+        tier: 1
+    },
+    {
+        id: 'extra_coin_prob_2',
+        name: '小銭拾い II',
+        description: '魚と一緒にコインが釣れる確率+25%',
+        effect: { type: 'extra_coin_prob', value: 0.25 },
+        price: 4000,
+        tier: 2
+    },
+    {
+        id: 'extra_coin_amount_1',
+        name: '臨時収入 I',
+        description: '追加コイン獲得時の量+50%',
+        effect: { type: 'extra_coin_amount', value: 0.5 },
+        price: 3000,
+        tier: 1
+    },
+    {
+        id: 'extra_coin_amount_2',
+        name: '臨時収入 II',
+        description: '追加コイン獲得時の量+100%',
+        effect: { type: 'extra_coin_amount', value: 1.0 },
+        price: 10000,
+        tier: 2
+    },
+
+    // フィーバー宝箱増 (Fever Treasure Boost)
+    {
+        id: 'fever_treasure_boost_2',
+        name: 'フィーバーリッチ II',
+        description: 'フィーバー中の宝箱中身+20%',
+        effect: { type: 'fever_treasure_boost', value: 0.2 },
+        price: 8000,
+        tier: 2
+    },
+    {
+        id: 'fever_treasure_boost_3',
+        name: 'フィーバーリッチ III',
+        description: 'フィーバー中の宝箱中身+50%',
+        effect: { type: 'fever_treasure_boost', value: 0.5 },
+        price: 25000,
+        tier: 3
+    },
+
+    // ========================================
+    // 所持数依存系 (Count Dependent)
+    // ========================================
+
+    {
+        id: 'count_skill_multi',
+        name: 'スキルコレクター (連)',
+        description: '所持スキル数に応じて複数釣り数UP',
+        effect: { type: 'count_skill_multi', value: 0.1 }, // 10個につき+1程度の係数
+        price: 40000,
+        tier: 3
+    },
+    {
+        id: 'count_fish_gacha',
+        name: '魚コレクター (券)',
+        description: '所持魚数に応じて追加ガチャチケ数UP',
+        effect: { type: 'count_fish_gacha', value: 0.1 },
+        price: 40000,
+        tier: 3
+    },
+    {
+        id: 'count_gacha_coin',
+        name: 'チケット長者 (金)',
+        description: '所持ガチャチケ数に応じて追加コイン量UP',
+        effect: { type: 'count_gacha_coin', value: 0.1 },
+        price: 40000,
+        tier: 3
+    },
+    {
+        id: 'count_fish_title',
+        name: '魚コレクター (名)',
+        description: '所持魚数に応じて称号付き出現率UP',
+        effect: { type: 'count_fish_title', value: 0.05 },
+        price: 40000,
+        tier: 3
+    },
+
+    // 所持スキル数 -> パワー (T123)
+    {
+        id: 'count_skill_power_1',
+        name: 'マナの共鳴 I',
+        description: '所持スキル数に応じてパワーUP(小)',
+        effect: { type: 'count_skill_power', value: 0.5 },
+        price: 3000,
+        tier: 1
+    },
+    {
+        id: 'count_skill_power_2',
+        name: 'マナの共鳴 II',
+        description: '所持スキル数に応じてパワーUP(中)',
+        effect: { type: 'count_skill_power', value: 1.0 },
+        price: 12000,
+        tier: 2
+    },
+    {
+        id: 'count_skill_power_3',
+        name: 'マナの共鳴 III',
+        description: '所持スキル数に応じてパワーUP(大)',
+        effect: { type: 'count_skill_power', value: 2.0 },
+        price: 40000,
+        tier: 3
+    },
+
+    // 所持チケット数 -> 売却 (T123)
+    {
+        id: 'count_gacha_sell_1',
+        name: '券の価値 I',
+        description: '所持ガチャチケ数に応じて売却価格UP(小)',
+        effect: { type: 'count_gacha_sell', value: 0.05 }, // 1枚につき+0.05%?
+        price: 3000,
+        tier: 1
+    },
+    {
+        id: 'count_gacha_sell_2',
+        name: '券の価値 II',
+        description: '所持ガチャチケ数に応じて売却価格UP(中)',
+        effect: { type: 'count_gacha_sell', value: 0.1 },
+        price: 12000,
+        tier: 2
+    },
+    {
+        id: 'count_gacha_sell_3',
+        name: '券の価値 III',
+        description: '所持ガチャチケ数に応じて売却価格UP(大)',
+        effect: { type: 'count_gacha_sell', value: 0.2 },
+        price: 40000,
+        tier: 3
     }
 ];
 

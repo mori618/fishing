@@ -270,12 +270,27 @@ const MissionManager = {
         const text = template.textFn(finalTarget, param);
 
         // 報酬計算（パワー + スキル）
-        const isTicket = Math.random() < 0.2;
+        let ticketProb = 0.2; // 基本確率 20%
+
+        // スキル補正: gacha_mission_up
+        if (GameState.equippedSkills) {
+            const gachaMissionBonus = GameState.equippedSkills.reduce((sum, id) => {
+                const s = GAME_DATA.SKILLS.find(sk => sk.id === id);
+                return sum + (s && s.effect.type === 'gacha_mission_up' ? s.effect.value : 0);
+            }, 0);
+            if (gachaMissionBonus > 0) {
+                ticketProb += gachaMissionBonus;
+                console.log(`🎫 ガチャミッション確率UP: ${(ticketProb * 100).toFixed(0)}% (+${(gachaMissionBonus * 100).toFixed(0)}%)`);
+            }
+        }
+
+        const isTicket = Math.random() < ticketProb;
         const baseRewardValue = template.baseReward * (finalTarget / template.minTarget);
+        // コイン報酬には modifier を適用
         const scaledRewardValue = baseRewardValue * powerScale * rewardModifier;
 
         const reward = isTicket
-            ? { type: 'ticket', value: Math.max(1, Math.round(rewardModifier)) }
+            ? { type: 'ticket', value: Math.max(1, Math.round(rewardModifier)) } // チケット枚数にもmodifierが効く仕様（元コード準拠）
             : { type: 'money', value: Math.round(scaledRewardValue) };
 
         return {

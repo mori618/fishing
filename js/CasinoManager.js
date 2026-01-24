@@ -437,7 +437,18 @@ const CasinoManager = {
         let moneyChange = 0;
 
         // Calculate effective multiplier (Max of winner's mult or loser's penalty)
-        const multiplier = Math.max(Math.abs(pHand.mult), Math.abs(oHand.mult));
+        let multiplier = Math.max(Math.abs(pHand.mult), Math.abs(oHand.mult));
+
+        // High Roller Skill Check (Double Risk/Double Return)
+        let isHighRoller = false;
+        if (GameState.equippedSkills) {
+            const skill = GameState.equippedSkills.find(id => id === 'casino_high_roller' || (GAME_DATA.SKILLS.find(s => s.id === id && s.effect.type === 'casino_high_roller')));
+            if (skill) {
+                isHighRoller = true;
+                multiplier *= 2;
+                console.log('🎰 High Roller Active: x2 Multiplier');
+            }
+        }
 
         if (pHand.score > oHand.score) {
             moneyChange = this.currentBet * multiplier;
@@ -465,6 +476,10 @@ const CasinoManager = {
 
         if (moneyChange > 0) {
             GameState.casinoTotalWin += moneyChange;
+            // ミッション進捗更新（コイン獲得）
+            if (typeof MissionManager !== 'undefined') {
+                MissionManager.checkMission('money_earned', { amount: moneyChange });
+            }
         } else if (moneyChange < 0) {
             GameState.casinoTotalLoss += Math.abs(moneyChange);
         }

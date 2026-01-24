@@ -990,7 +990,10 @@ const UIManager = {
         // We inject the buttons and the text.
         baitInfo.innerHTML = `
             <button class="selector-btn prev" onclick="GameState.switchBait(-1); UIManager.updateBaitInfo();"><span class="material-icons">chevron_left</span></button>
-            <span style="cursor: pointer;" onclick="UIManager.showBaitPurchaseDialog('${currentBaitId}')">${bait.name} × ${displayCount}</span>
+            <span class="bait-label-container" onclick="UIManager.showBaitPurchaseDialog('${currentBaitId}')" style="cursor: pointer;">
+                <span class="bait-name-text">${bait.name}</span>
+                <span class="bait-count-text">× ${displayCount}</span>
+            </span>
             <button class="selector-btn next" onclick="GameState.switchBait(1); UIManager.updateBaitInfo();"><span class="material-icons">chevron_right</span></button>
         `;
     },
