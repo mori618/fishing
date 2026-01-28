@@ -4,10 +4,29 @@ const SkillInventoryManager = {
         tier: 'all',
         sort: 'tier-desc'
     },
-    
+
     // 生成するHTMLテンプレート
     template: `
         <div class="inventory-controls">
+            <!-- スキルセットセクション -->
+            <div class="skill-sets-section" style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <div style="font-weight: bold; font-size: 14px; color: var(--text-highlight);">
+                        <span class="material-icons" style="font-size: 16px; vertical-align: text-bottom; margin-right: 4px;">style</span>
+                        スキルセット
+                    </div>
+                    <button class="btn btn-sm btn-primary" onclick="SkillInventoryManager.promptSaveSet()" style="font-size: 12px; padding: 4px 8px;">
+                        <span class="material-icons" style="font-size: 14px;">save</span> 現在の装備を保存
+                    </button>
+                </div>
+                <div class="skill-sets-list" style="
+                    display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; min-height: 36px;
+                    scrollbar-width: thin; scrollbar-color: var(--accent-color) rgba(255,255,255,0.1);
+                ">
+                    <!-- セット一覧がここに描画されます -->
+                </div>
+            </div>
+
             <div class="search-box">
                 <span class="material-icons">search</span>
                 <input type="text" class="skill-search" placeholder="スキル名で検索...">
@@ -40,20 +59,20 @@ const SkillInventoryManager = {
     // コンテナを指定して初期化
     init(containerElement) {
         this.container = containerElement;
-        
+
         // HTML構造を注入
         this.container.innerHTML = this.template;
-        
+
         // イベントリスナー設定
         this.bindEvents();
-        
+
         // 初回描画
         this.render();
     },
 
     bindEvents() {
         if (!this.container) return;
-        
+
         const searchInput = this.container.querySelector('.skill-search');
         const filterSelect = this.container.querySelector('.skill-filter-tier');
         const sortSelect = this.container.querySelector('.skill-sort');
@@ -78,19 +97,19 @@ const SkillInventoryManager = {
         // GameState.skillInventory は { skillId: count } 形式
         // (GameState.skills ではなく GameState.skillInventory を参照するよう修正)
         const inventory = GameState.skillInventory || {};
-        
+
         for (const [id, count] of Object.entries(inventory)) {
             const data = GAME_DATA.SKILLS.find(s => s.id === id);
             if (!data) continue;
-            
+
             // 装備中の個数を計算
             const equippedCount = GameState.getEquippedSkillCount(id);
-            
+
             for (let i = 0; i < count; i++) {
                 // インデックスが装備数未満なら「装備中」とみなす（簡易的な割り当て）
                 const isEquipped = i < equippedCount;
-                instances.push({ 
-                    ...data, 
+                instances.push({
+                    ...data,
                     uniqueId: `${id}-${i}`,
                     isEquipped: isEquipped
                 });
@@ -101,12 +120,33 @@ const SkillInventoryManager = {
 
     render() {
         if (!this.container) return;
-        
+
         const grid = this.container.querySelector('.skills-grid');
         const totalCountSpan = this.container.querySelector('.skill-total-count');
         const equippedCountSpan = this.container.querySelector('.skill-equipped-count');
-        
+
         let instances = this.getInstances();
+
+        // スキルセット一覧の描画
+        const setsList = this.container.querySelector('.skill-sets-list');
+        if (setsList) {
+            if (!GameState.skillSets || GameState.skillSets.length === 0) {
+                setsList.innerHTML = '<span style="color: var(--text-secondary); font-size: 12px; font-style: italic;">保存されたセットはありません</span>';
+            } else {
+                setsList.innerHTML = GameState.skillSets.map((set, index) => `
+                    <div class="skill-set-chip" style="
+                        display: flex; align-items: center; background: rgba(0,0,0,0.3); 
+                        border: 1px solid var(--border-color); border-radius: 16px; padding: 2px 2px 2px 10px; 
+                        white-space: nowrap; font-size: 12px; transition: all 0.2s;">
+                        <span style="cursor: pointer; margin-right: 8px;" onclick="SkillInventoryManager.handleApplySet(${index})">${set.name}</span>
+                        <button class="btn-icon-sm" onclick="SkillInventoryManager.handleDeleteSet(${index})" 
+                            style="background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 4px; border-radius: 50%;">
+                            <span class="material-icons" style="font-size: 14px;">close</span>
+                        </button>
+                    </div>
+                `).join('');
+            }
+        }
 
         // 統計情報の更新
         totalCountSpan.textContent = `Total: ${instances.length}`;
@@ -160,7 +200,7 @@ const SkillInventoryManager = {
         const overlay = document.createElement('div');
         overlay.id = 'skill-dialog-overlay';
         overlay.className = 'modal-overlay';
-        
+
         // 装備ボタンの状態
         let actionBtnHTML = '';
         if (isEquipped) {
@@ -185,7 +225,7 @@ const SkillInventoryManager = {
         }
 
         const rarityClass = `rarity-${this.getTierRarity(tier)}`;
-        
+
         // アイコン取得（簡易的にデータから再取得）
         const skillData = GAME_DATA.SKILLS.find(s => s.id === skillId);
         const icon = skillData ? (skillData.icon || 'auto_awesome') : 'auto_awesome';
@@ -255,5 +295,43 @@ const SkillInventoryManager = {
     closeDialog() {
         const existing = document.getElementById('skill-dialog-overlay');
         if (existing) existing.remove();
+    },
+
+    // ========================================
+    // スキルセット操作
+    // ========================================
+    promptSaveSet() {
+        const name = prompt('保存するスキルセットの名前を入力してください:');
+        if (name) {
+            GameState.saveCurrentSkillSet(name);
+            UIManager.showMessage(`セット「${name}」を保存しました`);
+            this.render();
+        }
+    },
+
+    handleApplySet(index) {
+        const result = GameState.applySkillSet(index);
+        if (result.success) {
+            UIManager.showMessage('スキルセットを装備しました');
+            this.render();
+            if (window.ShopManager) ShopManager.renderSkillSlotInfo();
+        } else {
+            UIManager.showMessage(`装備できません: ${result.message}`, true);
+        }
+    },
+
+    handleDeleteSet(index) {
+        // 確認
+        if (!confirm('このスキルセットを削除しますか？')) return;
+
+        if (GameState.skillSets && GameState.skillSets[index]) {
+            const name = GameState.skillSets[index].name;
+            GameState.skillSets.splice(index, 1);
+
+            if (window.SaveManager) SaveManager.save(GameState);
+
+            UIManager.showMessage(`セット「${name}」を削除しました`);
+            this.render();
+        }
     }
 };

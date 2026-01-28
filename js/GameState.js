@@ -15,6 +15,7 @@ const GameState = {
     rodRankIndex: 0,
     rodStarLevels: {},  // インデックスごとの星数 { 0: 0, 1: 0 }
     equippedSkills: [],
+    skillSets: [], // 保存されたスキルセット { name: string, skills: string[] }
 
     // Getter for backward compatibility (current rod's stars)
     get rodStars() {
@@ -144,6 +145,13 @@ const GameState = {
             }
 
             this.equippedSkills = [...saveData.rod.equippedSkills];
+
+            // スキルセットの復元
+            if (saveData.player && saveData.player.skillSets) {
+                this.skillSets = [...saveData.player.skillSets];
+            } else {
+                this.skillSets = [];
+            }
 
             this.inventory = [...saveData.inventory];
 
@@ -389,6 +397,113 @@ const GameState = {
         }
 
         return slots;
+    },
+
+    // ========================================
+    // スキルセット操作
+    // ========================================
+
+    // 現在の装備をセットとして保存
+    saveCurrentSkillSet(name) {
+        if (!name) return false;
+
+        // 同じ名前があれば上書き、なければ追加
+        const existingIndex = this.skillSets.findIndex(set => set.name === name);
+        const newSet = {
+            name: name,
+            skills: [...this.equippedSkills]
+        };
+
+        if (existingIndex >= 0) {
+            this.skillSets[existingIndex] = newSet;
+            console.log(`💾 スキルセット更新: ${name}`);
+        } else {
+            this.skillSets.push(newSet);
+            console.log(`💾 新規スキルセット保存: ${name}`);
+        }
+
+        // 保存
+        if (typeof SaveManager !== 'undefined') {
+            SaveManager.save(this);
+        }
+        return true;
+    },
+
+    // スキルセットを装備可能かチェック
+    canEquipSkillSet(skillsArray) {
+        // 1. スロット数チェック
+        const currentRod = this.getCurrentRod();
+        // 基本スロット = (竿の星の数) + 1
+        // ※ rodStarsはgetterで現在のrodRankIndexの星の数を返す
+        let maxSlots = this.rodStars + 1;
+
+        // セット内のスキルによる拡張分を加算
+        // 「セットに含まれている」拡張スキルが有効になる前提で計算する
+        for (const skillId of skillsArray) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'skill_slot_expansion') {
+                maxSlots += skill.effect.value;
+            }
+        }
+
+        if (skillsArray.length > maxSlots) {
+            return {
+                can: false,
+                reason: `スロット数が足りません (必要: ${skillsArray.length}, 上限: ${maxSlots})`
+            };
+        }
+
+        // 2. 所持数チェック
+        // 必要なスキルの数を集計
+        const needed = {};
+        for (const id of skillsArray) {
+            needed[id] = (needed[id] || 0) + 1;
+        }
+
+        // インベントリチェック
+        const missingSkills = [];
+        for (const [id, count] of Object.entries(needed)) {
+            const owned = this.skillInventory[id] || 0;
+            if (owned < count) {
+                const skillName = GAME_DATA.SKILLS.find(s => s.id === id)?.name || id;
+                const missingCount = count - owned;
+                missingSkills.push(`「${skillName}」x${missingCount}`);
+            }
+        }
+
+        if (missingSkills.length > 0) {
+            return {
+                can: false,
+                reason: `以下のスキルが不足しています:\n${missingSkills.join('\n')}`
+            };
+        }
+
+        return { can: true };
+    },
+
+    // スキルセットを適用
+    applySkillSet(index) {
+        if (index < 0 || index >= this.skillSets.length) {
+            return { success: false, message: '指定されたスキルセットが存在しません' };
+        }
+
+        const targetSet = this.skillSets[index];
+        const check = this.canEquipSkillSet(targetSet.skills);
+
+        if (!check.can) {
+            return { success: false, message: check.reason };
+        }
+
+        // 適用
+        this.equippedSkills = [...targetSet.skills];
+        console.log(`✨ スキルセット「${targetSet.name}」を装備しました`);
+
+        // 保存
+        if (typeof SaveManager !== 'undefined') {
+            SaveManager.save(this);
+        }
+
+        return { success: true };
     },
 
     // ========================================
