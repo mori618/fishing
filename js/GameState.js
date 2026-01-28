@@ -376,7 +376,19 @@ const GameState = {
     // スキルスロット数（＝星の数）
     // ========================================
     getSkillSlots() {
-        return this.rodStars + 1;
+        let slots = this.rodStars + 1;
+
+        // スキルによる拡張
+        // スロット拡張スキル自体も装備枠を1つ使うため、
+        // 実質的な増加量は value - 1 となるが、単純に枠を増やす処理とする
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'skill_slot_expansion') {
+                slots += skill.effect.value;
+            }
+        }
+
+        return slots;
     },
 
     // ========================================

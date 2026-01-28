@@ -1529,6 +1529,39 @@ const SKILLS = [
         effect: { type: 'count_gacha_sell', value: 0.2 },
         price: 40000,
         tier: 3
+    },
+
+    // ========================================
+    // 特殊スキル (Special)
+    // ========================================
+
+    // スロット拡張 (Slot Expansion) - 宝箱限定
+    {
+        id: 'slot_expansion_1',
+        name: '拡張モジュール I',
+        description: 'スキルスロット数+2 (実質+1)',
+        effect: { type: 'skill_slot_expansion', value: 2 },
+        price: 5000,
+        tier: 1,
+        isTreasureExclusive: true
+    },
+    {
+        id: 'slot_expansion_2',
+        name: '拡張モジュール II',
+        description: 'スキルスロット数+3 (実質+2)',
+        effect: { type: 'skill_slot_expansion', value: 3 },
+        price: 20000,
+        tier: 2,
+        isTreasureExclusive: true
+    },
+    {
+        id: 'slot_expansion_3',
+        name: '拡張モジュール III',
+        description: 'スキルスロット数+4 (実質+3)',
+        effect: { type: 'skill_slot_expansion', value: 4 },
+        price: 50000,
+        tier: 3,
+        isTreasureExclusive: true
     }
 ];
 
@@ -1878,7 +1911,9 @@ const SHIPS = [
         catchAmountRange: [1, 3],
         maxRarity: 'C',
         description: '近海漁業用の小型船。小回りが利く。',
-        fishingInterval: 300000 // 5分
+        description: '近海漁業用の小型船。小回りが利く。',
+        fishingInterval: 300000, // 5分
+        fuelConsumption: 1 // 1分あたりの燃料消費量
     },
     {
         id: 'ship_medium',
@@ -1888,7 +1923,9 @@ const SHIPS = [
         catchAmountRange: [4, 8],
         maxRarity: 'B',
         description: '多少の荒波にも耐える中型船。',
-        fishingInterval: 300000 // 5分
+        description: '多少の荒波にも耐える中型船。',
+        fishingInterval: 300000, // 5分
+        fuelConsumption: 2 // 1分あたりの燃料消費量
     },
     {
         id: 'ship_large',
@@ -1898,7 +1935,9 @@ const SHIPS = [
         catchAmountRange: [10, 20],
         maxRarity: 'S',
         description: '遠洋漁業も可能な大型船。大量の魚を積載可能。',
-        fishingInterval: 300000 // 5分
+        description: '遠洋漁業も可能な大型船。大量の魚を積載可能。',
+        fishingInterval: 300000, // 5分
+        fuelConsumption: 3 // 1分あたりの燃料消費量
     }
 ];
 

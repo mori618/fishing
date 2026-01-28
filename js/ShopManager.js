@@ -1469,12 +1469,14 @@ const ShopManager = {
                         <div class="status-bar-group">
                             <div class="bar-label">
                                 <span class="material-icons">local_gas_station</span> 燃料
-                                <span class="bar-value">${port.fuelMinutes}分</span>
+                                <span class="bar-value">${port.fuelMinutes} <small>(稼働:約${Math.floor(port.fuelMinutes / (ownedShip.fuelConsumption || 1))}分)</small></span>
                             </div>
                             <div class="progress-track" style="background:#444; height:10px; border-radius:5px; overflow:hidden;">
                                 <div class="progress-fill fuel" style="width: ${fuelPercent}%; background:var(--accent-color); height:100%;"></div>
                             </div>
-                            <div class="bar-desc" style="font-size:10px; color:#aaa; margin-top:2px;">1分ごとに1消費 / 5分ごとに漁獲</div>
+                            <div class="bar-desc" style="font-size:10px; color:#aaa; margin-top:2px;">
+                                1分ごとに${ownedShip.fuelConsumption || 1}消費 / 5分ごとに漁獲
+                            </div>
                         </div>
 
                         <!-- 倉庫 -->
@@ -1567,6 +1569,7 @@ const ShopManager = {
                         <div class="ship-stats" style="font-size:12px; margin-top:4px;">
                             <span style="display:block;">容量: ${ship.capacity} ${capacityDiff}</span>
                             <span style="display:block;">対象ランク: 〜${ship.maxRarity}</span>
+                            <span style="display:block;">消費燃料: ${ship.fuelConsumption || 1}/分</span>
                             <span style="display:block;">漁獲量: ${ship.catchAmountRange[0]}〜${ship.catchAmountRange[1]}匹/回</span>
                         </div>
                     </div>

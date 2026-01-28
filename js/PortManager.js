@@ -66,8 +66,10 @@ const PortManager = {
                 // エコ航行スキル判定 (getShipFuelEfficiency)
                 const ecoEfficiency = GameState.getShipFuelEfficiency();
                 if (Math.random() >= ecoEfficiency) {
-                    currentFuel--;
-                    consumedFuel++;
+                    // 船ごとの消費量を取得 (デフォルト1)
+                    const consumption = ship.fuelConsumption || 1;
+                    currentFuel -= consumption;
+                    consumedFuel += consumption;
                 } else {
                     // 燃料消費回避！
                 }
@@ -108,8 +110,8 @@ const PortManager = {
             if (timeProcessed > 31536000000) break; // 1年以上は無視
         }
 
-        // 結果を適用
-        GameState.port.fuelMinutes = currentFuel;
+        // 結果を適用 (0未満にならないよう補正)
+        GameState.port.fuelMinutes = Math.max(0, currentFuel);
 
         // lastProcessTime を更新 (端数は切り捨てて現在時刻に合わせる、あるいは diffMs 分進める)
         // ここでは「現在時刻」に更新し、端数タイマーはリセット扱いにします（シンプル実装）。
@@ -117,7 +119,7 @@ const PortManager = {
 
         // ログ出力
         if (consumedFuel > 0 || simulatedCatchCount > 0) {
-            console.log(`⚓ オフライン補償完了: 燃料消費 ${consumedFuel}分, 漁獲 ${simulatedCatchCount}匹`);
+            console.log(`⚓ オフライン補償完了: 燃料消費 ${consumedFuel} (約${Math.ceil(consumedFuel / (ship ? (ship.fuelConsumption || 1) : 1))}分稼働), 漁獲 ${simulatedCatchCount}匹`);
             if (simulatedCatchCount > 0) {
                 UIManager.showMessage(`おかえりなさい！\n漁船が ${simulatedCatchCount} 匹の魚を獲ってきました！`);
             }
@@ -197,7 +199,9 @@ const PortManager = {
                 this.minutesTimer -= this.MINUTE_MS;
 
                 if (Math.random() >= ecoEfficiency) {
-                    GameState.port.fuelMinutes--;
+                    // 船ごとの消費量
+                    const consumption = ship.fuelConsumption || 1;
+                    GameState.port.fuelMinutes -= consumption;
                 }
 
                 if (GameState.port.fuelMinutes <= 0) {
