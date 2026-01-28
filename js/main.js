@@ -8,6 +8,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // 初期化
     // ========================================
     UIManager.initStartScreen();
+    // 港マネージャ初期化 (GameState初期化後に呼ぶ必要があるため、ここではなく startGame 後が良いが、
+    // GameState.init は start-btn/continue-btn で呼ばれる。
+    // そのため、initStartScreen時点ではまだ早すぎる可能性がある。
+    // しかしいったんここで `setInterval` だけ仕込んでおくか、
+    // あるいは `FishingGame.init` と同じタイミングで `PortManager.init` を呼ぶべき。
+
+    // updateループは常に回しておき、内部で GameState チェックする設計にする
+    setInterval(() => {
+        if (typeof PortManager !== 'undefined') {
+            // main.js のループ間隔は 1000ms ではないかもしれないが、
+            // setInterval(..., 1000) であれば dt=1000 として渡す
+            PortManager.updateMetric(1000);
+        }
+    }, 1000);
 
     // ========================================
     // スタート画面のイベント
@@ -17,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('start-btn').addEventListener('click', () => {
         GameState.init(null);  // 新規データで初期化
         FishingGame.init();
+        if (typeof PortManager !== 'undefined') PortManager.init();
         UIManager.showScreen('fishing');
         UIManager.updateFeverVisuals(); // フィーバー表示初期化
         console.log('🆕 新規ゲームを開始しました');
@@ -30,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (saveData) {
                 GameState.init(saveData);
                 FishingGame.init();
+                if (typeof PortManager !== 'undefined') PortManager.init();
                 UIManager.showScreen('fishing');
                 UIManager.updateFeverVisuals(); // フィーバー表示復元
                 UIManager.updateMissionUI();    // ミッション表示更新
@@ -70,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
             UIManager.openHelp();
         });
     }
-    
+
     // ヘルプ機能の初期化
     if (UIManager.initHelp) {
         UIManager.initHelp();

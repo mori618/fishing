@@ -144,8 +144,12 @@ const UIManager = {
             this.renderStats();
         } else if (screenId === 'skills') {
             SkillInventoryManager.render();
+        } else if (screenId === 'skills') {
+            SkillInventoryManager.render();
         } else if (screenId === 'gacha') {
             this.prepareGachaScreen();
+        } else if (screenId === 'port') {
+            ShopManager.renderPort();
         }
     },
 
@@ -1512,7 +1516,7 @@ const UIManager = {
             requestAnimationFrame(() => {
                 modal.classList.remove('hidden');
             });
-            
+
             // デフォルトタブをリセット（または前回の状態を記憶するか？今回はリセットで）
             this.switchHelpTab('help-fishing');
         }

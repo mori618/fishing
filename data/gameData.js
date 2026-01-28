@@ -804,17 +804,125 @@ const SKILLS = [
     {
         id: 'triple_catcher_2',
         name: 'トリプルキャッチ II',
-        description: '15%の確率で魚が3匹釣れる',
-        effect: { type: 'multi_catch_3', value: 0.15 },
+        description: '10%の確率で魚が3匹釣れる',
+        effect: { type: 'multi_catch_3', value: 0.10 },
         price: 20000,
         tier: 2
     },
     {
         id: 'triple_catcher_3',
         name: 'トリプルキャッチ III',
-        description: '30%の確率で魚が3匹釣れる',
-        effect: { type: 'multi_catch_3', value: 0.30 },
+        description: '20%の確率で魚が3匹釣れる',
+        effect: { type: 'multi_catch_3', value: 0.20 },
+        price: 50000,
+        tier: 3
+    },
+
+    // ========================================
+    // 港 (Port) 関連スキル
+    // ========================================
+
+    // 高速エンジン (Fast Engine) - 漁獲間隔短縮
+    {
+        id: 'ship_interval_down_1',
+        name: '高速エンジン I',
+        description: '漁獲間隔を10%短縮',
+        effect: { type: 'ship_interval_down', value: 0.10 },
+        price: 5000,
+        tier: 1
+    },
+    {
+        id: 'ship_interval_down_2',
+        name: '高速エンジン II',
+        description: '漁獲間隔を25%短縮',
+        effect: { type: 'ship_interval_down', value: 0.25 },
+        price: 20000,
+        tier: 2
+    },
+    {
+        id: 'ship_interval_down_3',
+        name: '高速エンジン III',
+        description: '漁獲間隔を45%短縮',
+        effect: { type: 'ship_interval_down', value: 0.45 },
         price: 60000,
+        tier: 3
+    },
+
+    // 大型網 (Large Net) - 漁獲量アップ
+    {
+        id: 'ship_amount_up_1',
+        name: '大型網 I',
+        description: '一度の漁獲量 +1〜2匹',
+        effect: { type: 'ship_amount_up', min: 1, max: 2 },
+        price: 6000,
+        tier: 1
+    },
+    {
+        id: 'ship_amount_up_2',
+        name: '大型網 II',
+        description: '一度の漁獲量 +3〜5匹',
+        effect: { type: 'ship_amount_up', min: 3, max: 5 },
+        price: 25000,
+        tier: 2
+    },
+    {
+        id: 'ship_amount_up_3',
+        name: '大型網 III',
+        description: '一度の漁獲量 +6〜10匹',
+        effect: { type: 'ship_amount_up', min: 6, max: 10 },
+        price: 80000,
+        tier: 3
+    },
+
+    // エコ航行 (Eco Sailing) - 燃料消費回避
+    {
+        id: 'ship_fuel_eco_1',
+        name: 'エコ航行 I',
+        description: '20%の確率で燃料消費を回避',
+        effect: { type: 'ship_fuel_eco', value: 0.20 },
+        price: 4000,
+        tier: 1
+    },
+    {
+        id: 'ship_fuel_eco_2',
+        name: 'エコ航行 II',
+        description: '40%の確率で燃料消費を回避',
+        effect: { type: 'ship_fuel_eco', value: 0.40 },
+        price: 15000,
+        tier: 2
+    },
+    {
+        id: 'ship_fuel_eco_3',
+        name: 'エコ航行 III',
+        description: '60%の確率で燃料消費を回避',
+        effect: { type: 'ship_fuel_eco', value: 0.60 },
+        price: 45000,
+        tier: 3
+    },
+
+    // 港の顔馴染み (Port Regular) - 燃料割引
+    {
+        id: 'ship_fuel_discount_1',
+        name: '港の顔馴染み I',
+        description: '燃料購入価格 15%割引',
+        effect: { type: 'ship_fuel_discount', value: 0.15 },
+        price: 3000,
+        tier: 1
+    },
+    {
+        id: 'ship_fuel_discount_2',
+        name: '港の顔馴染み II',
+        description: '燃料購入価格 30%割引',
+        effect: { type: 'ship_fuel_discount', value: 0.30 },
+        price: 10000,
+        tier: 2
+    },
+    {
+        id: 'ship_fuel_discount_3',
+        name: '港の顔馴染み III',
+        description: '燃料購入価格 50%割引',
+        effect: { type: 'ship_fuel_discount', value: 0.50 },
+        price: 30000,
         tier: 3
     },
 
@@ -1427,9 +1535,6 @@ const SKILLS = [
 // ========================================
 // 餌データ
 // ========================================
-// ========================================
-// 餌データ
-// ========================================
 const BAITS = [
     {
         id: 'bait_d',
@@ -1761,6 +1866,66 @@ const SKIES = [
     }
 ];
 
+// ========================================
+// 港（Port）データ - 漁船
+// ========================================
+const SHIPS = [
+    {
+        id: 'ship_small',
+        name: '小型漁船',
+        price: 10000,
+        capacity: 20,
+        catchAmountRange: [1, 3],
+        maxRarity: 'C',
+        description: '近海漁業用の小型船。小回りが利く。',
+        fishingInterval: 300000 // 5分
+    },
+    {
+        id: 'ship_medium',
+        name: '中型漁船',
+        price: 100000,
+        capacity: 50,
+        catchAmountRange: [4, 8],
+        maxRarity: 'B',
+        description: '多少の荒波にも耐える中型船。',
+        fishingInterval: 300000 // 5分
+    },
+    {
+        id: 'ship_large',
+        name: '大型漁船',
+        price: 500000,
+        capacity: 150,
+        catchAmountRange: [10, 20],
+        maxRarity: 'S',
+        description: '遠洋漁業も可能な大型船。大量の魚を積載可能。',
+        fishingInterval: 300000 // 5分
+    }
+];
+
+// ========================================
+// 港（Port）データ - 燃料
+// ========================================
+const FUELS = [
+    {
+        id: 'fuel_regular',
+        name: 'レギュラー燃料',
+        recovery: 30, // 30分回復
+        price: 500
+    },
+    {
+        id: 'fuel_high',
+        name: 'ハイオク燃料',
+        recovery: 60, // 60分回復
+        price: 1200
+    },
+    {
+        id: 'fuel_max',
+        name: 'マックス燃料',
+        recovery: 180, // 180分(3時間)回復
+        price: 5000
+    }
+];
+
 // エクスポート用（グローバル変数として使用）
 if (typeof window !== 'undefined') {
     window.GAME_DATA = {
@@ -1776,6 +1941,8 @@ if (typeof window !== 'undefined') {
         RECYCLE_RATES,
         TREASURE_CONFIG,
         SKINS,
-        SKIES
+        SKIES,
+        SHIPS,
+        FUELS
     };
 }
