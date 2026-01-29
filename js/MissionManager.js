@@ -77,7 +77,7 @@ const MissionManager = {
     // ========================================
     DYNAMIC_TEMPLATES: {
         A: [
-            { id: 'fish_count', textFn: (t) => `魚を${t}匹釣る`, minTarget: 10, maxTarget: 20, baseReward: 500 }
+            { id: 'fish_count', textFn: (t) => `魚を${t}匹釣る`, minTarget: 5, maxTarget: 10, baseReward: 500 }
         ],
         B: [
             { id: 'rank_fish', textFn: (t, p) => `${p}ランクの魚を${t}匹釣る`, minTarget: 5, maxTarget: 10, baseReward: 800, rankList: ['D', 'C', 'B', 'A', 'S'] },
@@ -270,21 +270,8 @@ const MissionManager = {
         const text = template.textFn(finalTarget, param);
 
         // 報酬計算（パワー + スキル）
-        let ticketProb = 0.2; // 基本確率 20%
-
-        // スキル補正: gacha_mission_up
-        if (GameState.equippedSkills) {
-            const gachaMissionBonus = GameState.equippedSkills.reduce((sum, id) => {
-                const s = GAME_DATA.SKILLS.find(sk => sk.id === id);
-                return sum + (s && s.effect.type === 'gacha_mission_up' ? s.effect.value : 0);
-            }, 0);
-            if (gachaMissionBonus > 0) {
-                ticketProb += gachaMissionBonus;
-                console.log(`🎫 ガチャミッション確率UP: ${(ticketProb * 100).toFixed(0)}% (+${(gachaMissionBonus * 100).toFixed(0)}%)`);
-            }
-        }
-
-        const isTicket = Math.random() < ticketProb;
+        // 動的ミッションの報酬はガチャチケット確定
+        const isTicket = true;
         const baseRewardValue = template.baseReward * (finalTarget / template.minTarget);
         // コイン報酬には modifier を適用
         const scaledRewardValue = baseRewardValue * powerScale * rewardModifier;
