@@ -1340,6 +1340,29 @@ const FishingGame = {
             } // end loop
         } // end if (lootTable.skills)
 
+        // スロット拡張スキル抽選 (各チェストに応じたTierのものを5%で排出)
+        const expansionSkillMap = {
+            'WOOD': 'slot_expansion_1',
+            'SILVER': 'slot_expansion_2',
+            'GOLD': 'slot_expansion_3'
+        };
+
+        const expansionSkillId = expansionSkillMap[chest.treasureType];
+        if (expansionSkillId) {
+            // 5%の確率
+            if (Math.random() < 0.05) {
+                const skillData = GAME_DATA.SKILLS.find(s => s.id === expansionSkillId);
+                if (skillData) {
+                    // 既に持っているかチェックはGameState.addSkillで行うが、
+                    // スロット拡張は重複所持意味ないので、既に持ってたらスキップするか、
+                    // 予備として持たせるか（現状のシステムでは持ってるだけなら無害）
+                    console.log(`✨ スロット拡張モジュール当選！: ${skillData.name}`);
+                    GameState.addSkill(skillData.id);
+                    results.push({ type: 'skill', id: skillData.id, name: `${skillData.name} (Rare!)` });
+                }
+            }
+        }
+
         // 限定スキル抽選 (宝箱からのみ、低確率1%)
         if (Math.random() < 0.01) {
             const limitedSkillIds = [

@@ -19,7 +19,11 @@ const ShopManager = {
 
         if (category === 'casino') {
             UIManager.showScreen('casino');
+            UIManager.showScreen('casino');
             CasinoManager.render();
+        } else if (category === 'port') {
+            UIManager.showScreen('port');
+            this.renderPort();
         } else {
             UIManager.showScreen('shop');
             this.renderShop();
@@ -136,11 +140,18 @@ const ShopManager = {
                     <div class="building-desc">見た目の変更・空の変更</div>
                 </div>
             </div>
-             <div class="shop-building casino" onclick="ShopManager.setCategory('casino')">
+            <div class="shop-building casino" onclick="ShopManager.setCategory('casino')">
                 <div class="building-icon"><span class="material-icons">stars</span></div>
                 <div class="building-info">
                     <div class="building-name">グランド・カジノ</div>
                     <div class="building-desc">運試しとスキルリサイクル</div>
+                </div>
+            </div>
+             <div class="shop-building port" onclick="ShopManager.setCategory('port')" style="border-color: #3b82f6;">
+                <div class="building-icon" style="color: #3b82f6;"><span class="material-icons">anchor</span></div>
+                <div class="building-info">
+                    <div class="building-name">ポート・ロイヤル</div>
+                    <div class="building-desc">自動漁獲船の管理・運用</div>
                 </div>
             </div>
         `;
@@ -1230,15 +1241,15 @@ const ShopManager = {
                 </div>
                 <div class="item-action bait-purchase-grid" style="display: flex; gap: 8px; flex-direction: column; min-width: 140px;">
                     ${(() => {
-                        // 割引計算
-                        const discount = GameState.getShopDiscount();
-                        const buttonsHtml = [1, 10].map(multiplier => {
-                            const finalPrice = Math.floor(bait.price * multiplier * (1.0 - discount));
-                            const canBuy = GameState.money >= finalPrice;
-                            const isDiscounted = discount > 0;
-                            const label = multiplier === 1 ? '1セット' : `${multiplier}セット`;
+                    // 割引計算
+                    const discount = GameState.getShopDiscount();
+                    const buttonsHtml = [1, 10].map(multiplier => {
+                        const finalPrice = Math.floor(bait.price * multiplier * (1.0 - discount));
+                        const canBuy = GameState.money >= finalPrice;
+                        const isDiscounted = discount > 0;
+                        const label = multiplier === 1 ? '1セット' : `${multiplier}セット`;
 
-                            return `
+                        return `
                                 <button class="btn btn-buy ${canBuy ? '' : 'disabled'}" 
                                         style="width: 100%; border-radius: 50px; font-weight: bold; box-shadow: 0 4px 0 #e08e0b;"
                                         onclick="ShopManager.buyBait('${bait.id}', ${multiplier})" ${canBuy ? '' : 'disabled'}>
@@ -1246,10 +1257,10 @@ const ShopManager = {
                                     <div style="font-size: 1.0em;">¥${finalPrice.toLocaleString()}</div>
                                 </button>
                             `;
-                        }).join('');
+                    }).join('');
 
-                        return buttonsHtml;
-                    })()}
+                    return buttonsHtml;
+                })()}
 
             `;
 
@@ -1400,6 +1411,227 @@ const ShopManager = {
         UIManager.updateInventory();
         // ショップを再描画して購入ボタンを更新
         this.renderShop();
+    },
+
+    // ========================================
+    // 港（Port）画面描画
+    // ========================================
+    renderPort() {
+        const portArea = document.getElementById('port-main-area');
+        const moneyDisplay = document.getElementById('port-money-display');
+        if (moneyDisplay) moneyDisplay.textContent = `${GameState.money.toLocaleString()} G`;
+
+        if (!portArea) return;
+
+        const port = GameState.port;
+        const ownedShip = port.ownedShipId
+            ? GAME_DATA.SHIPS.find(s => s.id === port.ownedShipId)
+            : null;
+
+        let html = '';
+
+        // 1. 保有船ステータス
+        if (ownedShip) {
+            // 燃料ゲージ率 (最大300分=5時間 をMAXバー表示基準とする)
+            const maxBarMinutes = 300;
+            const fuelPercent = Math.min(100, (port.fuelMinutes / maxBarMinutes) * 100);
+
+            // 在庫状況
+            const stockCount = port.stock.length;
+            const stockPercent = Math.min(100, (stockCount / ownedShip.capacity) * 100);
+
+            // 予想売却額
+            let estimatedValue = 0;
+            const priceBonus = GameState.getPriceBonus(); // 既存: return (1.0 + bonus) ? or just bonus?
+            // GameState.getPriceBonus implementation check:
+            // "bonus *= skill.effect.value;" (initially 1.0?? NO)
+            // It returns multiplier? Let's check logic:
+            // "let bonus = 0; ... bonus += skill.effect.value;" -> Returns simple add-on (e.g. 0.1)
+            // GameState.collectPortStock uses "priceMultiplier = 1.0 + priceBonus"
+            // So here we do the same.
+
+            // Actually, verify_port_logic used "Math.floor(fish.price * priceMultiplier)"
+            const multiplier = 1.0 + priceBonus;
+
+            port.stock.forEach(fish => {
+                estimatedValue += Math.floor(fish.price * multiplier);
+            });
+
+            html += `
+                <div class="port-status-card">
+                    <div class="card-header-row">
+                        <h3><span class="material-icons">sailing</span> ${ownedShip.name}</h3>
+                        <span class="rank-badge rarity-${ownedShip.maxRarity}">MAX Rank: ${ownedShip.maxRarity}</span>
+                    </div>
+                    
+                    <div class="status-bars">
+                        <!-- 燃料 -->
+                        <div class="status-bar-group">
+                            <div class="bar-label">
+                                <span class="material-icons">local_gas_station</span> 燃料
+                                <span class="bar-value">${port.fuelMinutes} <small>(稼働:約${Math.floor(port.fuelMinutes / (ownedShip.fuelConsumption || 1))}分)</small></span>
+                            </div>
+                            <div class="progress-track" style="background:#444; height:10px; border-radius:5px; overflow:hidden;">
+                                <div class="progress-fill fuel" style="width: ${fuelPercent}%; background:var(--accent-color); height:100%;"></div>
+                            </div>
+                            <div class="bar-desc" style="font-size:10px; color:#aaa; margin-top:2px;">
+                                1分ごとに${ownedShip.fuelConsumption || 1}消費 / 5分ごとに漁獲
+                            </div>
+                        </div>
+
+                        <!-- 倉庫 -->
+                        <div class="status-bar-group" style="margin-top:10px;">
+                            <div class="bar-label">
+                                <span class="material-icons">inventory_2</span> 倉庫
+                                <span class="bar-value">${stockCount} / ${ownedShip.capacity}</span>
+                            </div>
+                            <div class="progress-track" style="background:#444; height:10px; border-radius:5px; overflow:hidden;">
+                                <div class="progress-fill stock ${stockCount >= ownedShip.capacity ? 'full' : ''}" style="width: ${stockPercent}%; background:${stockCount >= ownedShip.capacity ? '#ff5252' : '#4caf50'}; height:100%;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="port-actions" style="margin-top:15px; display:flex; justify-content:space-between; align-items:center;">
+                        <div class="stock-info">
+                            予想売上: <strong style="color:#ffd700;">${estimatedValue.toLocaleString()} G</strong>
+                        </div>
+                        <button class="btn btn-collect ${stockCount > 0 ? '' : 'disabled'}" 
+                                onclick="ShopManager.collectPortStock()" ${stockCount > 0 ? '' : 'disabled'}
+                                style="background:${stockCount > 0 ? 'var(--primary-color)' : '#555'}; color:white; border:none; padding:8px 16px; border-radius:4px;">
+                            <span class="material-icons" style="vertical-align:middle; font-size:18px;">savings</span> 収獲を受け取る
+                        </button>
+                    </div>
+                </div>
+            `;
+        } else {
+            // 船未所持
+            html += `
+                <div class="port-status-card empty" style="text-align:center; padding:30px; background:rgba(0,0,0,0.3); border-radius:8px;">
+                    <div class="empty-message">
+                        <span class="material-icons" style="font-size: 48px; color: #555;">no_transfer</span>
+                        <p style="color:#aaa;">漁船を所持していません。<br>造船所で船を購入してください。</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 2. 燃料スタンド
+        html += `<h3 class="section-title" style="margin-top:20px; border-bottom:1px solid #444; padding-bottom:5px;"><span class="material-icons">local_gas_station</span> 給油スタンド</h3>`;
+        html += `<div class="fuel-shop-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(100px, 1fr)); gap:10px; margin-top:10px;">`;
+        GAME_DATA.FUELS.forEach(fuel => {
+            const discount = GameState.getPortFuelDiscount();
+            const finalPrice = Math.floor(fuel.price * (1.0 - discount));
+            const canBuy = GameState.money >= finalPrice;
+
+            let priceDisplay = `¥${finalPrice.toLocaleString()}`;
+            if (discount > 0) {
+                // 割引表示
+                priceDisplay = `<span style="text-decoration:line-through; color:#aaa; font-size:10px;">¥${fuel.price.toLocaleString()}</span> <span style="color:#ffeb3b;">¥${finalPrice.toLocaleString()}</span>`;
+            }
+
+            html += `
+                <div class="fuel-item" style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px; text-align:center;">
+                    <div class="fuel-icon"><span class="material-icons" style="color:var(--accent-color);">opacity</span></div>
+                    <div class="fuel-info">
+                        <div class="fuel-name" style="font-weight:bold; font-size:14px;">${fuel.name}</div>
+                        <div class="fuel-effect" style="font-size:12px; color:#aaa;">+${fuel.recovery}分</div>
+                    </div>
+                    <button class="btn btn-buy-small ${canBuy ? '' : 'disabled'}" 
+                            onclick="ShopManager.buyFuel('${fuel.id}')" ${canBuy ? '' : 'disabled'}
+                            style="width:100%; margin-top:5px; font-size:12px; padding:4px;">
+                        ${priceDisplay}
+                    </button>
+                </div>
+            `;
+        });
+        html += `</div>`;
+
+        // 3. 造船所
+        html += `<h3 class="section-title" style="margin-top:20px; border-bottom:1px solid #444; padding-bottom:5px;"><span class="material-icons">store</span> 造船所</h3>`;
+        html += `<div class="ship-shop-list" style="display:flex; flex-direction:column; gap:10px; margin-top:10px; padding-bottom:50px;">`;
+        GAME_DATA.SHIPS.forEach(ship => {
+            const isOwned = port.ownedShipId === ship.id;
+            const canBuy = GameState.money >= ship.price;
+
+            // 性能比較
+            let capacityDiff = '';
+            if (ownedShip) {
+                const diff = ship.capacity - ownedShip.capacity;
+                if (diff > 0) capacityDiff = `<span class="stat-up" style="color:#4caf50;">(+${diff})</span>`;
+                else if (diff < 0) capacityDiff = `<span class="stat-down" style="color:#ff5252;">(${diff})</span>`;
+            }
+
+            html += `
+                <div class="shop-item ship-item ${isOwned ? 'owned' : ''}" style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.5); padding:10px; border-radius:8px; border:1px solid ${isOwned ? 'var(--primary-color)' : '#444'};">
+                    <div class="item-info">
+                        <div class="item-name rarity-${ship.maxRarity}" style="font-weight:bold; font-size:16px;">${ship.name}</div>
+                        <div class="item-desc" style="font-size:12px; color:#aaa;">${ship.description}</div>
+                        <div class="ship-stats" style="font-size:12px; margin-top:4px;">
+                            <span style="display:block;">容量: ${ship.capacity} ${capacityDiff}</span>
+                            <span style="display:block;">対象ランク: 〜${ship.maxRarity}</span>
+                            <span style="display:block;">消費燃料: ${ship.fuelConsumption || 1}/分</span>
+                            <span style="display:block;">漁獲量: ${ship.catchAmountRange[0]}〜${ship.catchAmountRange[1]}匹/回</span>
+                        </div>
+                    </div>
+                    <div class="item-action">
+                        ${isOwned
+                    ? '<span class="status equipped" style="color:var(--primary-color); font-weight:bold;">運用中</span>'
+                    : `<button class="btn btn-buy ${canBuy ? '' : 'disabled'}" 
+                                   onclick="ShopManager.buyShip('${ship.id}')" ${canBuy ? '' : 'disabled'}
+                                   style="padding:8px 12px;">
+                                   ¥${ship.price.toLocaleString()}
+                               </button>`
+                }
+                    </div>
+                </div>
+            `;
+        });
+        html += `</div>`;
+
+        portArea.innerHTML = html;
+    },
+
+    // 船購入アクション
+    buyShip(shipId) {
+        if (confirm('船を買い替えますか？\n(現在の船は廃棄され、燃料は引き継がれます)')) {
+            if (GameState.buyShip(shipId)) {
+                UIManager.showMessage('新しい船を購入しました！');
+                this.renderPort();
+                const moneyDisplay = document.getElementById('port-money-display');
+                if (moneyDisplay) moneyDisplay.textContent = `${GameState.money.toLocaleString()} G`;
+                UIManager.updateMoney(); // 全体更新
+            } else {
+                UIManager.showMessage('資金が足りません');
+            }
+        }
+    },
+
+    // 燃料購入アクション
+    buyFuel(fuelId) {
+        if (GameState.addFuel(fuelId)) {
+            // UIManager.showMessage('燃料を補給しました'); // 頻繁に買うのでログ出しすぎない方がいいかも
+            this.renderPort();
+            const moneyDisplay = document.getElementById('port-money-display');
+            if (moneyDisplay) moneyDisplay.textContent = `${GameState.money.toLocaleString()} G`;
+            UIManager.updateMoney();
+        } else {
+            UIManager.showMessage('資金が足りません');
+        }
+    },
+
+    // 収獲受け取りアクション
+    collectPortStock() {
+        const earned = GameState.collectPortStock();
+        if (earned > 0) {
+            // 音を鳴らす？
+            UIManager.showMessage(`水揚げ完了！ ${earned.toLocaleString()} G を獲得しました`);
+            this.renderPort();
+            const moneyDisplay = document.getElementById('port-money-display');
+            if (moneyDisplay) moneyDisplay.textContent = `${GameState.money.toLocaleString()} G`;
+            UIManager.updateMoney();
+        } else {
+            UIManager.showMessage('収獲がありません');
+        }
     }
 };
 

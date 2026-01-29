@@ -70,7 +70,8 @@ const SaveManager = {
                     baitInventory: { ...gameState.baitInventory },
                     baitType: gameState.baitType,
                     selectedSkin: gameState.selectedSkin,
-                    selectedSky: gameState.selectedSky
+                    selectedSky: gameState.selectedSky,
+                    skillSets: [...(gameState.skillSets || [])]
                 },
                 rod: {
                     rankIndex: gameState.rodRankIndex,

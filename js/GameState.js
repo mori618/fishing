@@ -15,6 +15,7 @@ const GameState = {
     rodRankIndex: 0,
     rodStarLevels: {},  // インデックスごとの星数 { 0: 0, 1: 0 }
     equippedSkills: [],
+    skillSets: [], // 保存されたスキルセット { name: string, skills: string[] }
 
     // Getter for backward compatibility (current rod's stars)
     get rodStars() {
@@ -87,6 +88,16 @@ const GameState = {
     },
 
     // ========================================
+    // 港（Port）状態
+    // ========================================
+    port: {
+        ownedShipId: null,
+        fuelMinutes: 0,
+        stock: [],
+        lastProcessTime: Date.now()
+    },
+
+    // ========================================
     // 初期化
     // ========================================
     init(saveData = null) {
@@ -134,6 +145,13 @@ const GameState = {
             }
 
             this.equippedSkills = [...saveData.rod.equippedSkills];
+
+            // スキルセットの復元
+            if (saveData.player && saveData.player.skillSets) {
+                this.skillSets = [...saveData.player.skillSets];
+            } else {
+                this.skillSets = [];
+            }
 
             this.inventory = [...saveData.inventory];
 
@@ -224,6 +242,24 @@ const GameState = {
             this.selectedSkin = saveData.player.selectedSkin || 'skin_default';
             this.unlockedSkies = saveData.unlocked.skies || ['sky_default'];
             this.selectedSky = saveData.player.selectedSky || 'sky_default';
+
+            // 港データの復元
+            if (saveData.port) {
+                this.port = {
+                    ownedShipId: saveData.port.ownedShipId || null,
+                    fuelMinutes: saveData.port.fuelMinutes || 0,
+                    stock: saveData.port.stock || [],
+                    lastProcessTime: saveData.port.lastProcessTime || Date.now()
+                };
+            } else {
+                // 既存データへの追加
+                this.port = {
+                    ownedShipId: null,
+                    fuelMinutes: 0,
+                    stock: [],
+                    lastProcessTime: Date.now()
+                };
+            }
         } else {
             // 新規ゲーム
             const defaultData = SaveManager.getDefaultData();
@@ -243,6 +279,13 @@ const GameState = {
             this.selectedSkin = 'skin_default';
             this.unlockedSkies = ['sky_default'];
             this.selectedSky = 'sky_default';
+            // 初期港データ
+            this.port = {
+                ownedShipId: null,
+                fuelMinutes: 0,
+                stock: [],
+                lastProcessTime: Date.now()
+            };
         }
 
 
@@ -341,7 +384,126 @@ const GameState = {
     // スキルスロット数（＝星の数）
     // ========================================
     getSkillSlots() {
-        return this.rodStars + 1;
+        let slots = this.rodStars + 1;
+
+        // スキルによる拡張
+        // スロット拡張スキル自体も装備枠を1つ使うため、
+        // 実質的な増加量は value - 1 となるが、単純に枠を増やす処理とする
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'skill_slot_expansion') {
+                slots += skill.effect.value;
+            }
+        }
+
+        return slots;
+    },
+
+    // ========================================
+    // スキルセット操作
+    // ========================================
+
+    // 現在の装備をセットとして保存
+    saveCurrentSkillSet(name) {
+        if (!name) return false;
+
+        // 同じ名前があれば上書き、なければ追加
+        const existingIndex = this.skillSets.findIndex(set => set.name === name);
+        const newSet = {
+            name: name,
+            skills: [...this.equippedSkills]
+        };
+
+        if (existingIndex >= 0) {
+            this.skillSets[existingIndex] = newSet;
+            console.log(`💾 スキルセット更新: ${name}`);
+        } else {
+            this.skillSets.push(newSet);
+            console.log(`💾 新規スキルセット保存: ${name}`);
+        }
+
+        // 保存
+        if (typeof SaveManager !== 'undefined') {
+            SaveManager.save(this);
+        }
+        return true;
+    },
+
+    // スキルセットを装備可能かチェック
+    canEquipSkillSet(skillsArray) {
+        // 1. スロット数チェック
+        const currentRod = this.getCurrentRod();
+        // 基本スロット = (竿の星の数) + 1
+        // ※ rodStarsはgetterで現在のrodRankIndexの星の数を返す
+        let maxSlots = this.rodStars + 1;
+
+        // セット内のスキルによる拡張分を加算
+        // 「セットに含まれている」拡張スキルが有効になる前提で計算する
+        for (const skillId of skillsArray) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'skill_slot_expansion') {
+                maxSlots += skill.effect.value;
+            }
+        }
+
+        if (skillsArray.length > maxSlots) {
+            return {
+                can: false,
+                reason: `スロット数が足りません (必要: ${skillsArray.length}, 上限: ${maxSlots})`
+            };
+        }
+
+        // 2. 所持数チェック
+        // 必要なスキルの数を集計
+        const needed = {};
+        for (const id of skillsArray) {
+            needed[id] = (needed[id] || 0) + 1;
+        }
+
+        // インベントリチェック
+        const missingSkills = [];
+        for (const [id, count] of Object.entries(needed)) {
+            const owned = this.skillInventory[id] || 0;
+            if (owned < count) {
+                const skillName = GAME_DATA.SKILLS.find(s => s.id === id)?.name || id;
+                const missingCount = count - owned;
+                missingSkills.push(`「${skillName}」x${missingCount}`);
+            }
+        }
+
+        if (missingSkills.length > 0) {
+            return {
+                can: false,
+                reason: `以下のスキルが不足しています:\n${missingSkills.join('\n')}`
+            };
+        }
+
+        return { can: true };
+    },
+
+    // スキルセットを適用
+    applySkillSet(index) {
+        if (index < 0 || index >= this.skillSets.length) {
+            return { success: false, message: '指定されたスキルセットが存在しません' };
+        }
+
+        const targetSet = this.skillSets[index];
+        const check = this.canEquipSkillSet(targetSet.skills);
+
+        if (!check.can) {
+            return { success: false, message: check.reason };
+        }
+
+        // 適用
+        this.equippedSkills = [...targetSet.skills];
+        console.log(`✨ スキルセット「${targetSet.name}」を装備しました`);
+
+        // 保存
+        if (typeof SaveManager !== 'undefined') {
+            SaveManager.save(this);
+        }
+
+        return { success: true };
     },
 
     // ========================================
@@ -802,7 +964,133 @@ const GameState = {
         return bonus;
     },
 
+    // ========================================
+    // 港スキル補正 (Port Skill Modifiers)
+    // ========================================
 
+    // 漁獲間隔短縮率 (0.0 ~ 1.0)
+    // 漁獲間隔短縮 multiplier (1.0 - reduction)
+    getShipIntervalMultiplier() {
+        let reduction = 0;
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'ship_interval_down') {
+                reduction += skill.effect.value;
+            }
+        }
+        return Math.max(1.0 - reduction, 0.1); // 最低10%は残す
+    },
+
+    // 漁獲量ボーナス (min, max加算値)
+    // 漁獲量ボーナス (min, max加算値)
+    getShipAmountBonus() {
+        let bonus = { min: 0, max: 0 };
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'ship_amount_up') {
+                bonus.min += skill.effect.min;
+                bonus.max += skill.effect.max;
+            }
+        }
+        return bonus;
+    },
+
+    // 燃料消費回避確率
+    // 燃料消費効率 (回避確率)
+    getShipFuelEfficiency() {
+        let chance = 0;
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'ship_fuel_eco') {
+                chance += skill.effect.value;
+            }
+        }
+        return Math.min(chance, 1.0);
+    },
+
+    // 燃料購入割引率
+    getPortFuelDiscount() {
+        let discount = 0;
+        for (const skillId of this.equippedSkills) {
+            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+            if (skill && skill.effect.type === 'ship_fuel_discount') {
+                discount += skill.effect.value;
+            }
+        }
+        return Math.min(discount, 0.9); // 最大90%OFF
+    },
+
+    // ========================================
+    // 港管理メソッド
+    // ========================================
+
+    // 船を購入
+    buyShip(shipId) {
+        const ship = GAME_DATA.SHIPS.find(s => s.id === shipId);
+        if (!ship) {
+            console.error(`Ship not found: ${shipId}`);
+            return false;
+        }
+
+        if (this.money < ship.price) {
+            console.log('Not enough money to buy ship');
+            return false;
+        }
+
+        this.addMoney(-ship.price);
+        this.port.ownedShipId = shipId;
+        console.log(`Ship purchased: ${ship.name}`);
+        return true;
+    },
+
+    // 燃料を追加
+    addFuel(fuelId) {
+        const fuel = GAME_DATA.FUELS.find(f => f.id === fuelId);
+        if (!fuel) {
+            console.error(`Fuel not found: ${fuelId}`);
+            return false;
+        }
+
+        // 割引適用
+        const discount = this.getPortFuelDiscount();
+        const finalPrice = Math.floor(fuel.price * (1.0 - discount));
+
+        if (this.money < finalPrice) {
+            console.log('Not enough money to buy fuel');
+            return false;
+        }
+
+        this.addMoney(-finalPrice);
+        this.port.fuelMinutes += fuel.recovery;
+        console.log(`Fuel added: +${fuel.recovery} mins. Total: ${this.port.fuelMinutes} mins`);
+        return true;
+    },
+
+    // 港の在庫を換金
+    collectPortStock() {
+        if (!this.port.stock || this.port.stock.length === 0) {
+            return 0;
+        }
+
+        let totalValue = 0;
+        const priceBonus = this.getPriceBonus(); // 例: 0.1 (+10%), -0.2 (-20%) etc
+        const priceMultiplier = 1.0 + priceBonus;
+
+        this.port.stock.forEach(fish => {
+            // 基本売価 * (1 + 補正)
+            let sellPrice = Math.floor(fish.price * priceMultiplier);
+            if (sellPrice < 1) sellPrice = 1;
+            totalValue += sellPrice;
+        });
+
+        this.addMoney(totalValue);
+        console.log(`Port stock collected: ${this.port.stock.length} fish for ${totalValue} G`);
+
+        // 在庫クリア
+        this.port.stock = [];
+
+        return totalValue;
+    },
 
     // ========================================
     // ダブルキャッチ (2匹釣り) 確率を取得

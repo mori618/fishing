@@ -146,7 +146,7 @@
                 <h2><span class="material-icons">auto_stories</span> 冒険の手引き</h2>
                 <button id="help-close-btn" class="btn-close"><span class="material-icons">close</span></button>
             </div>
-            
+
             <div class="help-tabs">
                 <button class="help-tab active" data-target="help-fishing">釣り</button>
                 <button class="help-tab" data-target="help-town">町・施設</button>
@@ -184,15 +184,21 @@
                     <div class="help-grid">
                         <div class="grid-item">
                             <div class="item-icon"><span class="material-icons">storefront</span></div>
-                            <div class="item-info"><strong>釣具店</strong><p>強力な竿や効率の良い餌を購入できます。</p></div>
+                            <div class="item-info"><strong>釣具店</strong>
+                                <p>強力な竿や効率の良い餌を購入できます。</p>
+                            </div>
                         </div>
                         <div class="grid-item">
                             <div class="item-icon"><span class="material-icons">auto_fix_high</span></div>
-                            <div class="item-info"><strong>スキル店</strong><p>釣りを有利にするパッシブスキルを習得！</p></div>
+                            <div class="item-info"><strong>スキル店</strong>
+                                <p>釣りを有利にするパッシブスキルを習得！</p>
+                            </div>
                         </div>
                         <div class="grid-item">
                             <div class="item-icon"><span class="material-icons">casino</span></div>
-                            <div class="item-info"><strong>カジノ</strong><p>運を味方に。レアな景品やガシャ券を狙おう。</p></div>
+                            <div class="item-info"><strong>カジノ</strong>
+                                <p>運を味方に。レアな景品やガシャ券を狙おう。</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -269,6 +275,25 @@
         <main class="shop-content casino-theme">
             <div id="casino-main-area">
                 <!-- Casino content injected here -->
+            </div>
+        </main>
+    </div>
+
+    <div id="port-screen" class="screen">
+        <header class="shop-header">
+            <button class="btn-header-back" onclick="ShopManager.setCategory('town')">
+                <span class="material-icons">arrow_back</span>
+            </button>
+            <h2 class="shop-title"><span class="material-icons">anchor</span> ポート・ロイヤル</h2>
+            <div class="shop-money">
+                <span class="status-icon"><span class="material-icons">paid</span></span>
+                <span id="port-money-display">¥0</span>
+            </div>
+        </header>
+
+        <main class="shop-content">
+            <div id="port-main-area">
+                <!-- Port content injected here -->
             </div>
         </main>
     </div>
@@ -367,6 +392,7 @@
     <script src="js/EncyclopediaManager.js"></script>
     <script src="js/SkillInventoryManager.js"></script>
     <script src="js/UIManager.js"></script>
+    <script src="js/PortManager.js"></script>
     <script src="js/main.js"></script>
 </body>
 
