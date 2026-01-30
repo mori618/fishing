@@ -1731,8 +1731,8 @@ const FISHING_CONFIG = {
     waitTimeMax: 6000,
 
     // 予兆（ウキ揺れ）の設定
-    nibbleCountMin: 3,
-    nibbleCountMax: 6,
+    nibbleCountMin: 1,
+    nibbleCountMax: 3,
     nibbleIntervalMin: 500,  // 0.5秒
     nibbleIntervalMax: 1500, // 1.5秒
     nibbleShakeDuration: 200, // 1回の揺れにかかる時間（ミリ秒）
