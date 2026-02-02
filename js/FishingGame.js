@@ -898,6 +898,13 @@ const FishingGame = {
             return;
         }
 
+        // 経験値を獲得 (魚のパワー分)
+        if (this.currentFish) {
+            const xp = Math.floor(this.currentFish.power);
+            GameState.addExp(xp);
+            console.log(`🆙 経験値獲得: ${xp} XP`);
+        }
+
         // インベントリに追加 (複数釣り判定)
         let catchCount = 1;
         const chance3 = GameState.getMultiCatch3Chance();

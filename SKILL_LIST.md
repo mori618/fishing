@@ -292,3 +292,17 @@ HIT受付時間（ウキが沈んでから逃げるまでの時間）を延長�
 | `slot_expansion_1` | 拡張モジュール I | 1 | 5,000 | スキルスロット+2 (実質+1) | `skill_slot_expansion`: +2 |
 | `slot_expansion_2` | 拡張モジュール II | 2 | 20,000 | スキルスロット+3 (実質+2) | `skill_slot_expansion`: +3 |
 | `slot_expansion_3` | 拡張モジュール III | 3 | 50,000 | スキルスロット+4 (実質+3) | `skill_slot_expansion`: +4 |
+
+## ランク関連系 (Rank & XP)
+ランクアップや経験値に関連するスキルです。
+
+| ID | 名前 | Tier | 価格 | 説明 | 効果詳細 |
+|---|---|---|---|---|---|
+| `xp_boost_1` | 経験値アップ I | 1 | 2,000 | 経験値 +10% | `xp_boost`: +10% |
+| `xp_boost_2` | 経験値アップ II | 2 | 8,000 | 経験値 +20% | `xp_boost`: +20% |
+| `xp_boost_3` | 経験値アップ III | 3 | 25,000 | 経験値 +50% | `xp_boost`: +50% |
+| `xp_boost_4` | 知識の探求者 極 | 4 | 80,000 | 経験値 +100% | `xp_boost`: +100% |
+| `rank_power_boost_1` | ランク熟練 I | 1 | 5,000 | ランクパワーボーナス +50% | `rank_power_boost`: +50% |
+| `rank_power_boost_2` | ランク熟練 II | 2 | 15,000 | ランクパワーボーナス +100% | `rank_power_boost`: +100% |
+| `rank_power_boost_3` | ランク熟練 III | 3 | 50,000 | ランクパワーボーナス +200% | `rank_power_boost`: +200% |
+| `rank_power_boost_4` | 王者の風格 極 | 4 | 150,000 | ランクパワーボーナス +400% | `rank_power_boost`: +400% |

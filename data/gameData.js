@@ -269,505 +269,313 @@ const TITLE_CONFIG = {
 };
 
 // ========================================
+// ランクシステム設定
+// ========================================
+const RANK_SYSTEM = {
+    baseExp: 100,       // ランク1→2に必要な経験値
+    expGrowthRate: 1.15, // 必要経験値の増加率 (15%増)
+    powerBonusPerRank: 0.01, // ランクごとの釣りパワーボーナス (1%)
+    // ランクアップ報酬 (ジェネレーター関数等で動的に処理するか、固定パターン)
+    rewardCoinBase: 1000,
+    rewardCoinGrowth: 500,
+};
+
+// ========================================
 // スキルデータ
 // ========================================
 const SKILLS = [
-    // パワーアップ系
-    // パワーアップ系 (Power Boost)
     { id: 'power_up_1', name: 'パワーUP I', description: '釣りパワー+5', effect: { type: 'power_boost', value: 5 }, price: 200, tier: 1 },
     { id: 'power_up_2', name: 'パワーUP II', description: '釣りパワー+15', effect: { type: 'power_boost', value: 15 }, price: 800, tier: 2 },
     { id: 'power_up_3', name: 'パワーUP III', description: '釣りパワー+30', effect: { type: 'power_boost', value: 30 }, price: 2500, tier: 3 },
     { id: 'power_up_4', name: 'パワーUP 極', description: '釣りパワー+60', effect: { type: 'power_boost', value: 60 }, price: 10000, tier: 4 },
-
-    // オーバードライブ (Overdrive) - 攻速両面強化
     { id: 'overdrive_1', name: 'オーバードライブ I', description: 'パワー+15% & ゲージ速度+5%', effect: { type: 'overdrive', power: 0.15, speed: 0.05 }, price: 1000, tier: 1 },
     { id: 'overdrive_2', name: 'オーバードライブ II', description: 'パワー+30% & ゲージ速度+10%', effect: { type: 'overdrive', power: 0.3, speed: 0.1 }, price: 4000, tier: 2 },
     { id: 'overdrive_3', name: 'オーバードライブ III', description: 'パワー+50% & ゲージ速度+20%', effect: { type: 'overdrive', power: 0.5, speed: 0.2 }, price: 10000, tier: 3 },
-    { id: 'overdrive_4', name: 'オーバードライブ 極', description: 'パワー+100% & ゲージ速度+40%', effect: { type: 'overdrive', power: 1.0, speed: 0.4 }, price: 30000, tier: 4 },
-
-    // アルティメットリスク (Ultimate Risk) - 超絶強化・超絶リスク
+    { id: 'overdrive_4', name: 'オーバードライブ 極', description: 'パワー+100% & ゲージ速度+30%', effect: { type: 'overdrive', power: 1, speed: 0.4 }, price: 30000, tier: 4 },
     { id: 'ultimate_risk_1', name: '究極の賭け I', description: 'パワー+40% & 失敗時に所持魚が半分減少', effect: { type: 'ultimate_risk', power: 0.4, lossRate: 0.5 }, price: 5000, tier: 1 },
     { id: 'ultimate_risk_2', name: '究極の賭け II', description: 'パワー+70% & 失敗時に所持魚が8割減少', effect: { type: 'ultimate_risk', power: 0.7, lossRate: 0.8 }, price: 15000, tier: 2 },
-    { id: 'ultimate_risk_3', name: '究極の賭け III', description: 'パワー+100% & 失敗時に所持魚が0になる', effect: { type: 'ultimate_risk', power: 1.0, lossRate: 1.0 }, price: 50000, tier: 3 },
-    { id: 'ultimate_risk_4', name: '禁忌の力 極', description: 'パワー+200% & 失敗時に所持金と魚が0になる', effect: { type: 'ultimate_risk', power: 2.0, lossRate: 1.0, moneyLoss: true }, price: 150000, tier: 4 },
-
-    // ゲージ減速系 (Gauge Slow)
+    { id: 'ultimate_risk_3', name: '究極の賭け III', description: 'パワー+100% & 失敗時に所持魚が0になる', effect: { type: 'ultimate_risk', power: 1, lossRate: 1 }, price: 50000, tier: 3 },
+    { id: 'ultimate_risk_4', name: '究極の賭け 極', description: 'パワー+200% & 失敗時に所持金と魚が0になる', effect: { type: 'ultimate_risk', power: 2, lossRate: 1, moneyLoss: true }, price: 150000, tier: 4 },
     { id: 'gauge_slow_1', name: 'ゲージ減速 I', description: 'ゲージ速度-10%', effect: { type: 'gauge_slow', value: 0.1 }, price: 300, tier: 1 },
     { id: 'gauge_slow_2', name: 'ゲージ減速 II', description: 'ゲージ速度-20%', effect: { type: 'gauge_slow', value: 0.2 }, price: 1000, tier: 2 },
     { id: 'gauge_slow_3', name: 'ゲージ減速 III', description: 'ゲージ速度-30%', effect: { type: 'gauge_slow', value: 0.3 }, price: 5000, tier: 3 },
     { id: 'gauge_slow_4', name: 'ゲージ減速 極', description: 'ゲージ速度-45%', effect: { type: 'gauge_slow', value: 0.45 }, price: 15000, tier: 4 },
-
-    // 価格アップ系
-    // 価格アップ系 (Price Boost)
     { id: 'price_up_1', name: '売値UP I', description: '魚の売却価格+10%', effect: { type: 'price_boost', value: 0.1 }, price: 400, tier: 1 },
     { id: 'price_up_2', name: '売値UP II', description: '魚の売却価格+25%', effect: { type: 'price_boost', value: 0.25 }, price: 1500, tier: 2 },
     { id: 'price_up_3', name: '売値UP III', description: '魚の売却価格+45%', effect: { type: 'price_boost', value: 0.45 }, price: 4000, tier: 3 },
-    { id: 'price_up_4', name: '売値UP 極', description: '魚の売却価格+70%', effect: { type: 'price_boost', value: 0.70 }, price: 12000, tier: 4 },
-
-    // ハイリスク売却 (High Risk Sell) - 闇取引
+    { id: 'price_up_4', name: '売値UP 極', description: '魚の売却価格+70%', effect: { type: 'price_boost', value: 0.7 }, price: 12000, tier: 4 },
     { id: 'high_risk_sell_1', name: '闇取引 I', description: '売却価格1.2倍 & 失敗時に所持金微減', effect: { type: 'high_risk_sell', priceMult: 1.2, penaltyRate: 0.05 }, price: 1200, tier: 1 },
     { id: 'high_risk_sell_2', name: '闇取引 II', description: '売却価格1.5倍 & 失敗時に所持金減少(小)', effect: { type: 'high_risk_sell', priceMult: 1.5, penaltyRate: 0.1 }, price: 5000, tier: 2 },
-    { id: 'high_risk_sell_3', name: '闇取引 III', description: '売却価格3倍 & 失敗時に所持金減少(大)', effect: { type: 'high_risk_sell', priceMult: 3.0, penaltyRate: 0.3 }, price: 15000, tier: 3 },
-    { id: 'high_risk_sell_4', name: '闇取引 極', description: '売却価格5倍 & 失敗時に全額没収', effect: { type: 'high_risk_sell', priceMult: 5.0, penaltyRate: 1.0 }, price: 50000, tier: 4 },
-
-    // 成功率アップ系
-    // キャッチ率アップ系 (Catch Rate Boost)
+    { id: 'high_risk_sell_3', name: '闇取引 III', description: '売却価格3倍 & 失敗時に所持金減少(大)', effect: { type: 'high_risk_sell', priceMult: 3, penaltyRate: 0.3 }, price: 15000, tier: 3 },
+    { id: 'high_risk_sell_4', name: '闇取引 極', description: '売却価格5倍 & 失敗時に全額没収', effect: { type: 'high_risk_sell', priceMult: 5, penaltyRate: 1 }, price: 50000, tier: 4 },
     { id: 'catch_rate_1', name: 'キャッチ率UP I', description: '捕獲確率+5%', effect: { type: 'catch_boost', value: 0.05 }, price: 500, tier: 1 },
     { id: 'catch_rate_2', name: 'キャッチ率UP II', description: '捕獲確率+15%', effect: { type: 'catch_boost', value: 0.15 }, price: 2000, tier: 2 },
-    { id: 'catch_rate_3', name: 'キャッチ率UP III', description: '捕獲確率+30%', effect: { type: 'catch_boost', value: 0.30 }, price: 6000, tier: 3 },
-    { id: 'catch_rate_4', name: 'キャッチ率UP 極', description: '捕獲確率+50%', effect: { type: 'catch_boost', value: 0.50 }, price: 18000, tier: 4 },
-
-    // レア度アップ系 (Rare Fish Boost)
+    { id: 'catch_rate_3', name: 'キャッチ率UP III', description: '捕獲確率+30%', effect: { type: 'catch_boost', value: 0.3 }, price: 6000, tier: 3 },
+    { id: 'catch_rate_4', name: 'キャッチ率UP 極', description: '捕獲確率+50%', effect: { type: 'catch_boost', value: 0.5 }, price: 18000, tier: 4 },
     { id: 'rare_up_1', name: 'レア魚UP I', description: 'レア魚出現率+20%', effect: { type: 'rare_boost', value: 0.2 }, price: 600, tier: 1 },
     { id: 'rare_up_2', name: 'レア魚UP II', description: 'レア魚出現率+50%', effect: { type: 'rare_boost', value: 0.5 }, price: 2400, tier: 2 },
-    { id: 'rare_up_3', name: 'レア魚UP III', description: 'レア魚出現率+100%', effect: { type: 'rare_boost', value: 1.0 }, price: 10000, tier: 3 },
-    { id: 'rare_up_4', name: '幸運の星 極', description: 'レア魚出現率が3倍', effect: { type: 'rare_boost', value: 3.0 }, price: 40000, tier: 4 },
-
-    // ランクスナイパー (Rank Sniper) - 下位魚除外
+    { id: 'rare_up_3', name: 'レア魚UP III', description: 'レア魚出現率+100%', effect: { type: 'rare_boost', value: 1 }, price: 10000, tier: 3 },
+    { id: 'rare_up_4', name: '幸運の星 極', description: 'レア魚出現率が3倍', effect: { type: 'rare_boost', value: 3 }, price: 40000, tier: 4 },
     { id: 'rank_sniper_1', name: 'ランクスナイパー I', description: 'Cランク以上の魚しか釣れなくなる', effect: { type: 'rank_sniper', minRarity: 'C' }, price: 2000, tier: 1 },
     { id: 'rank_sniper_2', name: 'ランクスナイパー II', description: 'Bランク以上の魚しか釣れなくなる', effect: { type: 'rank_sniper', minRarity: 'B' }, price: 6000, tier: 2 },
     { id: 'rank_sniper_3', name: 'ランクスナイパー III', description: 'Aランク以上の魚しか釣れなくなる', effect: { type: 'rank_sniper', minRarity: 'A' }, price: 20000, tier: 3 },
     { id: 'rank_sniper_4', name: '選別の眼 極', description: 'Sランク以上の魚しか釣れなくなる', effect: { type: 'rank_sniper', minRarity: 'S' }, price: 100000, tier: 4 },
-
-    // 条件付きレアアップ (Conditional Rare Boost)
     { id: 'moon_rare_up_1', name: '月光の導き I', description: '月の加護装備時のみレア魚率+20%', effect: { type: 'moon_rare_up', value: 0.2 }, price: 3000, tier: 1 },
     { id: 'moon_rare_up_2', name: '月光の導き II', description: '月の加護装備時のみレア魚率+40%', effect: { type: 'moon_rare_up', value: 0.4 }, price: 10000, tier: 2 },
     { id: 'moon_rare_up_3', name: '月光の導き III', description: '月の加護装備時のみレア魚率+70%', effect: { type: 'moon_rare_up', value: 0.7 }, price: 40000, tier: 3 },
-    { id: 'moon_rare_up_4', name: '満月の導き 極', description: '月の加護装備時のみレア魚出現率が2倍', effect: { type: 'moon_rare_up', value: 2.0, multiplier: true }, price: 120000, tier: 4 },
-
+    { id: 'moon_rare_up_4', name: '満月の導き 極', description: '月の加護装備時のみレア魚出現率が2倍', effect: { type: 'moon_rare_up', value: 2, multiplier: true }, price: 120000, tier: 4 },
     { id: 'sun_chest_up_1', name: '太陽の恵み I', description: '太陽の加護装備時のみ宝箱率+5%', effect: { type: 'sun_chest_up', value: 0.05 }, price: 3000, tier: 1 },
     { id: 'sun_chest_up_2', name: '太陽の恵み II', description: '太陽の加護装備時のみ宝箱率+15%', effect: { type: 'sun_chest_up', value: 0.15 }, price: 10000, tier: 2 },
     { id: 'sun_chest_up_3', name: '太陽の恵み III', description: '太陽の加護装備時のみ宝箱率+40%', effect: { type: 'sun_chest_up', value: 0.4 }, price: 40000, tier: 3 },
-    { id: 'sun_chest_up_4', name: '灼熱の恵み 極', description: '太陽の加護装備時のみ宝箱出現率が3倍', effect: { type: 'sun_chest_up', value: 3.0, multiplier: true }, price: 120000, tier: 4 },
-
-    // 予兆察知系 (Nibble Fix)
+    { id: 'sun_chest_up_4', name: '灼熱の恵み 極', description: '太陽の加護装備時のみ宝箱出現率が3倍', effect: { type: 'sun_chest_up', value: 3, multiplier: true }, price: 120000, tier: 4 },
     { id: 'nibble_fix_1', name: '予兆察知 I', description: 'ウキの揺れが常に3回になる', effect: { type: 'nibble_fix', value: 3 }, price: 400, tier: 1 },
     { id: 'nibble_fix_2', name: '予兆察知 II', description: 'ウキの揺れが常に2回になる', effect: { type: 'nibble_fix', value: 2 }, price: 1200, tier: 2 },
     { id: 'nibble_fix_3', name: '予兆察知 III', description: 'ウキの揺れが常に1回になる', effect: { type: 'nibble_fix', value: 1 }, price: 4000, tier: 3 },
     { id: 'nibble_fix_4', name: '神の的中 極', description: '即ヒット（ウキが揺れずに沈む）', effect: { type: 'nibble_fix', value: 0 }, price: 20000, tier: 4 },
-
-    // 集中力 (Concentration) - ヒット受付時間延長
     { id: 'concentration_1', name: '集中力 I', description: 'HIT受付時間をベースの1.5倍に延長', effect: { type: 'hit_window_mult', value: 1.5 }, price: 300, tier: 1 },
     { id: 'concentration_2', name: '集中力 II', description: 'HIT受付時間をベースの2倍に延長', effect: { type: 'hit_window_mult', value: 2 }, price: 1200, tier: 2 },
     { id: 'concentration_3', name: '集中力 III', description: 'HIT受付時間をベースの3倍に延長', effect: { type: 'hit_window_mult', value: 3 }, price: 5000, tier: 3 },
-    { id: 'concentration_4', name: '全神貫注 極', description: 'HIT受付時間をベースの5倍に延長', effect: { type: 'hit_window_mult', value: 5.0 }, price: 20000, tier: 4 },
-
-    // 忍耐力 (Patience) - 待ち時間短縮
+    { id: 'concentration_4', name: '全神貫注 極', description: 'HIT受付時間をベースの5倍に延長', effect: { type: 'hit_window_mult', value: 5 }, price: 20000, tier: 4 },
     { id: 'patience_1', name: '忍耐力 I', description: '待ち時間を10%短縮', effect: { type: 'wait_time_reduction', value: 0.1 }, price: 400, tier: 1 },
     { id: 'patience_2', name: '忍耐力 II', description: '待ち時間を25%短縮', effect: { type: 'wait_time_reduction', value: 0.25 }, price: 1500, tier: 2 },
     { id: 'patience_3', name: '忍耐力 III', description: '待ち時間を40%短縮', effect: { type: 'wait_time_reduction', value: 0.4 }, price: 4000, tier: 3 },
     { id: 'patience_4', name: '不倒不屈 極', description: '待ち時間を60%短縮', effect: { type: 'wait_time_reduction', value: 0.6 }, price: 15000, tier: 4 },
-
-    // 早打ち (Quick Hit Penalty) - 時短・安売り
     { id: 'quick_hit_penalty_1', name: '早打ち I', description: 'ヒット待ち-15% & 売却価格-10%', effect: { type: 'quick_hit_penalty', waitReduc: 0.15, priceReduc: 0.1 }, price: 1000, tier: 1 },
     { id: 'quick_hit_penalty_2', name: '早打ち II', description: 'ヒット待ち-30% & 売却価格-20%', effect: { type: 'quick_hit_penalty', waitReduc: 0.3, priceReduc: 0.2 }, price: 3000, tier: 2 },
     { id: 'quick_hit_penalty_3', name: '早打ち III', description: 'ヒット待ち-50% & 売却価格-40%', effect: { type: 'quick_hit_penalty', waitReduc: 0.5, priceReduc: 0.4 }, price: 8000, tier: 3 },
     { id: 'quick_hit_penalty_4', name: '神速の安売り 極', description: 'ヒット待ち-75% & 売却価格-60%', effect: { type: 'quick_hit_penalty', waitReduc: 0.75, priceReduc: 0.6 }, price: 25000, tier: 4 },
-
-
-    // 餌の達人 (Bait Master) - 餌消費回避
     { id: 'bait_master_1', name: '餌の達人 I', description: '釣り成功時、15%で餌を消費しない', effect: { type: 'bait_save', value: 0.15 }, price: 500, tier: 1 },
     { id: 'bait_master_2', name: '餌の達人 II', description: '釣り成功時、30%で餌を消費しない', effect: { type: 'bait_save', value: 0.3 }, price: 2000, tier: 2 },
     { id: 'bait_master_3', name: '餌の達人 III', description: '釣り成功時、50%で餌を消費しない', effect: { type: 'bait_save', value: 0.5 }, price: 6000, tier: 3 },
     { id: 'bait_master_4', name: '餌の達人 極', description: '釣り成功時、75%で餌を消費しない', effect: { type: 'bait_save', value: 0.75 }, price: 25000, tier: 4 },
-
-    // テクニシャン (Technician) - 赤ゾーン拡大
     { id: 'technician_1', name: 'テクニシャン I', description: '赤ゾーンの幅が20%拡大', effect: { type: 'red_zone_boost', value: 0.2 }, price: 600, tier: 1 },
     { id: 'technician_2', name: 'テクニシャン II', description: '赤ゾーンの幅が40%拡大', effect: { type: 'red_zone_boost', value: 0.4 }, price: 2500, tier: 2 },
     { id: 'technician_3', name: 'テクニシャン III', description: '赤ゾーンの幅が60%拡大', effect: { type: 'red_zone_boost', value: 0.6 }, price: 7000, tier: 3 },
-    { id: 'technician_4', name: 'テクニシャン 極', description: '赤ゾーンの幅が100%拡大', effect: { type: 'red_zone_boost', value: 1.0 }, price: 25000, tier: 4 },
-
-    // 起死回生 (Second Chance) - 失敗を無効化
+    { id: 'technician_4', name: 'テクニシャン 極', description: '赤ゾーンの幅が100%拡大', effect: { type: 'red_zone_boost', value: 1 }, price: 25000, tier: 4 },
     { id: 'second_chance_1', name: '起死回生 I', description: '白ゾーンでの失敗時、10%で成功扱い', effect: { type: 'second_chance', value: 0.1 }, price: 800, tier: 1 },
     { id: 'second_chance_2', name: '起死回生 II', description: '白ゾーンでの失敗時、20%で成功扱い', effect: { type: 'second_chance', value: 0.2 }, price: 3000, tier: 2 },
     { id: 'second_chance_3', name: '起死回生 III', description: '白ゾーンでの失敗時、35%で成功扱い', effect: { type: 'second_chance', value: 0.35 }, price: 8000, tier: 3 },
     { id: 'second_chance_4', name: '起死回生 極', description: '白ゾーンでの失敗時、50%で成功扱い', effect: { type: 'second_chance', value: 0.5 }, price: 30000, tier: 4 },
-
-    // 鑑定眼 (Appraisal) - 称号付き出現率
     { id: 'appraisal_1', name: '鑑定眼 I', description: '称号付きの出現確率が2倍', effect: { type: 'title_boost', value: 2 }, price: 1000, tier: 1 },
     { id: 'appraisal_2', name: '鑑定眼 II', description: '称号付きの出現確率が3倍', effect: { type: 'title_boost', value: 3 }, price: 3500, tier: 2 },
     { id: 'appraisal_3', name: '鑑定眼 III', description: '称号付きの出現確率が4倍', effect: { type: 'title_boost', value: 4 }, price: 9000, tier: 3 },
     { id: 'appraisal_4', name: '鑑定眼 極', description: '称号付きの出現確率が6倍', effect: { type: 'title_boost', value: 6 }, price: 35000, tier: 4 },
-
-    // 大物狙い (Big Game Hunter) - 上位ランク出現率
     { id: 'big_game_hunter_1', name: '大物狙い I', description: '上位ランクの出現率が1.5倍', effect: { type: 'big_game_boost', value: 1.5 }, price: 1200, tier: 1 },
     { id: 'big_game_hunter_2', name: '大物狙い II', description: '上位ランクの出現率が2.5倍', effect: { type: 'big_game_boost', value: 2.5 }, price: 4500, tier: 2 },
-    { id: 'big_game_hunter_3', name: '大物狙い III', description: '上位ランクの出現率が5.0倍', effect: { type: 'big_game_boost', value: 5.0 }, price: 12000, tier: 3 },
-    { id: 'big_game_hunter_4', name: '大物狙い 極', description: '上位ランクの出現率が10倍', effect: { type: 'big_game_boost', value: 10.0 }, price: 45000, tier: 4 },
-
-    // トレジャーハンター (Treasure Hunter) - 出現率
+    { id: 'big_game_hunter_3', name: '大物狙い III', description: '上位ランクの出現率が5.0倍', effect: { type: 'big_game_boost', value: 5 }, price: 12000, tier: 3 },
+    { id: 'big_game_hunter_4', name: '大物狙い 極', description: '上位ランクの出現率が10倍', effect: { type: 'big_game_boost', value: 10 }, price: 45000, tier: 4 },
     { id: 'treasure_hunter_1', name: 'トレジャーハンター I', description: '宝箱出現率 +2%', effect: { type: 'treasure_boost', value: 0.02 }, price: 1500, tier: 1 },
     { id: 'treasure_hunter_2', name: 'トレジャーハンター II', description: '宝箱出現率 +5%', effect: { type: 'treasure_boost', value: 0.05 }, price: 5000, tier: 2 },
     { id: 'treasure_hunter_3', name: 'トレジャーハンター III', description: '宝箱出現率 +10%', effect: { type: 'treasure_boost', value: 0.1 }, price: 15000, tier: 3 },
     { id: 'treasure_hunter_4', name: '秘宝の予感 極', description: '宝箱出現率 +20%', effect: { type: 'treasure_boost', value: 0.2 }, price: 50000, tier: 4 },
-
-    // フォーチュンハンター (Fortune Hunter) - 報酬量
     { id: 'fortune_hunter_1', name: 'フォーチュンハンター I', description: '宝箱報酬量 +20%', effect: { type: 'treasure_quantity', value: 0.2 }, price: 3000, tier: 1 },
     { id: 'fortune_hunter_2', name: 'フォーチュンハンター II', description: '宝箱報酬量 +50%', effect: { type: 'treasure_quantity', value: 0.5 }, price: 10000, tier: 2 },
-    { id: 'fortune_hunter_3', name: 'フォーチュンハンター III', description: '宝箱報酬量 +100%', effect: { type: 'treasure_quantity', value: 1.0 }, price: 30000, tier: 3 },
-    { id: 'fortune_hunter_4', name: '富の宝庫 極', description: '宝箱報酬量 +200%', effect: { type: 'treasure_quantity', value: 2.0 }, price: 80000, tier: 4 },
-
-    // ラグジュアリーハンター (Luxury Hunter) - 報酬質
+    { id: 'fortune_hunter_3', name: 'フォーチュンハンター III', description: '宝箱報酬量 +100%', effect: { type: 'treasure_quantity', value: 1 }, price: 30000, tier: 3 },
+    { id: 'fortune_hunter_4', name: '富の宝庫 極', description: '宝箱報酬量 +200%', effect: { type: 'treasure_quantity', value: 2 }, price: 80000, tier: 4 },
     { id: 'luxury_hunter_1', name: 'ラグジュアリーハンター I', description: '宝箱報酬質UP(小)', effect: { type: 'treasure_quality', value: 1.2 }, price: 5000, tier: 1 },
     { id: 'luxury_hunter_2', name: 'ラグジュアリーハンター II', description: '宝箱報酬質UP(中)', effect: { type: 'treasure_quality', value: 1.5 }, price: 20000, tier: 2 },
-    { id: 'luxury_hunter_3', name: 'ラグジュアリーハンター III', description: '宝箱報酬質UP(大)', effect: { type: 'treasure_quality', value: 2.0 }, price: 50000, tier: 3 },
-    { id: 'luxury_hunter_4', name: '至高の宝箱 極', description: '宝箱報酬質UP(特大)', effect: { type: 'treasure_quality', value: 3.0 }, price: 150000, tier: 4 },
-
-    // 情熱 (Passion) - フィーバーゲージ蓄積
+    { id: 'luxury_hunter_3', name: 'ラグジュアリーハンター III', description: '宝箱報酬質UP(大)', effect: { type: 'treasure_quality', value: 2 }, price: 50000, tier: 3 },
+    { id: 'luxury_hunter_4', name: '至高の宝箱 極', description: '宝箱報酬質UP(特大)', effect: { type: 'treasure_quality', value: 3 }, price: 150000, tier: 4 },
     { id: 'passion_1', name: '情熱 I', description: 'フィーバーゲージ蓄積率 +5%', effect: { type: 'fever_charge', value: 0.05 }, price: 2000, tier: 1 },
-    { id: 'passion_2', name: '情熱 II', description: 'フィーバーゲージ蓄積率 +10%', effect: { type: 'fever_charge', value: 0.10 }, price: 8000, tier: 2 },
+    { id: 'passion_2', name: '情熱 II', description: 'フィーバーゲージ蓄積率 +10%', effect: { type: 'fever_charge', value: 0.1 }, price: 8000, tier: 2 },
     { id: 'passion_3', name: '情熱 III', description: 'フィーバーゲージ蓄積率 +15%', effect: { type: 'fever_charge', value: 0.15 }, price: 25000, tier: 3 },
     { id: 'passion_4', name: '燃え盛る情熱 極', description: 'フィーバーゲージ蓄積率 +25%', effect: { type: 'fever_charge', value: 0.25 }, price: 60000, tier: 4 },
-
-    // 熱狂 (Mania) - フィーバー延長
-    { id: 'mania_1', name: '熱狂 I', description: 'フィーバー終了確率 -10%', effect: { type: 'fever_long', value: 0.10 }, price: 3000, tier: 1 },
-    { id: 'mania_2', name: '熱狂 II', description: 'フィーバー終了確率 -20%', effect: { type: 'fever_long', value: 0.20 }, price: 12000, tier: 2 },
-    { id: 'mania_3', name: '熱狂 III', description: 'フィーバー終了確率 -30%', effect: { type: 'fever_long', value: 0.30 }, price: 40000, tier: 3 },
-    { id: 'mania_4', name: '冷めぬ熱狂 極', description: 'フィーバー終了確率 -50%', effect: { type: 'fever_long', value: 0.50 }, price: 100000, tier: 4 },
-
-    // フィーバー偏向 (Fever Favor)
-    { id: 'fever_bias_sun_1', name: '太陽の好意 I', description: 'おたからフィーバー確率 +10%', effect: { type: 'fever_bias_sun', value: 0.10 }, price: 5000, tier: 1 },
-    { id: 'fever_bias_sun_2', name: '太陽の好意 II', description: 'おたからフィーバー確率 +20%', effect: { type: 'fever_bias_sun', value: 0.20 }, price: 15000, tier: 2 },
+    { id: 'mania_1', name: '熱狂 I', description: 'フィーバー終了確率 -10%', effect: { type: 'fever_long', value: 0.1 }, price: 3000, tier: 1 },
+    { id: 'mania_2', name: '熱狂 II', description: 'フィーバー終了確率 -20%', effect: { type: 'fever_long', value: 0.2 }, price: 12000, tier: 2 },
+    { id: 'mania_3', name: '熱狂 III', description: 'フィーバー終了確率 -30%', effect: { type: 'fever_long', value: 0.3 }, price: 40000, tier: 3 },
+    { id: 'mania_4', name: '冷めぬ熱狂 極', description: 'フィーバー終了確率 -50%', effect: { type: 'fever_long', value: 0.5 }, price: 100000, tier: 4 },
+    { id: 'fever_bias_sun_1', name: '太陽の好意 I', description: 'おたからフィーバー確率 +10%', effect: { type: 'fever_bias_sun', value: 0.1 }, price: 5000, tier: 1 },
+    { id: 'fever_bias_sun_2', name: '太陽の好意 II', description: 'おたからフィーバー確率 +20%', effect: { type: 'fever_bias_sun', value: 0.2 }, price: 15000, tier: 2 },
     { id: 'fever_bias_sun_3', name: '太陽の加護 (偏)', description: 'おたからフィーバー確率 +35%', effect: { type: 'fever_bias_sun', value: 0.35 }, price: 50000, tier: 3 },
-    { id: 'fever_bias_sun_4', name: '太陽の寵愛 極', description: 'おたからフィーバー確率 +60%', effect: { type: 'fever_bias_sun', value: 0.60 }, price: 150000, tier: 4 },
-
-    { id: 'fever_bias_moon_1', name: '月の好意 I', description: 'おさかなフィーバー確率 +10%', effect: { type: 'fever_bias_moon', value: 0.10 }, price: 5000, tier: 1 },
-    { id: 'fever_bias_moon_2', name: '月の好意 II', description: 'おさかなフィーバー確率 +20%', effect: { type: 'fever_bias_moon', value: 0.20 }, price: 15000, tier: 2 },
+    { id: 'fever_bias_sun_4', name: '太陽の寵愛 極', description: 'おたからフィーバー確率 +60%', effect: { type: 'fever_bias_sun', value: 0.6 }, price: 150000, tier: 4 },
+    { id: 'fever_bias_moon_1', name: '月の好意 I', description: 'おさかなフィーバー確率 +10%', effect: { type: 'fever_bias_moon', value: 0.1 }, price: 5000, tier: 1 },
+    { id: 'fever_bias_moon_2', name: '月の好意 II', description: 'おさかなフィーバー確率 +20%', effect: { type: 'fever_bias_moon', value: 0.2 }, price: 15000, tier: 2 },
     { id: 'fever_bias_moon_3', name: '月の加護 (偏)', description: 'おさかなフィーバー確率 +35%', effect: { type: 'fever_bias_moon', value: 0.35 }, price: 50000, tier: 3 },
-    { id: 'fever_bias_moon_4', name: '月の寵愛 極', description: 'おさかなフィーバー確率 +60%', effect: { type: 'fever_bias_moon', value: 0.60 }, price: 150000, tier: 4 },
-
-    // フィーバーリッチ (Fever Rich) - フィーバー中の宝箱
+    { id: 'fever_bias_moon_4', name: '月の寵愛 極', description: 'おさかなフィーバー確率 +60%', effect: { type: 'fever_bias_moon', value: 0.6 }, price: 150000, tier: 4 },
     { id: 'fever_treasure_boost_1', name: 'フィーバーリッチ I', description: 'フィーバー中の宝箱出現率 +10%', effect: { type: 'fever_treasure_boost', value: 0.1 }, price: 2000, tier: 1 },
     { id: 'fever_treasure_boost_2', name: 'フィーバーリッチ II', description: 'フィーバー中の宝箱出現率 +20%', effect: { type: 'fever_treasure_boost', value: 0.2 }, price: 8000, tier: 2 },
     { id: 'fever_treasure_boost_3', name: 'フィーバーリッチ III', description: 'フィーバー中の宝箱出現率 +35%', effect: { type: 'fever_treasure_boost', value: 0.35 }, price: 25000, tier: 3 },
     { id: 'fever_treasure_boost_4', name: '黄金の熱狂 極', description: 'フィーバー中の宝箱出現率 +60%', effect: { type: 'fever_treasure_boost', value: 0.6 }, price: 70000, tier: 4 },
-
-
-    // 達人の針 (Perfect Master) - 赤ゾーン確定捕獲
     { id: 'perfect_master_1', name: '達人の針 I', description: 'ゲージ赤ゾーン停止時、捕獲率が50%になる', effect: { type: 'perfect_catch', value: 0.5 }, price: 5000, tier: 1 },
     { id: 'perfect_master_2', name: '達人の針 II', description: 'ゲージ赤ゾーン停止時、捕獲率が75%になる', effect: { type: 'perfect_catch', value: 0.75 }, price: 20000, tier: 2 },
-    { id: 'perfect_master_3', name: '達人の針 III', description: 'ゲージ赤ゾーン停止時、捕獲率が100%になる', effect: { type: 'perfect_catch', value: 1.0 }, price: 100000, tier: 3 },
-    { id: 'perfect_master_4', name: '神の指先 極', description: '赤ゾーン停止時100%捕獲 & 赤ゾーン幅+40%', effect: { type: 'perfect_catch', value: 1.0, extraRedZone: 0.4 }, price: 250000, tier: 4 },
-
-
-    // ダブルキャッチ (Dual Catcher) - 2匹釣り
-    { id: 'dual_catcher_1', name: 'ダブルキャッチ I', description: '20%の確率で魚が2匹釣れる', effect: { type: 'multi_catch_2', value: 0.20 }, price: 3000, tier: 1 },
+    { id: 'perfect_master_3', name: '達人の針 III', description: 'ゲージ赤ゾーン停止時、捕獲率が100%になる', effect: { type: 'perfect_catch', value: 1 }, price: 100000, tier: 3 },
+    { id: 'perfect_master_4', name: '神の指先 極', description: '赤ゾーン停止時100%捕獲 & 赤ゾーン幅+40%', effect: { type: 'perfect_catch', value: 1, extraRedZone: 0.4 }, price: 250000, tier: 4 },
+    { id: 'dual_catcher_1', name: 'ダブルキャッチ I', description: '20%の確率で魚が2匹釣れる', effect: { type: 'multi_catch_2', value: 0.2 }, price: 3000, tier: 1 },
     { id: 'dual_catcher_2', name: 'ダブルキャッチ II', description: '35%の確率で魚が2匹釣れる', effect: { type: 'multi_catch_2', value: 0.35 }, price: 10000, tier: 2 },
-    { id: 'dual_catcher_3', name: 'ダブルキャッチ III', description: '50%の確率で魚が2匹釣れる', effect: { type: 'multi_catch_2', value: 0.50 }, price: 30000, tier: 3 },
-    { id: 'dual_catcher_4', name: '二連釣 極', description: '80%の確率で魚が2匹釣れる', effect: { type: 'multi_catch_2', value: 0.80 }, price: 80000, tier: 4 },
-
-    // トリプルキャッチ (Triple Catcher) - 3匹釣り
+    { id: 'dual_catcher_3', name: 'ダブルキャッチ III', description: '50%の確率で魚が2匹釣れる', effect: { type: 'multi_catch_2', value: 0.5 }, price: 30000, tier: 3 },
+    { id: 'dual_catcher_4', name: '二連釣 極', description: '80%の確率で魚が2匹釣れる', effect: { type: 'multi_catch_2', value: 0.8 }, price: 80000, tier: 4 },
     { id: 'triple_catcher_1', name: 'トリプルキャッチ I', description: '5%の確率で魚が3匹釣れる', effect: { type: 'multi_catch_3', value: 0.05 }, price: 5000, tier: 1 },
-    { id: 'triple_catcher_2', name: 'トリプルキャッチ II', description: '10%の確率で魚が3匹釣れる', effect: { type: 'multi_catch_3', value: 0.10 }, price: 20000, tier: 2 },
-    { id: 'triple_catcher_3', name: 'トリプルキャッチ III', description: '20%の確率で魚が3匹釣れる', effect: { type: 'multi_catch_3', value: 0.20 }, price: 50000, tier: 3 },
-    { id: 'triple_catcher_4', name: '三連釣 極', description: '40%の確率で魚が3匹釣れる', effect: { type: 'multi_catch_3', value: 0.40 }, price: 120000, tier: 4 },
-
-
-    // 増幅の心得 (Skill Amplifier) - 他スキル効果アップ
-    {
-        id: 'amplifier_1',
-        name: '増幅の心得 I',
-        description: '他のスキル効果を1.2倍にする',
-        effect: { type: 'skill_amplifier', value: 0.20 },
-        price: 5000,
-        tier: 1
-    },
-    {
-        id: 'amplifier_2',
-        name: '増幅の心得 II',
-        description: '他のスキル効果を1.35倍にする',
-        effect: { type: 'skill_amplifier', value: 0.35 },
-        price: 15000,
-        tier: 2
-    },
-    {
-        id: 'amplifier_3',
-        name: '増幅の心得 III',
-        description: '他のスキル効果を1.5倍にする',
-        effect: { type: 'skill_amplifier', value: 0.50 },
-        price: 40000,
-        tier: 3
-    },
-    {
-        id: 'amplifier_4',
-        name: '真理の増幅 極',
-        description: '他のスキル効果を2倍にする',
-        effect: { type: 'skill_amplifier', value: 1.0 },
-        price: 150000,
-        tier: 4
-    },
-    // ========================================
-    // 港 (Port) 関連スキル
-    // ========================================
-
-    // 高速エンジン (Fast Engine) - 漁獲間隔短縮
-    { id: 'ship_interval_down_1', name: '高速エンジン I', description: '漁獲間隔を10%短縮', effect: { type: 'ship_interval_down', value: 0.10 }, price: 5000, tier: 1 },
+    { id: 'triple_catcher_2', name: 'トリプルキャッチ II', description: '10%の確率で魚が3匹釣れる', effect: { type: 'multi_catch_3', value: 0.1 }, price: 20000, tier: 2 },
+    { id: 'triple_catcher_3', name: 'トリプルキャッチ III', description: '20%の確率で魚が3匹釣れる', effect: { type: 'multi_catch_3', value: 0.2 }, price: 50000, tier: 3 },
+    { id: 'triple_catcher_4', name: '三連釣 極', description: '40%の確率で魚が3匹釣れる', effect: { type: 'multi_catch_3', value: 0.4 }, price: 120000, tier: 4 },
+    { id: 'amplifier_1', name: '増幅の心得 I', description: '他のスキル効果を1.2倍にする', effect: { type: 'skill_amplifier', value: 0.2 }, price: 5000, tier: 1 },
+    { id: 'amplifier_2', name: '増幅の心得 II', description: '他のスキル効果を1.35倍にする', effect: { type: 'skill_amplifier', value: 0.35 }, price: 15000, tier: 2 },
+    { id: 'amplifier_3', name: '増幅の心得 III', description: '他のスキル効果を1.5倍にする', effect: { type: 'skill_amplifier', value: 0.5 }, price: 40000, tier: 3 },
+    { id: 'amplifier_4', name: '真理の増幅 極', description: '他のスキル効果を2倍にする', effect: { type: 'skill_amplifier', value: 1 }, price: 150000, tier: 4 },
+    { id: 'ship_interval_down_1', name: '高速エンジン I', description: '漁獲間隔を10%短縮', effect: { type: 'ship_interval_down', value: 0.1 }, price: 5000, tier: 1 },
     { id: 'ship_interval_down_2', name: '高速エンジン II', description: '漁獲間隔を25%短縮', effect: { type: 'ship_interval_down', value: 0.25 }, price: 20000, tier: 2 },
     { id: 'ship_interval_down_3', name: '高速エンジン III', description: '漁獲間隔を45%短縮', effect: { type: 'ship_interval_down', value: 0.45 }, price: 60000, tier: 3 },
-    { id: 'ship_interval_down_4', name: '超電磁エンジン 極', description: '漁獲間隔を70%短縮', effect: { type: 'ship_interval_down', value: 0.70 }, price: 180000, tier: 4 },
-
-    // 大型網 (Large Net) - 漁獲量アップ
+    { id: 'ship_interval_down_4', name: '超電磁エンジン 極', description: '漁獲間隔を70%短縮', effect: { type: 'ship_interval_down', value: 0.7 }, price: 180000, tier: 4 },
     { id: 'ship_amount_up_1', name: '大型網 I', description: '一度の漁獲量 +1〜2匹', effect: { type: 'ship_amount_up', min: 1, max: 2 }, price: 6000, tier: 1 },
     { id: 'ship_amount_up_2', name: '大型網 II', description: '一度の漁獲量 +3〜5匹', effect: { type: 'ship_amount_up', min: 3, max: 5 }, price: 25000, tier: 2 },
     { id: 'ship_amount_up_3', name: '大型網 III', description: '一度の漁獲量 +6〜10匹', effect: { type: 'ship_amount_up', min: 6, max: 10 }, price: 80000, tier: 3 },
     { id: 'ship_amount_up_4', name: '天を掬う網 極', description: '一度の漁獲量 +15〜25匹', effect: { type: 'ship_amount_up', min: 15, max: 25 }, price: 250000, tier: 4 },
-
-    // エコ航行 (Eco Sailing) - 燃料消費回避
-    { id: 'ship_fuel_eco_1', name: 'エコ航行 I', description: '20%の確率で燃料消費を回避', effect: { type: 'ship_fuel_eco', value: 0.20 }, price: 4000, tier: 1 },
-    { id: 'ship_fuel_eco_2', name: 'エコ航行 II', description: '40%の確率で燃料消費を回避', effect: { type: 'ship_fuel_eco', value: 0.40 }, price: 15000, tier: 2 },
-    { id: 'ship_fuel_eco_3', name: 'エコ航行 III', description: '60%の確率で燃料消費を回避', effect: { type: 'ship_fuel_eco', value: 0.60 }, price: 45000, tier: 3 },
-    { id: 'ship_fuel_eco_4', name: '永久機関の夢 極', description: '90%の確率で燃料消費を回避', effect: { type: 'ship_fuel_eco', value: 0.90 }, price: 150000, tier: 4 },
-
-    // 港の顔馴染み (Port Regular) - 燃料割引
+    { id: 'ship_fuel_eco_1', name: 'エコ航行 I', description: '20%の確率で燃料消費を回避', effect: { type: 'ship_fuel_eco', value: 0.2 }, price: 4000, tier: 1 },
+    { id: 'ship_fuel_eco_2', name: 'エコ航行 II', description: '40%の確率で燃料消費を回避', effect: { type: 'ship_fuel_eco', value: 0.4 }, price: 15000, tier: 2 },
+    { id: 'ship_fuel_eco_3', name: 'エコ航行 III', description: '60%の確率で燃料消費を回避', effect: { type: 'ship_fuel_eco', value: 0.6 }, price: 45000, tier: 3 },
+    { id: 'ship_fuel_eco_4', name: '永久機関の夢 極', description: '90%の確率で燃料消費を回避', effect: { type: 'ship_fuel_eco', value: 0.9 }, price: 150000, tier: 4 },
     { id: 'ship_fuel_discount_1', name: '港の顔馴染み I', description: '燃料購入価格 15%割引', effect: { type: 'ship_fuel_discount', value: 0.15 }, price: 3000, tier: 1 },
-    { id: 'ship_fuel_discount_2', name: '港の顔馴染み II', description: '燃料購入価格 30%割引', effect: { type: 'ship_fuel_discount', value: 0.30 }, price: 10000, tier: 2 },
-    { id: 'ship_fuel_discount_3', name: '港の顔馴染み III', description: '燃料購入価格 50%割引', effect: { type: 'ship_fuel_discount', value: 0.50 }, price: 30000, tier: 3 },
-    { id: 'ship_fuel_discount_4', name: '港の主 極', description: '燃料購入価格 80%割引', effect: { type: 'ship_fuel_discount', value: 0.80 }, price: 100000, tier: 4 },
-
-    // 船乗りの勘 (Sailor's Intuition) - 船イベント
+    { id: 'ship_fuel_discount_2', name: '港の顔馴染み II', description: '燃料購入価格 30%割引', effect: { type: 'ship_fuel_discount', value: 0.3 }, price: 10000, tier: 2 },
+    { id: 'ship_fuel_discount_3', name: '港の顔馴染み III', description: '燃料購入価格 50%割引', effect: { type: 'ship_fuel_discount', value: 0.5 }, price: 30000, tier: 3 },
+    { id: 'ship_fuel_discount_4', name: '港の主 極', description: '燃料購入価格 80%割引', effect: { type: 'ship_fuel_discount', value: 0.8 }, price: 100000, tier: 4 },
     { id: 'sailor_intuition_1', name: '船乗りの勘 I', description: 'ボートイベント出現率 +5%', effect: { type: 'boat_event_boost', value: 0.05 }, price: 2000, tier: 1 },
-    { id: 'sailor_intuition_2', name: '船乗りの勘 II', description: 'ボートイベント出現率 +10%', effect: { type: 'boat_event_boost', value: 0.10 }, price: 8000, tier: 2 },
+    { id: 'sailor_intuition_2', name: '船乗りの勘 II', description: 'ボートイベント出現率 +10%', effect: { type: 'boat_event_boost', value: 0.1 }, price: 8000, tier: 2 },
     { id: 'sailor_intuition_3', name: '船乗りの勘 III', description: 'ボートイベント出現率 +15%', effect: { type: 'boat_event_boost', value: 0.15 }, price: 25000, tier: 3 },
-    { id: 'sailor_intuition_4', name: '七つの海の勘 極', description: 'ボートイベント出現率 +30%', effect: { type: 'boat_event_boost', value: 0.30 }, price: 80000, tier: 4 },
-
-    // バードウォッチャー (Bird Watcher) - 鳥イベント
+    { id: 'sailor_intuition_4', name: '七つの海の勘 極', description: 'ボートイベント出現率 +30%', effect: { type: 'boat_event_boost', value: 0.3 }, price: 80000, tier: 4 },
     { id: 'bird_watcher_1', name: 'バードウォッチャー I', description: '鳥イベント出現率 +5%', effect: { type: 'bird_event_boost', value: 0.05 }, price: 2000, tier: 1 },
-    { id: 'bird_watcher_2', name: 'バードウォッチャー II', description: '鳥イベント出現率 +10%', effect: { type: 'bird_event_boost', value: 0.10 }, price: 8000, tier: 2 },
+    { id: 'bird_watcher_2', name: 'バードウォッチャー II', description: '鳥イベント出現率 +10%', effect: { type: 'bird_event_boost', value: 0.1 }, price: 8000, tier: 2 },
     { id: 'bird_watcher_3', name: 'バードウォッチャー III', description: '鳥イベント出現率 +15%', effect: { type: 'bird_event_boost', value: 0.15 }, price: 25000, tier: 3 },
-    { id: 'bird_watcher_4', name: '天空の眼 極', description: '鳥イベント出現率 +30%', effect: { type: 'bird_event_boost', value: 0.30 }, price: 80000, tier: 4 },
-
-
-    // ストイック (Stoic) - 経験値アップ重視
+    { id: 'bird_watcher_4', name: '天空の眼 極', description: '鳥イベント出現率 +30%', effect: { type: 'bird_event_boost', value: 0.3 }, price: 80000, tier: 4 },
     { id: 'stoic_1', name: 'ストイック I', description: '獲得経験値 +20% & コイン -10%', effect: { type: 'stoic', exp: 0.2, coin: -0.1 }, price: 1500, tier: 1 },
     { id: 'stoic_2', name: 'ストイック II', description: '獲得経験値 +50% & コイン -20%', effect: { type: 'stoic', exp: 0.5, coin: -0.2 }, price: 6000, tier: 2 },
-    { id: 'stoic_3', name: 'ストイック III', description: '獲得経験値 +100% & コイン -40%', effect: { type: 'stoic', exp: 1.0, coin: -0.4 }, price: 20000, tier: 3 },
-    { id: 'stoic_4', name: '求道者 極', description: '獲得経験値 +200% & コイン -60%', effect: { type: 'stoic', exp: 2.0, coin: -0.6 }, price: 60000, tier: 4 },
-
-    // 気楽な釣り人 (Casual Fisher) - 放置コイン重視
+    { id: 'stoic_3', name: 'ストイック III', description: '獲得経験値 +100% & コイン -40%', effect: { type: 'stoic', exp: 1, coin: -0.4 }, price: 20000, tier: 3 },
+    { id: 'stoic_4', name: '求道者 極', description: '獲得経験値 +200% & コイン -60%', effect: { type: 'stoic', exp: 2, coin: -0.6 }, price: 60000, tier: 4 },
     { id: 'casual_fisher_1', name: 'カジュアル I', description: '放置コイン獲得率 +20%', effect: { type: 'log_coin_boost', value: 0.2 }, price: 1000, tier: 1 },
     { id: 'casual_fisher_2', name: 'カジュアル II', description: '放置コイン獲得率 +50%', effect: { type: 'log_coin_boost', value: 0.5 }, price: 4000, tier: 2 },
-    { id: 'casual_fisher_3', name: 'カジュアル III', description: '放置コイン獲得率 +100%', effect: { type: 'log_coin_boost', value: 1.0 }, price: 12000, tier: 3 },
-    { id: 'casual_fisher_4', name: 'エンジョイ 極', description: '放置コイン獲得率 +200%', effect: { type: 'log_coin_boost', value: 2.0 }, price: 40000, tier: 4 },
-
-    // ========================================
-    // 新規追加スキル群 (Mission / Risk / Eco / Etc)
-    // ========================================
-
-    // ミッション報酬増 (Mission Reward Up)
+    { id: 'casual_fisher_3', name: 'カジュアル III', description: '放置コイン獲得率 +100%', effect: { type: 'log_coin_boost', value: 1 }, price: 12000, tier: 3 },
+    { id: 'casual_fisher_4', name: 'エンジョイ 極', description: '放置コイン獲得率 +200%', effect: { type: 'log_coin_boost', value: 2 }, price: 40000, tier: 4 },
     { id: 'mission_reward_up_1', name: '報酬アップ I', description: 'ミッション報酬 +50%', effect: { type: 'mission_reward_up', value: 0.5 }, price: 800, tier: 1 },
-    { id: 'mission_reward_up_2', name: '報酬アップ II', description: 'ミッション報酬 +100%', effect: { type: 'mission_reward_up', value: 1.0 }, price: 4000, tier: 2 },
-    { id: 'mission_reward_up_3', name: '報酬アップ III', description: 'ミッション報酬 +200%', effect: { type: 'mission_reward_up', value: 2.0 }, price: 15000, tier: 3 },
-    { id: 'mission_reward_up_4', name: 'ミッションの達人 極', description: 'ミッション報酬 +400% (5倍)', effect: { type: 'mission_reward_up', value: 4.0 }, price: 50000, tier: 4 },
-
-    // ガチャミッション (Gacha Mission Up)
+    { id: 'mission_reward_up_2', name: '報酬アップ II', description: 'ミッション報酬 +100%', effect: { type: 'mission_reward_up', value: 1 }, price: 4000, tier: 2 },
+    { id: 'mission_reward_up_3', name: '報酬アップ III', description: 'ミッション報酬 +200%', effect: { type: 'mission_reward_up', value: 2 }, price: 15000, tier: 3 },
+    { id: 'mission_reward_up_4', name: 'ミッションの達人 極', description: 'ミッション報酬 +400% (5倍)', effect: { type: 'mission_reward_up', value: 4 }, price: 50000, tier: 4 },
     { id: 'gacha_mission_up_1', name: 'ガチャの使命 I', description: '報酬がガチャチケのミッション率 +20%', effect: { type: 'gacha_mission_boost', value: 0.2 }, price: 4000, tier: 1 },
     { id: 'gacha_mission_up_2', name: 'ガチャの使命 II', description: '報酬がガチャチケのミッション率 +50%', effect: { type: 'gacha_mission_boost', value: 0.5 }, price: 15000, tier: 2 },
-    { id: 'gacha_mission_up_3', name: 'ガチャの使命 III', description: '報酬がガチャチケのミッション率 +100%', effect: { type: 'gacha_mission_boost', value: 1.0 }, price: 40000, tier: 3 },
-    { id: 'gacha_mission_up_4', name: '運命の導き 極', description: '報酬がガチャチケのミッション率 +200%', effect: { type: 'gacha_mission_boost', value: 2.0 }, price: 120000, tier: 4 },
-
-
-    // リサイクル強化 (Recycle Boost)
+    { id: 'gacha_mission_up_3', name: 'ガチャの使命 III', description: '報酬がガチャチケのミッション率 +100%', effect: { type: 'gacha_mission_boost', value: 1 }, price: 40000, tier: 3 },
+    { id: 'gacha_mission_up_4', name: '運命の導き 極', description: '報酬がガチャチケのミッション率 +200%', effect: { type: 'gacha_mission_boost', value: 2 }, price: 120000, tier: 4 },
     { id: 'recycle_boost_1', name: 'リサイクル強化 I', description: 'リサイクルの必要スキル数 -1', effect: { type: 'recycle_boost', costReduction: 1 }, price: 2000, tier: 1 },
     { id: 'recycle_boost_2', name: 'リサイクル強化 II', description: 'リサイクルの必要スキル数 -2', effect: { type: 'recycle_boost', costReduction: 2 }, price: 8000, tier: 2 },
     { id: 'recycle_boost_3', name: 'リサイクル強化 III', description: 'リサイクル時の獲得スキル数 +1', effect: { type: 'recycle_boost', gainBonus: 1 }, price: 25000, tier: 3 },
     { id: 'recycle_boost_4', name: 'エコの神様 極', description: 'リサイクル必要数-3 & 獲得数+2', effect: { type: 'recycle_boost', costReduction: 3, gainBonus: 2 }, price: 80000, tier: 4 },
-
-    // 自動合わせ (Auto Hit)
     { id: 'auto_hit_1', name: '自動合わせ I', description: 'ウキ沈下時に15%で自動ヒット', effect: { type: 'auto_hit', chance: 0.15 }, price: 2000, tier: 1 },
     { id: 'auto_hit_2', name: '自動合わせ II', description: 'ウキ沈下時に30%で自動ヒット', effect: { type: 'auto_hit', chance: 0.3 }, price: 8000, tier: 2 },
     { id: 'auto_hit_3', name: '自動合わせ III', description: 'ウキ沈下時に50%で自動ヒット', effect: { type: 'auto_hit', chance: 0.5 }, price: 25000, tier: 3 },
     { id: 'auto_hit_4', name: '自動精密機器 極', description: 'ウキ沈下時に80%で自動ヒット', effect: { type: 'auto_hit', chance: 0.8 }, price: 80000, tier: 4 },
-
-    // ショップ割引 (Shop Discount)
     { id: 'shop_discount_1', name: 'ショップ割引 I', description: 'ショップのアイテム価格 -10%', effect: { type: 'shop_discount', value: 0.1 }, price: 5000, tier: 1 },
     { id: 'shop_discount_2', name: 'ショップ割引 II', description: 'ショップのアイテム価格 -20%', effect: { type: 'shop_discount', value: 0.2 }, price: 20000, tier: 2 },
     { id: 'shop_discount_3', name: 'ショップ割引 III', description: 'ショップのアイテム価格 -30%', effect: { type: 'shop_discount', value: 0.3 }, price: 60000, tier: 3 },
     { id: 'shop_discount_4', name: 'お得意様 極', description: 'ショップのアイテム価格 -50%', effect: { type: 'shop_discount', value: 0.5 }, price: 180000, tier: 4 },
-
-
-    // 強化割引 (Upgrade Discount)
     { id: 'upgrade_discount_1', name: '強化割引 I', description: 'ロッド強化費用 -10%', effect: { type: 'upgrade_discount', value: 0.1 }, price: 8000, tier: 1 },
     { id: 'upgrade_discount_2', name: '強化割引 II', description: 'ロッド強化費用 -20%', effect: { type: 'upgrade_discount', value: 0.2 }, price: 30000, tier: 2 },
     { id: 'upgrade_discount_3', name: '強化割引 III', description: 'ロッド強化費用 -30%', effect: { type: 'upgrade_discount', value: 0.3 }, price: 100000, tier: 3 },
     { id: 'upgrade_discount_4', name: '常連の極意 極', description: 'ロッド強化費用 -50%', effect: { type: 'upgrade_discount', value: 0.5 }, price: 300000, tier: 4 },
-
-
-    // 加護系 (Blessing) - レベル上昇速度
     { id: 'sun_blessing_1', name: '太陽の加護 I', description: '太陽レベルの上昇速度が1.5倍', effect: { type: 'sun_blessing', value: 1.5 }, price: 2000, tier: 1 },
-    { id: 'sun_blessing_2', name: '太陽の加護 II', description: '太陽レベルの上昇速度が2倍', effect: { type: 'sun_blessing', value: 2.0 }, price: 8000, tier: 2 },
+    { id: 'sun_blessing_2', name: '太陽の加護 II', description: '太陽レベルの上昇速度が2倍', effect: { type: 'sun_blessing', value: 2 }, price: 8000, tier: 2 },
     { id: 'sun_blessing_3', name: '太陽の加護 III', description: '太陽レベルの上昇速度が2.5倍', effect: { type: 'sun_blessing', value: 2.5 }, price: 30000, tier: 3 },
-    { id: 'sun_blessing_4', name: '太陽の加護 極', description: '太陽レベルの上昇速度が3倍', effect: { type: 'sun_blessing', value: 3.0 }, price: 100000, tier: 4 },
-
+    { id: 'sun_blessing_4', name: '太陽の加護 極', description: '太陽レベルの上昇速度が3倍', effect: { type: 'sun_blessing', value: 3 }, price: 100000, tier: 4 },
     { id: 'moon_blessing_1', name: '月の加護 I', description: '月レベルの上昇速度が1.5倍', effect: { type: 'moon_blessing', value: 1.5 }, price: 2000, tier: 1 },
-    { id: 'moon_blessing_2', name: '月の加護 II', description: '月レベルの上昇速度が2倍', effect: { type: 'moon_blessing', value: 2.0 }, price: 8000, tier: 2 },
+    { id: 'moon_blessing_2', name: '月の加護 II', description: '月レベルの上昇速度が2倍', effect: { type: 'moon_blessing', value: 2 }, price: 8000, tier: 2 },
     { id: 'moon_blessing_3', name: '月の加護 III', description: '月レベルの上昇速度が2.5倍', effect: { type: 'moon_blessing', value: 2.5 }, price: 30000, tier: 3 },
-    { id: 'moon_blessing_4', name: '月の加護 極', description: '月レベルの上昇速度が3倍', effect: { type: 'moon_blessing', value: 3.0 }, price: 100000, tier: 4 },
-
-    // 未登録魚探索 (New Fish Finder)
+    { id: 'moon_blessing_4', name: '月の加護 極', description: '月レベルの上昇速度が3倍', effect: { type: 'moon_blessing', value: 3 }, price: 100000, tier: 4 },
     { id: 'new_fish_finder_1', name: '未知への探求 I', description: '未登録魚率UP(小) & 待ち時間+40%', effect: { type: 'new_fish_finder', value: 1.5, waitIncrease: 0.4 }, price: 5000, tier: 1 },
-    { id: 'new_fish_finder_2', name: '未知への探求 II', description: '未登録魚率UP(中) & 待ち時間+25%', effect: { type: 'new_fish_finder', value: 2.0, waitIncrease: 0.25 }, price: 15000, tier: 2 },
-    { id: 'new_fish_finder_3', name: '未知への探求 III', description: '未登録魚率UP(大) & 待ち時間+10%', effect: { type: 'new_fish_finder', value: 3.0, waitIncrease: 0.1 }, price: 40000, tier: 3 },
-    { id: 'new_fish_finder_4', name: '未知への探求 極', description: '未登録魚率UP(極) & デメリット消失', effect: { type: 'new_fish_finder', value: 5.0, waitIncrease: 0 }, price: 120000, tier: 4 },
-
-    // 売却ガチャチケ (Sell Ticket Chance)
+    { id: 'new_fish_finder_2', name: '未知への探求 II', description: '未登録魚率UP(中) & 待ち時間+25%', effect: { type: 'new_fish_finder', value: 2, waitIncrease: 0.25 }, price: 15000, tier: 2 },
+    { id: 'new_fish_finder_3', name: '未知への探求 III', description: '未登録魚率UP(大) & 待ち時間+10%', effect: { type: 'new_fish_finder', value: 3, waitIncrease: 0.1 }, price: 40000, tier: 3 },
+    { id: 'new_fish_finder_4', name: '未知への探求 極', description: '未登録魚率UP(極) & デメリット消失', effect: { type: 'new_fish_finder', value: 5, waitIncrease: 0 }, price: 120000, tier: 4 },
     { id: 'sell_ticket_chance_1', name: 'ラッキーセール I', description: '売却時に0.5%でガチャチケ獲得', effect: { type: 'sell_ticket_chance', value: 0.005 }, price: 3000, tier: 1 },
     { id: 'sell_ticket_chance_2', name: 'ラッキーセール II', description: '売却時に1.0%でガチャチケ獲得', effect: { type: 'sell_ticket_chance', value: 0.01 }, price: 10000, tier: 2 },
     { id: 'sell_ticket_chance_3', name: 'ラッキーセール III', description: '売却時に2.0%でガチャチケ獲得', effect: { type: 'sell_ticket_chance', value: 0.02 }, price: 30000, tier: 3 },
     { id: 'sell_ticket_chance_4', name: 'ラッキーセール 極', description: '売却時に5.0%でガチャチケ獲得', effect: { type: 'sell_ticket_chance', value: 0.05 }, price: 100000, tier: 4 },
-
-    // カジノハイローラー (Casino High Roller)
     { id: 'casino_high_roller_1', name: 'ハイローラー I', description: 'カジノ倍率 1.2倍', effect: { type: 'casino_high_roller', value: 1.2 }, price: 5000, tier: 1 },
     { id: 'casino_high_roller_2', name: 'ハイローラー II', description: 'カジノ倍率 1.5倍', effect: { type: 'casino_high_roller', value: 1.5 }, price: 15000, tier: 2 },
-    { id: 'casino_high_roller_3', name: 'ハイローラー III', description: 'カジノ倍率 2.0倍', effect: { type: 'casino_high_roller', value: 2.0 }, price: 50000, tier: 3 },
-    { id: 'casino_high_roller_4', name: '世紀の勝負師 極', description: 'カジノ倍率 4.0倍', effect: { type: 'casino_high_roller', value: 4.0 }, price: 200000, tier: 4 },
-
-    // マルチ系強化 (Extra / Multi Boosts)
-    // マルチキャッチ (Multi Catch)
+    { id: 'casino_high_roller_3', name: 'ハイローラー III', description: 'カジノ倍率 2.0倍', effect: { type: 'casino_high_roller', value: 2 }, price: 50000, tier: 3 },
+    { id: 'casino_high_roller_4', name: '世紀の勝負師 極', description: 'カジノ倍率 4.0倍', effect: { type: 'casino_high_roller', value: 4 }, price: 200000, tier: 4 },
     { id: 'multi_catch_prob_1', name: '群れ追い I', description: '複数釣れる確率 +10%', effect: { type: 'multi_catch_prob', value: 0.1 }, price: 2000, tier: 1 },
     { id: 'multi_catch_prob_2', name: '群れ追い II', description: '複数釣れる確率 +20%', effect: { type: 'multi_catch_prob', value: 0.2 }, price: 8000, tier: 2 },
     { id: 'multi_catch_prob_3', name: '群れ追い III', description: '複数釣れる確率 +35%', effect: { type: 'multi_catch_prob', value: 0.35 }, price: 25000, tier: 3 },
     { id: 'multi_catch_prob_4', name: '百魚繚乱 極', description: '複数釣れる確率 +60%', effect: { type: 'multi_catch_prob', value: 0.6 }, price: 80000, tier: 4 },
-
     { id: 'multi_catch_num_1', name: '大量捕獲 I', description: '複数釣り数 +1', effect: { type: 'multi_catch_num', value: 1 }, price: 5000, tier: 1 },
     { id: 'multi_catch_num_2', name: '大量捕獲 II', description: '複数釣り数 +2', effect: { type: 'multi_catch_num', value: 2 }, price: 20000, tier: 2 },
     { id: 'multi_catch_num_3', name: '大量捕獲 III', description: '複数釣り数 +3', effect: { type: 'multi_catch_num', value: 3 }, price: 60000, tier: 3 },
     { id: 'multi_catch_num_4', name: '千成瓢箪 極', description: '複数釣り数 +5', effect: { type: 'multi_catch_num', value: 5 }, price: 180000, tier: 4 },
-
-    // エクストラ系 (Extra Drops)
-    // エクストラガチャ (Extra Gacha Drops)
     { id: 'extra_gacha_prob_1', name: 'チケットの釣り人 I', description: 'ガチャチケドロップ率 +1%', effect: { type: 'extra_gacha_prob', value: 0.01 }, price: 3000, tier: 1 },
     { id: 'extra_gacha_prob_2', name: 'チケットの釣り人 II', description: 'ガチャチケドロップ率 +3%', effect: { type: 'extra_gacha_prob', value: 0.03 }, price: 10000, tier: 2 },
     { id: 'extra_gacha_prob_3', name: 'チケットの釣り人 III', description: 'ガチャチケドロップ率 +6%', effect: { type: 'extra_gacha_prob', value: 0.06 }, price: 35000, tier: 3 },
     { id: 'extra_gacha_prob_4', name: '幸運の招待状 極', description: 'ガチャチケドロップ率 +12%', effect: { type: 'extra_gacha_prob', value: 0.12 }, price: 120000, tier: 4 },
-
     { id: 'extra_gacha_num_1', name: 'チケットボーナス I', description: '追加ガチャチケ数 +1', effect: { type: 'extra_gacha_num', value: 1 }, price: 5000, tier: 1 },
     { id: 'extra_gacha_num_2', name: 'チケットボーナス II', description: '追加ガチャチケ数 +2', effect: { type: 'extra_gacha_num', value: 2 }, price: 20000, tier: 2 },
     { id: 'extra_gacha_num_3', name: 'チケットボーナス III', description: '追加ガチャチケ数 +4', effect: { type: 'extra_gacha_num', value: 4 }, price: 60000, tier: 3 },
     { id: 'extra_gacha_num_4', name: '富豪の特権 極', description: '追加ガチャチケ数 +8', effect: { type: 'extra_gacha_num', value: 8 }, price: 180000, tier: 4 },
-
-    {
-        id: 'fever_coin_1',
-        name: 'フィーバーコインUP I',
-        description: 'フィーバー中の獲得コインが1.5倍',
-        effect: { type: 'fever_bonus', value: 1.5 },
-        price: 3000,
-        tier: 1
-    },
-    {
-        id: 'fever_coin_2',
-        name: 'フィーバーコインUP II',
-        description: 'フィーバー中の獲得コインが2.2倍',
-        effect: { type: 'fever_bonus', value: 2.2 },
-        price: 12000,
-        tier: 2
-    },
-    {
-        id: 'fever_coin_3',
-        name: 'フィーバーコインUP III',
-        description: 'フィーバー中の獲得コインが3倍',
-        effect: { type: 'fever_bonus', value: 3.0 },
-        price: 40000,
-        tier: 3
-    },
-    {
-        id: 'fever_coin_4',
-        name: '究極の熱狂 極',
-        description: 'フィーバー中の獲得コインが5倍',
-        effect: { type: 'fever_bonus', value: 5.0 },
-        price: 150000,
-        tier: 4
-    },
-    // エクストラコイン (Extra Coin Drops)
+    { id: 'fever_coin_1', name: 'フィーバーコインUP I', description: 'フィーバー中の獲得コインが1.5倍', effect: { type: 'fever_bonus', value: 1.5 }, price: 3000, tier: 1 },
+    { id: 'fever_coin_2', name: 'フィーバーコインUP II', description: 'フィーバー中の獲得コインが2.2倍', effect: { type: 'fever_bonus', value: 2.2 }, price: 12000, tier: 2 },
+    { id: 'fever_coin_3', name: 'フィーバーコインUP III', description: 'フィーバー中の獲得コインが3倍', effect: { type: 'fever_bonus', value: 3 }, price: 40000, tier: 3 },
+    { id: 'fever_coin_4', name: '究極の熱狂 極', description: 'フィーバー中の獲得コインが5倍', effect: { type: 'fever_bonus', value: 5 }, price: 150000, tier: 4 },
     { id: 'extra_coin_prob_1', name: '小銭拾い I', description: 'コインドロップ率 +10%', effect: { type: 'extra_coin_prob', value: 0.1 }, price: 1000, tier: 1 },
     { id: 'extra_coin_prob_2', name: '小銭拾い II', description: 'コインドロップ率 +25%', effect: { type: 'extra_coin_prob', value: 0.25 }, price: 4000, tier: 2 },
     { id: 'extra_coin_prob_3', name: '小銭拾い III', description: 'コインドロップ率 +45%', effect: { type: 'extra_coin_prob', value: 0.45 }, price: 15000, tier: 3 },
     { id: 'extra_coin_prob_4', name: '黄金の導き 極', description: 'コインドロップ率 +70%', effect: { type: 'extra_coin_prob', value: 0.7 }, price: 50000, tier: 4 },
-
     { id: 'extra_coin_amount_1', name: '臨時収入 I', description: '追加コイン量 +50%', effect: { type: 'extra_coin_amount', value: 0.5 }, price: 3000, tier: 1 },
-    { id: 'extra_coin_amount_2', name: '臨時収入 II', description: '追加コイン量 +100%', effect: { type: 'extra_coin_amount', value: 1.0 }, price: 10000, tier: 2 },
-    { id: 'extra_coin_amount_3', name: '臨時収入 III', description: '追加コイン量 +200%', effect: { type: 'extra_coin_amount', value: 2.0 }, price: 35000, tier: 3 },
-    { id: 'extra_coin_amount_4', name: '富の連鎖 極', description: '追加コイン量 +400%', effect: { type: 'extra_coin_amount', value: 4.0 }, price: 120000, tier: 4 },
-
-
-    // ========================================
-    // 所持数依存系 (Count Dependent)
-    // ========================================
-
-    // コレクター系 (Collector) - 所持数ボーナス
+    { id: 'extra_coin_amount_2', name: '臨時収入 II', description: '追加コイン量 +100%', effect: { type: 'extra_coin_amount', value: 1 }, price: 10000, tier: 2 },
+    { id: 'extra_coin_amount_3', name: '臨時収入 III', description: '追加コイン量 +200%', effect: { type: 'extra_coin_amount', value: 2 }, price: 35000, tier: 3 },
+    { id: 'extra_coin_amount_4', name: '富の連鎖 極', description: '追加コイン量 +400%', effect: { type: 'extra_coin_amount', value: 4 }, price: 120000, tier: 4 },
     { id: 'count_skill_multi_1', name: 'スキル愛好家 I', description: '所持スキル10個につき複数釣り数 +0.2', effect: { type: 'count_skill_multi', value: 0.02 }, price: 4000, tier: 1 },
     { id: 'count_skill_multi_2', name: 'スキル愛好家 II', description: '所持スキル10個につき複数釣り数 +0.5', effect: { type: 'count_skill_multi', value: 0.05 }, price: 15000, tier: 2 },
     { id: 'count_skill_multi_3', name: 'スキルコレクター III', description: '所持スキル10個につき複数釣り数 +1.0', effect: { type: 'count_skill_multi', value: 0.1 }, price: 40000, tier: 3 },
     { id: 'count_skill_multi_4', name: 'スキルマスター 極', description: '所持スキル10個につき複数釣り数 +2.0', effect: { type: 'count_skill_multi', value: 0.2 }, price: 120000, tier: 4 },
-
     { id: 'count_fish_gacha_1', name: '魚の知識 I', description: '所持魚10個につき追加ガチャチケ +0.2', effect: { type: 'count_fish_gacha', value: 0.02 }, price: 4000, tier: 1 },
     { id: 'count_fish_gacha_2', name: '魚の知識 II', description: '所持魚10個につき追加ガチャチケ +0.5', effect: { type: 'count_fish_gacha', value: 0.05 }, price: 15000, tier: 2 },
     { id: 'count_fish_gacha_3', name: '魚コレクター III', description: '所持魚10個につき追加ガチャチケ +1.0', effect: { type: 'count_fish_gacha', value: 0.1 }, price: 40000, tier: 3 },
     { id: 'count_fish_gacha_4', name: '魚類図鑑 極', description: '所持魚10個につき追加ガチャチケ +2.0', effect: { type: 'count_fish_gacha', value: 0.2 }, price: 120000, tier: 4 },
-
     { id: 'count_gacha_coin_1', name: 'チケットの重み I', description: '所持チケット10枚につき追加コイン +10%', effect: { type: 'count_gacha_coin', value: 0.01 }, price: 4000, tier: 1 },
     { id: 'count_gacha_coin_2', name: 'チケットの重み II', description: '所持チケット10枚につき追加コイン +25%', effect: { type: 'count_gacha_coin', value: 0.025 }, price: 15000, tier: 2 },
     { id: 'count_gacha_coin_3', name: 'チケット長者 III', description: '所持チケット10枚につき追加コイン +50%', effect: { type: 'count_gacha_coin', value: 0.05 }, price: 40000, tier: 3 },
     { id: 'count_gacha_coin_4', name: 'チケット王 極', description: '所持チケット10枚につき追加コイン +100%', effect: { type: 'count_gacha_coin', value: 0.1 }, price: 120000, tier: 4 },
-
     { id: 'count_fish_title_1', name: '称号への関心 I', description: '所持魚10個につき称号率 +0.5%', effect: { type: 'count_fish_title', value: 0.0005 }, price: 4000, tier: 1 },
     { id: 'count_fish_title_2', name: '称号への関心 II', description: '所持魚10個につき称号率 +1.5%', effect: { type: 'count_fish_title', value: 0.0015 }, price: 15000, tier: 2 },
     { id: 'count_fish_title_3', name: '称号コレクター III', description: '所持魚10個につき称号率 +3.0%', effect: { type: 'count_fish_title', value: 0.003 }, price: 40000, tier: 3 },
     { id: 'count_fish_title_4', name: '栄誉の集積 極', description: '所持魚10個につき称号率 +6.0%', effect: { type: 'count_fish_title', value: 0.006 }, price: 120000, tier: 4 },
-
     { id: 'count_skill_power_1', name: 'マナの共鳴 I', description: '所持スキル数に応じてパワーUP(小)', effect: { type: 'count_skill_power', value: 0.5 }, price: 3000, tier: 1 },
-    { id: 'count_skill_power_2', name: 'マナの共鳴 II', description: '所持スキル数に応じてパワーUP(中)', effect: { type: 'count_skill_power', value: 1.0 }, price: 12000, tier: 2 },
-    { id: 'count_skill_power_3', name: 'マナの共鳴 III', description: '所持スキル数に応じてパワーUP(大)', effect: { type: 'count_skill_power', value: 2.0 }, price: 40000, tier: 3 },
+    { id: 'count_skill_power_2', name: 'マナの共鳴 II', description: '所持スキル数に応じてパワーUP(中)', effect: { type: 'count_skill_power', value: 1 }, price: 12000, tier: 2 },
+    { id: 'count_skill_power_3', name: 'マナの共鳴 III', description: '所持スキル数に応じてパワーUP(大)', effect: { type: 'count_skill_power', value: 2 }, price: 40000, tier: 3 },
     { id: 'count_skill_power_4', name: 'マナの共鳴 極', description: '所持スキル数に応じてパワーUP(超)', effect: { type: 'count_skill_power', value: 3.5 }, price: 60000, tier: 4 },
-
     { id: 'count_gacha_sell_1', name: '券の価値 I', description: '所持ガチャチケ数に応じて売却価格UP(小)', effect: { type: 'count_gacha_sell', value: 0.05 }, price: 3000, tier: 1 },
     { id: 'count_gacha_sell_2', name: '券の価値 II', description: '所持ガチャチケ数に応じて売却価格UP(中)', effect: { type: 'count_gacha_sell', value: 0.1 }, price: 12000, tier: 2 },
     { id: 'count_gacha_sell_3', name: '券の価値 III', description: '所持ガチャチケ数に応じて売却価格UP(大)', effect: { type: 'count_gacha_sell', value: 0.2 }, price: 40000, tier: 3 },
     { id: 'count_gacha_sell_4', name: '券の価値 極', description: '所持ガチャチケ数に応じて売却価格UP(超)', effect: { type: 'count_gacha_sell', value: 0.35 }, price: 60000, tier: 4 },
-
-    // ========================================
-    // 特殊スキル (Special)
-    // ========================================
-
-    // スロット拡張 (Slot Expansion) - 宝箱限定
-    { id: 'slot_expansion_1', name: '拡張モジュール I', description: 'スキルスロット数 +1', effect: { type: 'skill_slot_expansion', value: 1 }, price: 5000, tier: 1, isTreasureExclusive: true },
-    { id: 'slot_expansion_2', name: '拡張モジュール II', description: 'スキルスロット数 +2', effect: { type: 'skill_slot_expansion', value: 2 }, price: 20000, tier: 2, isTreasureExclusive: true },
-    { id: 'slot_expansion_3', name: '拡張モジュール III', description: 'スキルスロット数 +3', effect: { type: 'skill_slot_expansion', value: 3 }, price: 50000, tier: 3, isTreasureExclusive: true },
-    { id: 'slot_expansion_4', name: '拡張モジュール 極', description: 'スキルスロット数 +5', effect: { type: 'skill_slot_expansion', value: 5 }, price: 120000, tier: 4, isTreasureExclusive: true },
-
-    // ========================================
-    // 伝説の特殊合成スキル (Legendary Special Synthesis)
-    // ========================================
-
-    // 神の力 (Godly Power) - パワーUP + 究極のリスク
+    { id: 'slot_expansion_1', name: '拡張モジュール I', description: 'スキルスロット数 +1', effect: { type: 'skill_slot_expansion', value: 1 }, price: 5000, tier: 1 },
+    { id: 'slot_expansion_2', name: '拡張モジュール II', description: 'スキルスロット数 +2', effect: { type: 'skill_slot_expansion', value: 2 }, price: 20000, tier: 2 },
+    { id: 'slot_expansion_3', name: '拡張モジュール III', description: 'スキルスロット数 +3', effect: { type: 'skill_slot_expansion', value: 3 }, price: 50000, tier: 3 },
+    { id: 'slot_expansion_4', name: '拡張モジュール 極', description: 'スキルスロット数 +5', effect: { type: 'skill_slot_expansion', value: 5 }, price: 120000, tier: 4 },
     { id: 'godly_power_1', name: '神の力 I', description: 'パワー+50 & 失敗時ロスト率50%低減', effect: { type: 'godly_power', power: 50, safety: 0.5 }, price: 10000, tier: 1 },
     { id: 'godly_power_2', name: '神の力 II', description: 'パワー+80 & 失敗時ロスト率75%低減', effect: { type: 'godly_power', power: 80, safety: 0.75 }, price: 30000, tier: 2 },
-    { id: 'godly_power_3', name: '神の力 III', description: 'パワー+120 & 失敗ペナルティを完全に無効化', effect: { type: 'godly_power', power: 120, safety: 1.0 }, price: 80000, tier: 3 },
-    { id: 'godly_power_4', name: '創造主の権能 極', description: 'パワー+200 & ペナルティ無効 & パワー1.5倍', effect: { type: 'godly_power', power: 200, safety: 1.0, multiplier: 1.5 }, price: 250000, tier: 4 },
-
-    // 黄金の指先 (Golden Touch) - 売値UP + 闇取引
+    { id: 'godly_power_3', name: '神の力 III', description: 'パワー+120 & 失敗ペナルティを完全に無効化', effect: { type: 'godly_power', power: 120, safety: 1 }, price: 80000, tier: 3 },
+    { id: 'godly_power_4', name: '創造主の権能 極', description: 'パワー+200 & ペナルティ無効 & パワー1.5倍', effect: { type: 'godly_power', power: 200, safety: 1, multiplier: 1.5 }, price: 250000, tier: 4 },
     { id: 'golden_touch_1', name: '黄金の指先 I', description: '売値+50% & 闇取引の没収を50%回避', effect: { type: 'golden_touch', boost: 0.5, safety: 0.5 }, price: 10000, tier: 1 },
-    { id: 'golden_touch_2', name: '黄金の指先 II', description: '売値+100% & 闇取引の没収を75%回避', effect: { type: 'golden_touch', boost: 1.0, safety: 0.75 }, price: 30000, tier: 2 },
-    { id: 'golden_touch_3', name: '黄金の指先 III', description: '売値+200% & 闇取引のペナルティを無効化', effect: { type: 'golden_touch', boost: 2.0, safety: 1.0 }, price: 80000, tier: 3 },
-    { id: 'golden_touch_4', name: 'ミダスの抱擁 極', description: '売値+400% & ペナルティ無効 & 全売却価格2倍', effect: { type: 'golden_touch', boost: 4.0, safety: 1.0, multiplier: 2.0 }, price: 250000, tier: 4 },
-
-    // Master Angler - キャッチ率UP + テクニシャン
+    { id: 'golden_touch_2', name: '黄金の指先 II', description: '売値+100% & 闇取引の没収を75%回避', effect: { type: 'golden_touch', boost: 1, safety: 0.75 }, price: 30000, tier: 2 },
+    { id: 'golden_touch_3', name: '黄金の指先 III', description: '売値+200% & 闇取引のペナルティを無効化', effect: { type: 'golden_touch', boost: 2, safety: 1 }, price: 80000, tier: 3 },
+    { id: 'golden_touch_4', name: 'ミダスの抱擁 極', description: '売値+400% & ペナルティ無効 & 全売却価格2倍', effect: { type: 'golden_touch', boost: 4, safety: 1, multiplier: 2 }, price: 250000, tier: 4 },
     { id: 'master_angler_1', name: 'Master Angler I', description: 'キャッチ率+30% & 赤ゾーン+50%', effect: { type: 'master_angler', catch: 0.3, redZone: 0.5 }, price: 10000, tier: 1 },
-    { id: 'master_angler_2', name: 'Master Angler II', description: 'キャッチ率+50% & 赤ゾーン+100%', effect: { type: 'master_angler', catch: 0.5, redZone: 1.0 }, price: 30000, tier: 2 },
+    { id: 'master_angler_2', name: 'Master Angler II', description: 'キャッチ率+50% & 赤ゾーン+100%', effect: { type: 'master_angler', catch: 0.5, redZone: 1 }, price: 30000, tier: 2 },
     { id: 'master_angler_3', name: 'Master Angler III', description: 'キャッチ率+80% & 赤ゾーン+150%', effect: { type: 'master_angler', catch: 0.8, redZone: 1.5 }, price: 80000, tier: 3 },
-    { id: 'master_angler_4', name: '釣り神の領域 極', description: 'キャッチ率+150% & 赤ゾーン+300% & ゲージ低速化', effect: { type: 'master_angler', catch: 1.5, redZone: 3.0, slow: 0.5 }, price: 250000, tier: 4 },
-
-    // 永遠の熱狂 (Eternal Fever) - 情熱の炎 + 熱狂の嵐
+    { id: 'master_angler_4', name: '釣り神の領域 極', description: 'キャッチ率+150% & 赤ゾーン+300% & ゲージ低速化', effect: { type: 'master_angler', catch: 1.5, redZone: 3, slow: 0.5 }, price: 250000, tier: 4 },
     { id: 'eternal_fever_1', name: '永遠の熱狂 I', description: 'フィーバー蓄積+50% & 継続率+30%', effect: { type: 'eternal_fever', charge: 0.5, sustain: 0.3 }, price: 10000, tier: 1 },
-    { id: 'eternal_fever_2', name: '永遠の熱狂 II', description: 'フィーバー蓄積+100% & 継続率+60%', effect: { type: 'eternal_fever', charge: 1.0, sustain: 0.6 }, price: 30000, tier: 2 },
-    { id: 'eternal_fever_3', name: '永遠の熱狂 III', description: 'フィーバー蓄積3倍 & フィーバーが減らなくなる', effect: { type: 'eternal_fever', charge: 2.0, sustain: 1.0 }, price: 80000, tier: 3 },
-    { id: 'eternal_fever_4', name: '時を止める熱狂 極', description: '蓄積5倍 & 常時維持 & フィーバー報酬3倍', effect: { type: 'eternal_fever', charge: 4.0, sustain: 1.0, multiplier: 3.0 }, price: 250000, tier: 4 },
-
-    // 宇宙の加護 (Cosmic Blessing) - 太陽の加護 + 月の加護
+    { id: 'eternal_fever_2', name: '永遠の熱狂 II', description: 'フィーバー蓄積+100% & 継続率+60%', effect: { type: 'eternal_fever', charge: 1, sustain: 0.6 }, price: 30000, tier: 2 },
+    { id: 'eternal_fever_3', name: '永遠の熱狂 III', description: 'フィーバー蓄積3倍 & フィーバーが減らなくなる', effect: { type: 'eternal_fever', charge: 2, sustain: 1 }, price: 80000, tier: 3 },
+    { id: 'eternal_fever_4', name: '時を止める熱狂 極', description: '蓄積5倍 & 常時維持 & フィーバー報酬3倍', effect: { type: 'eternal_fever', charge: 4, sustain: 1, multiplier: 3 }, price: 250000, tier: 4 },
     { id: 'cosmic_blessing_1', name: '宇宙の加護 I', description: '太陽・月の加護を同時適用 (効果1.5倍)', effect: { type: 'cosmic_blessing', value: 1.5 }, price: 10000, tier: 1 },
     { id: 'cosmic_blessing_2', name: '宇宙の加護 II', description: '太陽・月の加護を同時適用 (効果2.5倍)', effect: { type: 'cosmic_blessing', value: 2.5 }, price: 30000, tier: 2 },
-    { id: 'cosmic_blessing_3', name: '宇宙の加護 III', description: '太陽・月の加護を同時適用 (効果5倍)', effect: { type: 'cosmic_blessing', value: 5.0 }, price: 80000, tier: 3 },
-    { id: 'cosmic_blessing_4', name: '天球の支配者 極', description: '全加護同時適用 (10倍) & 全レベル上昇速度2倍', effect: { type: 'cosmic_blessing', value: 10.0, speed: 2.0 }, price: 250000, tier: 4 },
-
+    { id: 'cosmic_blessing_3', name: '宇宙の加護 III', description: '太陽・月の加護を同時適用 (効果5倍)', effect: { type: 'cosmic_blessing', value: 5 }, price: 80000, tier: 3 },
+    { id: 'cosmic_blessing_4', name: '天球の支配者 極', description: '全加護同時適用 (10倍) & 全レベル上昇速度2倍', effect: { type: 'cosmic_blessing', value: 10, speed: 2 }, price: 250000, tier: 4 },
+    { id: 'xp_boost_1', name: '経験値アップ I', description: '獲得経験値 +10%', effect: { type: 'xp_boost', value: 0.1 }, price: 2000, tier: 1 },
+    { id: 'xp_boost_2', name: '経験値アップ II', description: '獲得経験値 +20%', effect: { type: 'xp_boost', value: 0.2 }, price: 8000, tier: 2 },
+    { id: 'xp_boost_3', name: '経験値アップ III', description: '獲得経験値 +50%', effect: { type: 'xp_boost', value: 0.5 }, price: 25000, tier: 3 },
+    { id: 'xp_boost_4', name: '知識の探求者 極', description: '獲得経験値 +100%', effect: { type: 'xp_boost', value: 1 }, price: 80000, tier: 4 },
+    { id: 'rank_power_boost_1', name: 'ランク熟練 I', description: 'ランクによるパワーボーナス +50%', effect: { type: 'rank_power_boost', value: 0.5 }, price: 5000, tier: 1 },
+    { id: 'rank_power_boost_2', name: 'ランク熟練 II', description: 'ランクによるパワーボーナス +100%', effect: { type: 'rank_power_boost', value: 1 }, price: 15000, tier: 2 },
+    { id: 'rank_power_boost_3', name: 'ランク熟練 III', description: 'ランクによるパワーボーナス +200%', effect: { type: 'rank_power_boost', value: 2 }, price: 50000, tier: 3 },
+    { id: 'rank_power_boost_4', name: '王者の風格 極', description: 'ランクによるパワーボーナス +400%', effect: { type: 'rank_power_boost', value: 4 }, price: 150000, tier: 4 },
+    { id: 'rank_reward_boost_1', name: '栄光の報酬 I', description: 'ランクアップ報酬 5倍', effect: { type: 'rank_reward_boost', value: 5 }, price: 20000, tier: 1 },
+    { id: 'rank_reward_boost_2', name: '栄光の報酬 II', description: 'ランクアップ報酬 10倍', effect: { type: 'rank_reward_boost', value: 10 }, price: 80000, tier: 2 },
+    { id: 'rank_reward_boost_3', name: '栄光の報酬 III', description: 'ランクアップ報酬 20倍', effect: { type: 'rank_reward_boost', value: 20 }, price: 250000, tier: 3 },
+    { id: 'rank_reward_boost_4', name: '栄華の極み 極', description: 'ランクアップ報酬 50倍', effect: { type: 'rank_reward_boost', value: 50 }, price: 1000000, tier: 4 }
 ];
 
 /**
@@ -1201,6 +1009,7 @@ if (typeof window !== 'undefined') {
         SKIES,
         SHIPS,
         FUELS,
-        SPECIAL_RECIPES
+        SPECIAL_RECIPES,
+        RANK_SYSTEM
     };
 }

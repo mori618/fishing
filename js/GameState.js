@@ -10,6 +10,13 @@ const GameState = {
     baitType: 'bait_d',
 
     // ========================================
+    // ランク (Rank)
+    // ========================================
+    rank: 1,
+    exp: 0,
+    rankUpDialogQueue: [], // ランクアップ表示待ち行列
+
+    // ========================================
     // 釣り竿の状態
     // ========================================
     rodRankIndex: 0,
@@ -130,6 +137,9 @@ const GameState = {
 
             this.rodRankIndex = saveData.rod.rankIndex;
 
+            this.rank = saveData.player.rank || 1;
+            this.exp = saveData.player.exp || 0;
+
             // ----------------新形式データ
             // 竿レベルの移行ロジック
             // ----------------------------------------
@@ -195,9 +205,8 @@ const GameState = {
             this.casinoTotalWin = saveData.statistics.casinoTotalWin || 0;
             this.casinoTotalLoss = saveData.statistics.casinoTotalLoss || 0;
             this.gachaTickets = saveData.statistics.gachaTickets || 0;
-            console.log('Load Mission Index:', saveData.statistics.currentMissionIndex);
+            // console.log('Load Mission Index:', saveData.statistics.currentMissionIndex);
             this.currentMissionIndex = saveData.statistics.currentMissionIndex ?? 0;
-            this.gachaTickets = saveData.statistics.gachaTickets || 0;
 
             // --- ミッションデータの移行と復元 ---
             this.currentMissionIndex = saveData.statistics.currentMissionIndex ?? 0; // 旧データ保持用
@@ -284,6 +293,9 @@ const GameState = {
                 'bait_s': 0
             };
             this.baitType = 'bait_d';
+
+            this.rank = 1;
+            this.exp = 0;
             // 初期スキン
             this.unlockedSkins = ['skin_default'];
             this.selectedSkin = 'skin_default';
@@ -344,7 +356,15 @@ const GameState = {
         return GAME_DATA.RODS[this.rodRankIndex];
     },
 
-    // ========================================
+    // ガチャチケットを獲得
+    addGachaTickets(amount) {
+        if (amount <= 0) return;
+        this.gachaTickets += amount;
+        if (typeof UIManager !== 'undefined' && UIManager.updateStatus) {
+            UIManager.updateStatus();
+        }
+    },
+
     // 現在の総合パワーを計算
     // ========================================
     getTotalPower() {
@@ -363,6 +383,9 @@ const GameState = {
 
         // 倍率補正 (Overdrive, Ultimate Risk等)
         let multiplier = 1.0;
+
+        // ランクボーナス (Rank Bonus) - 加算倍率
+        multiplier += this.getRankPowerBonus();
         const overdriveEffects = this.getEffectsByType('overdrive');
         overdriveEffects.forEach(effect => {
             multiplier += effect.power;
@@ -799,6 +822,132 @@ const GameState = {
         totalMultiplier += this.getDynamicTitleChance();
 
         return totalMultiplier;
+    },
+
+    // ========================================
+    // ランク・経験値システム
+    // ========================================
+
+    // 次のランクまでの必要経験値を計算
+    getNextRankExp() {
+        // Base * (Growth ^ (Rank - 1))
+        return Math.floor(GAME_DATA.RANK_SYSTEM.baseExp * Math.pow(GAME_DATA.RANK_SYSTEM.expGrowthRate, this.rank - 1));
+    },
+
+    // 経験値獲得倍率を取得 (Get XP Multiplier)
+    getXPMultiplier() {
+        let multiplier = 1.0;
+
+        // XP Boost Skill
+        this.getEffectsByType('xp_boost').forEach(effect => {
+            multiplier += effect.value;
+        });
+
+        // Stoic Skill (Trade-off)
+        this.getEffectsByType('stoic').forEach(effect => {
+            if (effect.exp) multiplier += effect.exp;
+        });
+
+        // Fever Mode Bonus (x2)
+        if (this.fever && this.fever.isActive) {
+            multiplier *= 2.0;
+        }
+
+        return Math.max(0, multiplier);
+    },
+
+    // 経験値を獲得
+    addExp(amount) {
+        if (amount <= 0) return;
+
+        // Apply Multiplier
+        const finalAmount = Math.floor(amount * this.getXPMultiplier());
+
+        this.exp += finalAmount;
+
+        // ランクアップ判定
+        this.checkRankUp();
+
+        // UI更新通知 (現状UIManagerが直接参照するか、イベント投げるか)
+        if (typeof UIManager !== 'undefined' && UIManager.updateRankInfo) {
+            UIManager.updateRankInfo();
+        }
+    },
+
+    // ランクアップチェック (再帰的に複数回アップ対応)
+    checkRankUp() {
+        const required = this.getNextRankExp();
+
+        if (this.exp >= required) {
+            this.exp -= required;
+            this.rank++;
+            console.log(`🆙 ランクアップ！ Lv.${this.rank}`);
+            this.processRankUpReward();
+
+            // まだ経験値が残っているかもしれないので再帰チェック
+            this.checkRankUp();
+        }
+    },
+
+    // ランクアップ報酬処理
+    processRankUpReward() {
+        let rewardMultiplier = 1.0;
+        this.getEffectsByType('rank_reward_boost').forEach(effect => {
+            rewardMultiplier += (effect.value - 1.0);
+        });
+
+        // Actually, simpler implementation: Multiplier starts at 1. Effect adds (value).
+        // If 5x skill, value is 5.
+        // If I use additive: 1 + 5 = 6? No.
+        // If I use max: Math.max(1, ...values).
+        // Let's check other skills. 
+        // cosmic_blessing: value 5.0. 
+        // Let's implement as additive of (value).
+        // So if default is 1x.
+        // Skill 5x means +400%? Or total 500%?
+        // Let's assume total multiplier matches the sum of skill values if present, or 1 if not.
+
+        // Re-evaluating:
+        // If multiple skills, usually we sum the "bonus".
+        // Bonus = (Value - 1).
+        // Total = 1 + Sum(Bonuses).
+        // Skill 5x -> Bonus 4. Total 5.
+        // Skill 5x + 10x -> Bonus 4 + 9 = 13. Total 14x.
+
+
+
+        // Coin Reward: Rank * 100 * Multiplier
+        const coinReward = Math.floor(this.rank * 100 * rewardMultiplier);
+        this.addMoney(coinReward);
+
+        // Ticket Reward: Equal to Rank * Multiplier
+        const ticketReward = Math.floor(this.rank * rewardMultiplier);
+        this.addGachaTickets(ticketReward);
+
+        // 報酬をユーザーに通知するためのキューに入れる
+        if (typeof UIManager !== 'undefined') {
+            UIManager.showRankUp(this.rank, coinReward, ticketReward);
+        }
+    },
+
+    // ランクによるパワーボーナスを取得 (倍率)
+    getRankPowerBonus() {
+        let bonusRate = (this.rank - 1) * GAME_DATA.RANK_SYSTEM.powerBonusPerRank;
+
+        // ランクパワーボーナス強化 (Rank Power Boost Skill)
+        let multiplier = 1.0;
+        this.getEffectsByType('rank_power_boost').forEach(effect => {
+            multiplier += effect.value;
+        });
+
+        // 例: Rank 10 (9% base) * Skill 1.5 (+50%) = 13.5% (0.135)
+        return bonusRate * multiplier;
+    },
+
+    // ランクによるミッション報酬倍率 (1.0 + (Rank-1)*0.1 etc)
+    getRankRewardMultiplier() {
+        // 例: ランク1につき+5%
+        return 1.0 + ((this.rank - 1) * 0.05);
     },
 
     // ========================================
