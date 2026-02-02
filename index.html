@@ -298,6 +298,25 @@
         </main>
     </div>
 
+    <div id="synthesis-screen" class="screen">
+        <header class="shop-header">
+            <button class="btn-header-back" onclick="ShopManager.setCategory('town')">
+                <span class="material-icons">arrow_back</span>
+            </button>
+            <h2 class="shop-title"><span class="material-icons">Science</span> 合成工房</h2>
+            <div class="shop-money">
+                <span class="status-icon"><span class="material-icons">paid</span></span>
+                <span id="synthesis-money-display">¥0</span>
+            </div>
+        </header>
+
+        <main class="shop-content">
+            <div id="synthesis-main-area">
+                <!-- Synthesis content injected here -->
+            </div>
+        </main>
+    </div>
+
     <!-- ========================================
          図鑑画面
          ======================================== -->
@@ -393,6 +412,7 @@
     <script src="js/SkillInventoryManager.js"></script>
     <script src="js/UIManager.js"></script>
     <script src="js/PortManager.js"></script>
+    <script src="js/SynthesisManager.js"></script>
     <script src="js/main.js"></script>
 </body>
 

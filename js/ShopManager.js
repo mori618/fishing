@@ -24,6 +24,9 @@ const ShopManager = {
         } else if (category === 'port') {
             UIManager.showScreen('port');
             this.renderPort();
+        } else if (category === 'synthesis') {
+            UIManager.showScreen('synthesis');
+            SynthesisManager.render();
         } else {
             UIManager.showScreen('shop');
             this.renderShop();
@@ -152,6 +155,13 @@ const ShopManager = {
                 <div class="building-info">
                     <div class="building-name">ポート・ロイヤル</div>
                     <div class="building-desc">自動漁獲船の管理・運用</div>
+                </div>
+            </div>
+            <div class="shop-building synthesis" onclick="ShopManager.setCategory('synthesis')" style="border-color: #a855f7;">
+                <div class="building-icon" style="color: #a855f7;"><span class="material-icons">science</span></div>
+                <div class="building-info">
+                    <div class="building-name">合成工房</div>
+                    <div class="building-desc">スキルの融合と強化</div>
                 </div>
             </div>
         `;
@@ -1060,10 +1070,22 @@ const ShopManager = {
         if (tier === 'special' || tier === 'tier4') targetTier = 3; // Special/Tier4は現状Tier3相当
 
         const limitedSkillIds = [
-            'nibble_fix',
-            'sun_blessing',
-            'moon_blessing',
-            'perfect_master_1'
+            'nibble_fix_1',
+            'nibble_fix_2',
+            'nibble_fix_3',
+            'nibble_fix_4',
+            'sun_blessing_1',
+            'sun_blessing_2',
+            'sun_blessing_3',
+            'sun_blessing_4',
+            'moon_blessing_1',
+            'moon_blessing_2',
+            'moon_blessing_3',
+            'moon_blessing_4',
+            'perfect_master_1',
+            'perfect_master_2',
+            'perfect_master_3',
+            'perfect_master_4'
         ];
 
         // 該当Tierのスキルを抽出 (限定スキルは除外)

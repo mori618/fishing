@@ -1014,15 +1014,20 @@ const FishingGame = {
                 }
             });
 
-            dropCoin += Math.floor(amount * amountMult);
-            console.log(`💰 スキル効果: コイン+${dropCoin}`);
+            // 永遠の熱狂 (Eternal Fever) 報酬倍率
+            const feverMult = GameState.getFeverRewardMultiplier();
+            dropCoin = Math.floor(dropCoin * amountMult * feverMult);
+            console.log(`💰 スキル効果: コイン+${dropCoin} (Fever x${feverMult})`);
         }
 
 
         // ドロップ処理実行
         if (dropTicket > 0) {
-            GameState.gachaTickets += dropTicket;
-            drops.push({ type: 'ticket', count: dropTicket, name: 'ガチャチケ' });
+            // 永遠の熱狂 (Eternal Fever) 報酬倍率
+            const feverMult = GameState.getFeverRewardMultiplier();
+            const finalTickets = Math.floor(dropTicket * feverMult);
+            GameState.gachaTickets += finalTickets;
+            drops.push({ type: 'ticket', count: finalTickets, name: 'ガチャチケ' });
         }
         if (dropCoin > 0) {
             GameState.addMoney(dropCoin);
@@ -1234,9 +1239,12 @@ const FishingGame = {
 
         console.log(`🎁 宝箱開封: ${type}, Quantity x${quantityMult.toFixed(2)}, Quality x${qualityMult.toFixed(2)}`);
 
+        // 永遠の熱狂 (Eternal Fever) 報酬倍率
+        const feverMult = GameState.getFeverRewardMultiplier();
+
         // 1. お金 (量と質の両方が乗る)
         const baseMoney = lootTable.money.min + Math.floor(Math.random() * (lootTable.money.max - lootTable.money.min + 1));
-        const finalMoney = Math.floor(baseMoney * quantityMult * qualityMult);
+        const finalMoney = Math.floor(baseMoney * quantityMult * qualityMult * feverMult);
 
         GameState.addMoney(finalMoney);
         results.push({ type: 'money', value: finalMoney, name: `${finalMoney.toLocaleString()} G` });
@@ -1366,10 +1374,22 @@ const FishingGame = {
         // 限定スキル抽選 (宝箱からのみ、低確率1%)
         if (Math.random() < 0.01) {
             const limitedSkillIds = [
-                'nibble_fix', // 予兆察知
-                'sun_blessing', // 太陽の加護
-                'moon_blessing', // 月の加護
-                'perfect_master_1' // 達人の針
+                'nibble_fix_1',
+                'nibble_fix_2',
+                'nibble_fix_3',
+                'nibble_fix_4',
+                'sun_blessing_1',
+                'sun_blessing_2',
+                'sun_blessing_3',
+                'sun_blessing_4',
+                'moon_blessing_1',
+                'moon_blessing_2',
+                'moon_blessing_3',
+                'moon_blessing_4',
+                'perfect_master_1',
+                'perfect_master_2',
+                'perfect_master_3',
+                'perfect_master_4'
             ];
             const targetId = limitedSkillIds[Math.floor(Math.random() * limitedSkillIds.length)];
             const skillData = GAME_DATA.SKILLS.find(s => s.id === targetId);

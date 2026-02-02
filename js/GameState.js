@@ -52,6 +52,7 @@ const GameState = {
     // unlockedSkills: [], // 廃止予定 (移行用コードで処理)
     unlockedSkies: ['sky_default'],
     selectedSky: 'sky_default',
+    customSkills: {}, // 合成で作られたスキルの詳細データ { "hybrid_id": { name, effect: { effects: [...] } } }
 
     // ========================================
     // 統計情報
@@ -96,6 +97,8 @@ const GameState = {
         stock: [],
         lastProcessTime: Date.now()
     },
+
+
 
     // ========================================
     // 初期化
@@ -162,6 +165,13 @@ const GameState = {
                     this.rodStarLevels[rodId] = 0;
                 }
             });
+
+            // カスタムスキルの復元
+            if (saveData.unlocked.customSkills) {
+                this.customSkills = { ...saveData.unlocked.customSkills };
+            } else {
+                this.customSkills = {};
+            }
 
             // スキルデータの移行
             if (saveData.unlocked.skillInventory) {
@@ -286,6 +296,7 @@ const GameState = {
                 stock: [],
                 lastProcessTime: Date.now()
             };
+            this.customSkills = {};
         }
 
 
@@ -342,30 +353,33 @@ const GameState = {
         let power = rod.basePower + (rod.starPowerBonus * stars);
 
         // スキルボーナスを加算 (固定値)
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (!skill) continue;
-
-            if (skill.effect.type === 'power_boost') {
-                power += skill.effect.value;
-            }
-        }
+        const powerEffects = this.getEffectsByType('power_boost');
+        powerEffects.forEach(effect => {
+            power += effect.value;
+        });
 
         // 動的ボーナスを加算 (所持スキル数依存など)
         power += this.getDynamicPowerBonus();
 
         // 倍率補正 (Overdrive, Ultimate Risk等)
         let multiplier = 1.0;
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (!skill) continue;
+        const overdriveEffects = this.getEffectsByType('overdrive');
+        overdriveEffects.forEach(effect => {
+            multiplier += effect.power;
+        });
 
-            if (skill.effect.type === 'overdrive') {
-                multiplier += skill.effect.power;
-            } else if (skill.effect.type === 'ultimate_risk') {
-                multiplier += skill.effect.power; // 通常 +1.0 (100%)
-            }
-        }
+        const ultimateRiskEffects = this.getEffectsByType('ultimate_risk');
+        ultimateRiskEffects.forEach(effect => {
+            multiplier += effect.power;
+        });
+
+        // 神の力 (Godly Power) - 加算ボーナスと倍率
+        const godlyEffects = this.getEffectsByType('godly_power');
+        godlyEffects.forEach(effect => {
+            power += effect.power;
+            if (effect.multiplier) multiplier *= effect.multiplier;
+        });
+
         power = Math.floor(power * multiplier);
 
         // ========================================
@@ -387,14 +401,10 @@ const GameState = {
         let slots = this.rodStars + 1;
 
         // スキルによる拡張
-        // スロット拡張スキル自体も装備枠を1つ使うため、
-        // 実質的な増加量は value - 1 となるが、単純に枠を増やす処理とする
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'skill_slot_expansion') {
-                slots += skill.effect.value;
-            }
-        }
+        const slotEffects = this.getEffectsByType('skill_slot_expansion');
+        slotEffects.forEach(effect => {
+            slots += effect.value;
+        });
 
         return slots;
     },
@@ -518,10 +528,12 @@ const GameState = {
         }
 
         for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'count_skill_power') {
-                bonus += totalOwnedSkills * skill.effect.value;
-            }
+            const skillData = this.getSkillData(skillId);
+            if (!skillData) continue;
+
+            this.getEffectsByType('count_skill_power').forEach(effect => {
+                bonus += totalOwnedSkills * effect.value;
+            });
         }
         return Math.floor(bonus);
     },
@@ -585,19 +597,19 @@ const GameState = {
     // ========================================
     getGaugeSlowBonus() {
         let slowBonus = 0;
-        let speedMultiplier = 1.0; // Overdriveなどで速度が上がる場合用
 
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (!skill) continue;
+        this.getEffectsByType('gauge_slow').forEach(effect => {
+            slowBonus += effect.value;
+        });
 
-            if (skill.effect.type === 'gauge_slow') {
-                slowBonus += skill.effect.value;
-            } else if (skill.effect.type === 'overdrive') {
-                // 速度+20% -> slowBonusをマイナスにする（加速）
-                slowBonus -= skill.effect.speed;
-            }
-        }
+        this.getEffectsByType('overdrive').forEach(effect => {
+            slowBonus -= effect.speed;
+        });
+
+        // Master Angler - 低速化
+        this.getEffectsByType('master_angler').forEach(effect => {
+            if (effect.slow) slowBonus += effect.slow;
+        });
 
         return slowBonus;
     },
@@ -607,24 +619,30 @@ const GameState = {
     // ========================================
     getPriceBonus() {
         let bonus = 0;
+        let multiplier = 1.0;
 
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (!skill) continue;
+        this.getEffectsByType('price_boost').forEach(effect => {
+            bonus += effect.value;
+        });
+        this.getEffectsByType('high_risk_sell').forEach(effect => {
+            bonus += (effect.priceMult - 1.0);
+        });
+        this.getEffectsByType('quick_hit_penalty').forEach(effect => {
+            bonus -= effect.priceReduc;
+        });
 
-            if (skill.effect.type === 'price_boost') {
-                bonus += skill.effect.value;
-            } else if (skill.effect.type === 'high_risk_sell') {
-                bonus += (skill.effect.priceMult - 1.0); // 1.5倍なら +0.5
-            } else if (skill.effect.type === 'quick_hit_penalty') {
-                bonus -= skill.effect.priceReduc; // -20% なら -0.2
-            }
-        }
+        // 黄金の指先 (Golden Touch)
+        this.getEffectsByType('golden_touch').forEach(effect => {
+            bonus += effect.boost;
+            if (effect.multiplier) multiplier *= effect.multiplier;
+        });
 
         // 動的補正を加算
         bonus += this.getDynamicSellMultiplier();
 
-        return Math.max(bonus, -0.9); // 最低でも1割価格は保証
+        // 互換性のために倍率をボーナスに統合して返す
+        const totalBonus = Math.max(bonus, -0.9);
+        return (1 + totalBonus) * multiplier - 1;
     },
 
     // ========================================
@@ -632,14 +650,24 @@ const GameState = {
     // ========================================
     getCatchBonus() {
         let bonus = 0;
+        this.getEffectsByType('catch_boost').forEach(effect => {
+            bonus += effect.value;
+        });
+        // Master Angler - 捕獲率
+        this.getEffectsByType('master_angler').forEach(effect => {
+            bonus += effect.catch;
+        });
+        return bonus;
+    },
 
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'catch_boost') {
-                bonus += skill.effect.value;
-            }
-        }
-
+    // ========================================
+    // フィーバー蓄積ボーナス
+    // ========================================
+    getFeverChargeBonus() {
+        let bonus = 0;
+        this.getEffectsByType('fever_charge_boost').forEach(eff => bonus += eff.value);
+        // 永遠の熱狂 (Eternal Fever) - 蓄積
+        this.getEffectsByType('eternal_fever').forEach(eff => bonus += eff.charge);
         return bonus;
     },
 
@@ -649,24 +677,15 @@ const GameState = {
     getRareBonus() {
         let bonus = 0;
 
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (!skill) continue;
-
-            if (skill.effect.type === 'rare_boost') {
-                bonus += skill.effect.value;
-            } else if (skill.effect.type === 'rank_sniper') {
-                // スナイパーは特定ランク"しか"釣れなくするが、
-                // ここでは出現率ボーナスとしては扱わない（別途ロジックが必要）
-                // あるいは「下位が出なくなる＝上位の相対確率が上がる」？
-                // いったんスキップ
-            } else if (skill.effect.type === 'moon_rare_up') {
-                // 月の加護がある場合のみ
-                if (this.equippedSkills.includes('moon_blessing')) {
-                    bonus += skill.effect.value;
-                }
+        this.getEffectsByType('rare_boost').forEach(effect => {
+            bonus += effect.value;
+        });
+        this.getEffectsByType('moon_rare_up').forEach(effect => {
+            if (this.hasMoonBlessing()) { // Helperを使用
+                const cosmicMult = this.getCosmicBlessingMultiplier();
+                bonus += effect.value * cosmicMult;
             }
-        }
+        });
 
         // 餌の補正も加算
         if (this.baitType) {
@@ -683,13 +702,11 @@ const GameState = {
     // 揺れ回数固定スキルを取得
     // ========================================
     getNibbleFixCount() {
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'nibble_fix') {
-                return skill.effect.value;
-            }
+        const effects = this.getEffectsByType('nibble_fix');
+        if (effects.length > 0) {
+            return effects[0].value;
         }
-        return null;  // スキルなしの場合はnull
+        return null;
     },
 
     // ========================================
@@ -697,22 +714,9 @@ const GameState = {
     // ========================================
     getHitWindowMultiplier() {
         let totalMultiplier = 1.0;
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (!skill) continue;
-
-            if (skill.effect.type === 'hit_window_mult') {
-                // 加算方式: 1.5倍なら+0.5を加算
-                totalMultiplier += (skill.effect.value - 1.0);
-            } else if (skill.effect.type === 'quick_hit_penalty') {
-                // 待ち時間短縮だがHitWindowも減る？ 
-                // data定義では `waitReduc` (待ち時間) と `priceReduc`
-                // `quick_hit_penalty` の説明は "ヒット待ち-50% & 売却価格減少" とあるので
-                // ここは HitWindow ではなく WaitTime のはず。
-                // もし "HitWindowも短くなる" ペナルティがあるならここに追加。
-                // data定義を確認すると `waitReduc` なので WaitTimeReduction で処理する。
-            }
-        }
+        this.getEffectsByType('hit_window_mult').forEach(effect => {
+            totalMultiplier += (effect.value - 1.0);
+        });
         return totalMultiplier;
     },
 
@@ -721,19 +725,15 @@ const GameState = {
     // ========================================
     getWaitTimeReduction() {
         let reduction = 0;
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (!skill) continue;
-
-            if (skill.effect.type === 'wait_time_reduction') {
-                reduction += skill.effect.value;
-            } else if (skill.effect.type === 'quick_hit_penalty') {
-                reduction += skill.effect.waitReduc;
-            } else if (skill.effect.type === 'new_fish_finder') {
-                // 待ち時間ペナルティ (増加) -> reductionを減らす (マイナスになると増える)
-                reduction -= skill.effect.waitIncrease;
-            }
-        }
+        this.getEffectsByType('wait_time_reduction').forEach(effect => {
+            reduction += effect.value;
+        });
+        this.getEffectsByType('quick_hit_penalty').forEach(effect => {
+            reduction += effect.waitReduc;
+        });
+        this.getEffectsByType('new_fish_finder').forEach(effect => {
+            reduction -= effect.waitIncrease;
+        });
         // 最大100%カット（念のためキャップ）
         return Math.min(reduction, 0.95); // 95%まで
     },
@@ -743,13 +743,21 @@ const GameState = {
     // ========================================
     getBaitSaveChance() {
         let chance = 0;
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'bait_save') {
-                chance += skill.effect.value;
-            }
-        }
+        this.getEffectsByType('bait_save').forEach(effect => {
+            chance += effect.value;
+        });
         return Math.min(chance, 1.0); // 最大100%
+    },
+
+    // ========================================
+    // フィーバー継続時間ボーナス
+    // ========================================
+    getFeverLongBonus() {
+        let reduction = 0;
+        this.getEffectsByType('fever_long_boost').forEach(eff => reduction += eff.value);
+        // 永遠の熱狂 (Eternal Fever) - 継続
+        this.getEffectsByType('eternal_fever').forEach(eff => reduction += eff.sustain);
+        return Math.min(reduction, 1.0);
     },
 
     // ========================================
@@ -757,12 +765,13 @@ const GameState = {
     // ========================================
     getRedZoneBonus() {
         let bonus = 0;
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'red_zone_boost') {
-                bonus += skill.effect.value;
-            }
-        }
+        this.getEffectsByType('red_zone_boost').forEach(effect => {
+            bonus += effect.value;
+        });
+        // Master Angler - 赤ゾーン
+        this.getEffectsByType('master_angler').forEach(effect => {
+            bonus += effect.redZone;
+        });
         return bonus;
     },
 
@@ -771,12 +780,9 @@ const GameState = {
     // ========================================
     getSecondChanceRate() {
         let rate = 0;
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'second_chance') {
-                rate += skill.effect.value;
-            }
-        }
+        this.getEffectsByType('second_chance').forEach(effect => {
+            rate += effect.value;
+        });
         return Math.min(rate, 1.0);
     },
 
@@ -785,13 +791,9 @@ const GameState = {
     // ========================================
     getTitleChanceMultiplier() {
         let totalMultiplier = 1.0;
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'title_boost') {
-                // 加算方式
-                totalMultiplier += (skill.effect.value - 1.0);
-            }
-        }
+        this.getEffectsByType('title_boost').forEach(effect => {
+            totalMultiplier += (effect.value - 1.0);
+        });
 
         // 動的補正を加算
         totalMultiplier += this.getDynamicTitleChance();
@@ -804,13 +806,9 @@ const GameState = {
     // ========================================
     getBigGameBonus() {
         let totalBonus = 1.0;
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'big_game_boost') {
-                // 加算方式
-                totalBonus += (skill.effect.value - 1.0);
-            }
-        }
+        this.getEffectsByType('big_game_boost').forEach(effect => {
+            totalBonus += (effect.value - 1.0);
+        });
         return totalBonus;
     },
 
@@ -819,12 +817,9 @@ const GameState = {
     // ========================================
     getShopDiscount() {
         let discount = 0;
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'shop_discount') {
-                discount += skill.effect.value;
-            }
-        }
+        this.getEffectsByType('shop_discount').forEach(effect => {
+            discount += effect.value;
+        });
         return Math.min(discount, 0.9); // 最大90%オフ
     },
 
@@ -833,12 +828,9 @@ const GameState = {
     // ========================================
     getUpgradeCostModifier() {
         let reduction = 0;
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'upgrade_discount') {
-                reduction += skill.effect.value;
-            }
-        }
+        this.getEffectsByType('upgrade_discount').forEach(effect => {
+            reduction += effect.value;
+        });
         return Math.max(0, 1.0 - reduction); // 倍率を返す (0.9 = 10% off)
     },
 
@@ -848,16 +840,12 @@ const GameState = {
     hasAutoHit() {
         let bestChance = 0;
         let hasIt = false;
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'auto_hit') {
-                hasIt = true;
-                // 重複した場合は一番高い確率を採用
-                if (skill.effect.value > bestChance) {
-                    bestChance = skill.effect.value;
-                }
+        this.getEffectsByType('auto_hit').forEach(effect => {
+            hasIt = true;
+            if (effect.chance > bestChance) {
+                bestChance = effect.chance;
             }
-        }
+        });
         return { hasIt, chance: bestChance };
     },
 
@@ -865,33 +853,37 @@ const GameState = {
     // ペナルティ・リスク状態の確認
     // ========================================
     getPenaltyStatus() {
-        let status = {
-            highRiskSell: false,
-            highRiskPenaltyRate: 0,
-            ultimateRisk: false,
-            rankSniper: null, // "B", "A" etc
-        };
+        const ultimateRisk = this.getEffectsByType('ultimate_risk').length > 0;
+        const highRiskSell = this.getEffectsByType('high_risk_sell').length > 0;
 
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (!skill) continue;
+        // ペナルティ回避率の計算
+        let ultimateSafety = 0;
+        this.getEffectsByType('godly_power').forEach(eff => {
+            ultimateSafety = Math.max(ultimateSafety, eff.safety || 0);
+        });
 
-            if (skill.effect.type === 'high_risk_sell') {
-                status.highRiskSell = true;
-                // ペナルティ率は加算（または最大値）
-                status.highRiskPenaltyRate = Math.max(status.highRiskPenaltyRate, skill.effect.penaltyRate);
-            } else if (skill.effect.type === 'ultimate_risk') {
-                status.ultimateRisk = true;
-            } else if (skill.effect.type === 'rank_sniper') {
-                // より厳しい条件（高いランク）で上書き
-                // B < A < S
-                const rankValue = { 'D': 1, 'C': 2, 'B': 3, 'A': 4, 'S': 5 };
-                if (!status.rankSniper || rankValue[skill.effect.minRarity] > rankValue[status.rankSniper]) {
-                    status.rankSniper = skill.effect.minRarity;
-                }
+        let highRiskSafety = 0;
+        this.getEffectsByType('golden_touch').forEach(eff => {
+            highRiskSafety = Math.max(highRiskSafety, eff.safety || 0);
+        });
+
+        // ランクスナイパー (上位ランク魚出現率)
+        let rankSniper = null;
+        this.getEffectsByType('rank_sniper').forEach(effect => {
+            const rankValue = { 'D': 1, 'C': 2, 'B': 3, 'A': 4, 'S': 5 };
+            if (!rankSniper || rankValue[effect.minRarity] > rankValue[rankSniper]) {
+                rankSniper = effect.minRarity;
             }
-        }
-        return status;
+        });
+
+        // 安全率が1.0(100%)ならフラグ自体を折る
+        return {
+            ultimateRisk: ultimateRisk && (ultimateSafety < 1.0),
+            highRiskSell: highRiskSell && (highRiskSafety < 1.0),
+            rankSniper: rankSniper,
+            ultimateSafety: ultimateSafety,
+            highRiskSafety: highRiskSafety
+        };
     },
 
     // ========================================
@@ -899,19 +891,16 @@ const GameState = {
     // ========================================
     getTreasureChanceBonus() {
         let bonus = 0;
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (!skill) continue;
+        this.getEffectsByType('treasure_boost').forEach(effect => {
+            bonus += effect.value;
+        });
 
-            if (skill.effect.type === 'treasure_boost') {
-                bonus += skill.effect.value;
-            } else if (skill.effect.type === 'sun_chest_up') {
-                // 太陽の加護がある場合のみ
-                if (this.equippedSkills.includes('sun_blessing')) {
-                    bonus += skill.effect.value;
-                }
+        this.getEffectsByType('sun_chest_up').forEach(effect => {
+            if (this.hasSunBlessing()) { // Helperを使用
+                const cosmicMult = this.getCosmicBlessingMultiplier();
+                bonus += effect.value * cosmicMult;
             }
-        }
+        });
         return bonus;
     },
 
@@ -920,19 +909,15 @@ const GameState = {
     // ========================================
     getTreasureQuantityMultiplier() {
         let multiplier = 1.0;
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (!skill) continue;
+        this.getEffectsByType('treasure_quantity').forEach(effect => {
+            multiplier += effect.value;
+        });
 
-            if (skill.effect.type === 'treasure_quantity') {
-                multiplier += skill.effect.value;
-            } else if (skill.effect.type === 'fever_treasure_boost') {
-                // フィーバー中のみ有効
-                if (this.fever.isActive) {
-                    multiplier += skill.effect.value;
-                }
+        this.getEffectsByType('fever_treasure_boost').forEach(effect => {
+            if (this.fever.isActive) {
+                multiplier += effect.value;
             }
-        }
+        });
         return multiplier;
     },
 
@@ -941,12 +926,9 @@ const GameState = {
     // ========================================
     getTreasureQualityMultiplier() {
         let multiplier = 1.0;
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'treasure_quality') {
-                multiplier *= skill.effect.value;
-            }
-        }
+        this.getEffectsByType('treasure_quality').forEach(effect => {
+            multiplier *= effect.value;
+        });
         return multiplier;
     },
 
@@ -955,13 +937,40 @@ const GameState = {
     // ========================================
     getNewFishBonus() {
         let bonus = 1.0;
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'new_fish_finder') {
-                bonus *= skill.effect.value;
-            }
-        }
+        this.getEffectsByType('new_fish_finder').forEach(effect => {
+            bonus *= effect.value;
+        });
         return bonus;
+    },
+
+    // ========================================
+    // フィーバー中の出現魚種バイアス
+    // ========================================
+    getFeverBiasBonus(type) {
+        let bonus = 0;
+        this.getEffectsByType('fever_bias').forEach(eff => {
+            if (eff.feverType === type) bonus += eff.value;
+        });
+        return bonus;
+    },
+
+    // ========================================
+    // 加護（Blessing）ヘルパー
+    // ========================================
+    hasSunBlessing() {
+        return this.getEffectsByType('sun_blessing').length > 0 ||
+            this.getEffectsByType('cosmic_blessing').length > 0;
+    },
+    hasMoonBlessing() {
+        return this.getEffectsByType('moon_blessing').length > 0 ||
+            this.getEffectsByType('cosmic_blessing').length > 0;
+    },
+    getCosmicBlessingMultiplier() {
+        let mult = 1.0;
+        this.getEffectsByType('cosmic_blessing').forEach(eff => {
+            if (eff.value > mult) mult = eff.value;
+        });
+        return mult;
     },
 
     // ========================================
@@ -972,12 +981,9 @@ const GameState = {
     // 漁獲間隔短縮 multiplier (1.0 - reduction)
     getShipIntervalMultiplier() {
         let reduction = 0;
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'ship_interval_down') {
-                reduction += skill.effect.value;
-            }
-        }
+        this.getEffectsByType('ship_interval_down').forEach(effect => {
+            reduction += effect.value;
+        });
         return Math.max(1.0 - reduction, 0.1); // 最低10%は残す
     },
 
@@ -985,13 +991,10 @@ const GameState = {
     // 漁獲量ボーナス (min, max加算値)
     getShipAmountBonus() {
         let bonus = { min: 0, max: 0 };
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'ship_amount_up') {
-                bonus.min += skill.effect.min;
-                bonus.max += skill.effect.max;
-            }
-        }
+        this.getEffectsByType('ship_amount_up').forEach(effect => {
+            bonus.min += effect.min;
+            bonus.max += effect.max;
+        });
         return bonus;
     },
 
@@ -999,24 +1002,18 @@ const GameState = {
     // 燃料消費効率 (回避確率)
     getShipFuelEfficiency() {
         let chance = 0;
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'ship_fuel_eco') {
-                chance += skill.effect.value;
-            }
-        }
+        this.getEffectsByType('ship_fuel_eco').forEach(effect => {
+            chance += effect.value;
+        });
         return Math.min(chance, 1.0);
     },
 
     // 燃料購入割引率
     getPortFuelDiscount() {
         let discount = 0;
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'ship_fuel_discount') {
-                discount += skill.effect.value;
-            }
-        }
+        this.getEffectsByType('ship_fuel_discount').forEach(effect => {
+            discount += effect.value;
+        });
         return Math.min(discount, 0.9); // 最大90%OFF
     },
 
@@ -1097,16 +1094,12 @@ const GameState = {
     // ========================================
     getMultiCatch2Chance() {
         let chance = 0;
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (!skill) continue;
-
-            if (skill.effect.type === 'multi_catch_2') {
-                chance += skill.effect.value;
-            } else if (skill.effect.type === 'multi_catch_prob') {
-                chance += skill.effect.value;
-            }
-        }
+        this.getEffectsByType('multi_catch_2').forEach(effect => {
+            chance += effect.value;
+        });
+        this.getEffectsByType('multi_catch_prob').forEach(effect => {
+            chance += effect.value;
+        });
         return Math.min(chance, 1.0);
     },
 
@@ -1115,12 +1108,9 @@ const GameState = {
     // ========================================
     getMultiCatch3Chance() {
         let chance = 0;
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'multi_catch_3') {
-                chance += skill.effect.value;
-            }
-        }
+        this.getEffectsByType('multi_catch_3').forEach(effect => {
+            chance += effect.value;
+        });
         return Math.min(chance, 1.0);
     },
 
@@ -1139,13 +1129,13 @@ const GameState = {
             const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
             if (!skill) continue;
 
-            if (skill.effect.type === 'multi_catch_num') {
-                num += skill.effect.value;
-            } else if (skill.effect.type === 'count_skill_multi') {
-                // 例: 10個につき+1
-                // 値が0.1なら、10個で1.0 -> floorで1
-                num += Math.floor(totalOwnedSkills * skill.effect.value);
-            }
+            this.getEffectsByType('multi_catch_num').forEach(effect => {
+                num += effect.value;
+            });
+
+            this.getEffectsByType('count_skill_multi').forEach(effect => {
+                num += Math.floor(totalOwnedSkills * effect.value);
+            });
         }
         return num;
     },
@@ -1156,16 +1146,12 @@ const GameState = {
     getMissionTargetModifier() {
         let modifier = 1.0;
 
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (!skill) continue;
-
-            if (skill.effect.type === 'stoic') {
-                modifier *= skill.effect.targetMult;
-            } else if (skill.effect.type === 'casual') {
-                modifier *= skill.effect.targetMult;
-            }
-        }
+        this.getEffectsByType('stoic').forEach(effect => {
+            modifier *= effect.targetMult;
+        });
+        this.getEffectsByType('casual').forEach(effect => {
+            modifier *= effect.targetMult;
+        });
 
         return modifier;
     },
@@ -1176,20 +1162,18 @@ const GameState = {
     getMissionRewardModifier() {
         let modifier = 1.0;
 
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (!skill) continue;
-
-            if (skill.effect.type === 'mission_reward') {
-                modifier *= skill.effect.value; // 旧スキル
-            } else if (skill.effect.type === 'mission_reward_up') {
-                modifier += skill.effect.value; // 新スキル (+20% -> 1.2倍)
-            } else if (skill.effect.type === 'stoic') {
-                modifier *= skill.effect.rewardMult;
-            } else if (skill.effect.type === 'casual') {
-                modifier *= skill.effect.rewardMult;
-            }
-        }
+        this.getEffectsByType('mission_reward').forEach(effect => {
+            modifier *= effect.value;
+        });
+        this.getEffectsByType('mission_reward_up').forEach(effect => {
+            modifier += effect.value;
+        });
+        this.getEffectsByType('stoic').forEach(effect => {
+            modifier *= effect.rewardMult;
+        });
+        this.getEffectsByType('casual').forEach(effect => {
+            modifier *= effect.rewardMult;
+        });
 
         // 現在のパワーを反映 (パワー100につき+10%のボーナスと仮定)
         // インフレしすぎないように調整
@@ -1206,14 +1190,9 @@ const GameState = {
     // ========================================
     getSkillAmplifier() {
         let amplifier = 1.0;
-
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'skill_amplifier') {
-                amplifier += skill.effect.value;
-            }
-        }
-
+        this.getEffectsByType('skill_amplifier').forEach(effect => {
+            amplifier += effect.value;
+        });
         return amplifier;
     },
 
@@ -1573,6 +1552,165 @@ const GameState = {
     },
 
     // ========================================
+    // スキルデータ取得（ハイブリッド対応）
+    // ========================================
+    getSkillData(skillId) {
+        // 通常のスキル
+        let skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
+        if (skill) return skill;
+
+        // 合成スキル（カスタムスキル）
+        if (this.customSkills[skillId]) {
+            return this.customSkills[skillId];
+        }
+
+        return null;
+    },
+
+    // ========================================
+    // エフェクト取得（ハイブリッド対応）
+    // ========================================
+    // 指定したタイプの効果値をすべて合計（またはリスト）で取得する
+    getEffectsByType(type) {
+        const effects = [];
+        for (const skillId of this.equippedSkills) {
+            const skill = this.getSkillData(skillId);
+            if (!skill) continue;
+
+            this._collectEffects(skill.effect, type, effects);
+        }
+        return effects;
+    },
+
+    // 再帰的にエフェクトを収集
+    _collectEffects(effect, type, results) {
+        if (!effect) return;
+
+        if (effect.type === 'hybrid' && effect.effects) {
+            for (const subEffect of effect.effects) {
+                this._collectEffects(subEffect, type, results);
+            }
+        } else if (effect.type === type) {
+            results.push(effect);
+        }
+    },
+
+    // ========================================
+    // スキル合成 (Synthesize)
+    // ========================================
+    synthesizeSkills(id1, id2) {
+        const skill1 = this.getSkillData(id1);
+        const skill2 = this.getSkillData(id2);
+
+        if (!skill1 || !skill2) return { success: false, message: 'スキルが見つかりません' };
+
+        // 所持チェック
+        const owned1 = this.getSkillCount(id1);
+        const owned2 = this.getSkillCount(id2);
+        if (id1 === id2) {
+            if (owned1 < 2) return { success: false, message: '合成には同じスキルが2つ必要です' };
+        } else {
+            if (owned1 < 1 || owned2 < 1) return { success: false, message: '素材が足りません' };
+        }
+
+        // Tier 4は素材不可
+        if (skill1.tier >= 4 || skill2.tier >= 4) {
+            return { success: false, message: 'Tier 4スキルは素材にできません' };
+        }
+
+        // ハイブリッドスキルは素材にできない
+        if (skill1.effect.type === 'hybrid' || skill2.effect.type === 'hybrid') {
+            return { success: false, message: '合成済みスキルは素材にできません' };
+        }
+
+        let resultId, resultSkill, cost;
+        const base1 = id1.replace(/_\d$/, '');
+        const base2 = id2.replace(/_\d$/, '');
+        const tier = skill1.tier;
+
+        if (id1 === id2) {
+            // 同名ランクアップ合成 (通常 + 通常, 特殊 + 特殊)
+            const nextTier = skill1.tier + 1;
+            resultId = `${base1}_${nextTier}`;
+            resultSkill = GAME_DATA.SKILLS.find(s => s.id === resultId);
+
+            if (!resultSkill) {
+                return { success: false, message: '次のランクのスキルが定義されていません' };
+            }
+
+            // ランクアップ費用
+            const costs = { 1: 1000, 2: 5000, 3: 20000 };
+            cost = costs[skill1.tier] || 50000;
+
+            // 特殊スキルのランクアップは費用増
+            if (GAME_DATA.SPECIAL_RECIPES && Object.values(GAME_DATA.SPECIAL_RECIPES).includes(base1)) {
+                cost *= 2;
+            }
+        } else {
+            // 異名合成 (特殊 or ハイブリッド)
+            if (skill1.tier !== skill2.tier) {
+                return { success: false, message: 'Tierが一致していません' };
+            }
+
+            // 特殊レシピチェック
+            const recipeKey = [base1, base2].sort().join('+');
+            const resultBaseId = GAME_DATA.SPECIAL_RECIPES ? GAME_DATA.SPECIAL_RECIPES[recipeKey] : null;
+
+            if (resultBaseId) {
+                // 特殊合成成功
+                resultId = `${resultBaseId}_${tier}`;
+                resultSkill = GAME_DATA.SKILLS.find(s => s.id === resultId);
+
+                if (!resultSkill) {
+                    return { success: false, message: '特殊スキルのデータが見つかりません' };
+                }
+
+                const specialCosts = { 1: 3000, 2: 15000, 3: 60000 };
+                cost = specialCosts[tier] || 100000;
+            } else {
+                // 通常ハイブリッド合成
+                resultId = `hybrid_${id1}_${id2}`;
+                if (id1 > id2) resultId = `hybrid_${id2}_${id1}`;
+
+                resultSkill = {
+                    id: resultId,
+                    name: `${skill1.name.split(' ')[0]}と${skill2.name.split(' ')[0]}の融合`,
+                    description: `${skill1.name}と${skill2.name}の効果を併せ持つ`,
+                    tier: tier,
+                    effect: {
+                        type: 'hybrid',
+                        effects: [skill1.effect, skill2.effect]
+                    },
+                    isHybrid: true
+                };
+
+                const hybridCosts = { 1: 1500, 2: 7500, 3: 30000 };
+                cost = hybridCosts[tier] || 75000;
+            }
+        }
+
+        if (this.money < cost) {
+            return { success: false, message: `お金が足りません (必要: ${cost} G)` };
+        }
+
+        // 消費
+        this.addMoney(-cost);
+        this.skillInventory[id1]--;
+        this.skillInventory[id2]--;
+
+        // 獲得
+        if (resultSkill.isHybrid) {
+            this.customSkills[resultId] = resultSkill;
+        }
+        this.skillInventory[resultId] = (this.skillInventory[resultId] || 0) + 1;
+        this.totalSkills++;
+
+        SaveManager.save(this);
+        return { success: true, skill: resultSkill, cost: cost };
+    }
+    ,
+
+    // ========================================
     // スキルの購入
     // ========================================
     buySkill(skillId) {
@@ -1661,6 +1799,19 @@ const GameState = {
     },
 
     // ========================================
+    // フィーバー報酬倍率（永遠の熱狂）
+    // ========================================
+    getFeverRewardMultiplier() {
+        let mult = 1.0;
+        if (this.fever.isActive) {
+            this.getEffectsByType('eternal_fever').forEach(eff => {
+                if (eff.multiplier) mult = Math.max(mult, eff.multiplier);
+            });
+        }
+        return mult;
+    },
+
+    // ========================================
     // 餌の追加（宝箱などから）
     // ========================================
     addBait(baitId, amount) {
@@ -1678,31 +1829,14 @@ const GameState = {
     },
 
     // ========================================
-    // フィーバー蓄積ボーナス取得 (加算)
+    // 成長速度（Cosmic Blessing用）
     // ========================================
-    getFeverChargeBonus() {
-        let bonus = 0;
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'fever_charge') {
-                bonus += skill.effect.value;
-            }
-        }
-        return bonus;
-    },
-
-    // ========================================
-    // フィーバー延長ボーナス取得 (進行確率現象)
-    // ========================================
-    getFeverLongBonus() {
-        let bonus = 0;
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'fever_long') {
-                bonus += skill.effect.value;
-            }
-        }
-        return bonus;
+    getFeverChargeBaseChance() {
+        let chance = 0.2;
+        this.getEffectsByType('cosmic_blessing').forEach(eff => {
+            if (eff.speed) chance *= eff.speed;
+        });
+        return Math.min(chance, 1.0);
     },
 
     // ========================================
@@ -1710,12 +1844,7 @@ const GameState = {
     // ========================================
     getBoatEventBonus() {
         let bonus = 0;
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'boat_event_boost') {
-                bonus += skill.effect.value;
-            }
-        }
+        this.getEffectsByType('boat_event_boost').forEach(eff => bonus += eff.value);
         return bonus;
     },
 
@@ -1724,27 +1853,7 @@ const GameState = {
     // ========================================
     getBirdEventBonus() {
         let bonus = 0;
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'bird_event_boost') {
-                bonus += skill.effect.value;
-            }
-        }
-        return bonus;
-    },
-
-    // ========================================
-    // フィーバータイプ偏りボーナス取得
-    // ========================================
-    getFeverBiasBonus(type) {
-        let bonus = 0;
-        const targetType = type === 'sun' ? 'fever_bias_sun' : 'fever_bias_moon';
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === targetType) {
-                bonus += skill.effect.value;
-            }
-        }
+        this.getEffectsByType('bird_event_boost').forEach(eff => bonus += eff.value);
         return bonus;
     },
 
@@ -1753,7 +1862,6 @@ const GameState = {
     // ========================================
     getCurrentBaitCount() {
         if (!this.baitType) return 0;
-        // 未定義の場合は0を返す
         return this.baitInventory[this.baitType] ?? 0;
     },
 
@@ -1789,32 +1897,23 @@ const GameState = {
         if (!bait) return false;
 
         const currentCount = this.baitInventory[this.baitType];
-
-        // 無限リソース
         if (currentCount === -1) return true;
 
-        // C, B ランクは失敗した時は消費しない
         if ((bait.rank === 'C' || bait.rank === 'B') && !isSuccess) {
             return true;
         }
 
-        // それ以外（A, S ランク、または C, B の成功時）は消費
-        if (currentCount <= 0) {
-            return false;
-        }
+        if (currentCount <= 0) return false;
 
-        // 餌の達人スキルの判定 (成功時のみ)
         if (isSuccess) {
             const saveChance = this.getBaitSaveChance();
             if (Math.random() < saveChance) {
-                console.log('✨ 餌の達人発動！餌を消費しませんでした');
+                console.log('✨ 餌の達人発動！');
                 return true;
             }
         }
 
         this.baitInventory[this.baitType]--;
-
-        // オートセーブ
         SaveManager.save(this);
         return true;
     },
@@ -1822,28 +1921,21 @@ const GameState = {
     // ========================================
     // スキン関連
     // ========================================
-
-    // 現在のスキン情報を取得
     getCurrentSkin() {
         return GAME_DATA.SKINS.find(s => s.id === this.selectedSkin) || GAME_DATA.SKINS[0];
     },
 
-    // スキンを装備
     equipSkin(skinId) {
-        if (!this.unlockedSkins.includes(skinId)) {
-            return false;
-        }
+        if (!this.unlockedSkins.includes(skinId)) return false;
         this.selectedSkin = skinId;
         SaveManager.save(this);
         return true;
     },
 
-    // ロッドIDに関連するスキンをアンロック
     unlockSkinByRodId(rodId) {
         const skin = GAME_DATA.SKINS.find(s => s.rodId === rodId);
         if (skin && !this.unlockedSkins.includes(skin.id)) {
             this.unlockedSkins.push(skin.id);
-            console.log(`✨ スキン解放: ${skin.name}`);
             return true;
         }
         return false;
@@ -1853,13 +1945,7 @@ const GameState = {
     // 達人の針（赤ゾーン確定）所持判定
     // ========================================
     hasPerfectMaster() {
-        for (const skillId of this.equippedSkills) {
-            const skill = GAME_DATA.SKILLS.find(s => s.id === skillId);
-            if (skill && skill.effect.type === 'perfect_catch') {
-                return true;
-            }
-        }
-        return false;
+        return this.getEffectsByType('perfect_catch').length > 0;
     },
 
     // ========================================
@@ -1870,35 +1956,27 @@ const GameState = {
         // フィーバー中の処理 (Lv6〜)
         // ========================================
         if (this.fever.isActive) {
-            // 変動確率の抽選 (0〜100)
             const roll = Math.random() * 100;
+            const longBonus = this.getFeverLongBonus();
 
-            // 確率調整: 早く終わらせるが、リセットもありにする
-            // 進行: 75%
-            // 維持: 10%
-            // 後退: 10%
-            // リセット: 5%
-
-            // 確定フラグがある場合は進行 (レベルアップ)
             if (isGuaranteed) {
                 this.fever.value++;
-            } else if (roll < 75) {
-                // 進行 (75%)
+            } else if (roll < (75 * (1.0 - longBonus * 0.5))) {
                 this.fever.value++;
+            } else if (longBonus >= 1.0) {
+                // 維持
             } else if (roll < 85) {
                 // 維持 (10%)
-                // ±0
             } else if (roll < 95) {
                 // 後退 (10%)
                 this.fever.value--;
-                if (this.fever.value < 6) this.fever.value = 6; // Lv6未満にはならない
+                if (this.fever.value < 6) this.fever.value = 6;
             } else {
                 // リセット (5%)
-                this.fever.value = 6; // スタート位置に戻る
-                return { message: 'reset' }; // 大当たり演出用
+                this.fever.value = 6;
+                return { message: 'reset' };
             }
 
-            // 終了判定 (Lv12を超えたら終了)
             if (this.fever.value > 12) {
                 this.fever.isActive = false;
                 this.fever.value = 0;
@@ -1907,29 +1985,23 @@ const GameState = {
             }
             return { message: 'active' };
         }
-
         // ========================================
         // ゲージ蓄積中の処理 (〜Lv6)
         // ========================================
         else {
-            // 20%の確率で蓄積 (または確定フラグがあれば100%)
-            if (isGuaranteed || Math.random() < 0.2) {
+            const chargeChance = this.getFeverChargeBaseChance();
+            const chargeBonus = 0; // 必要なら getFeverChargeBonus をここで使う
+
+            if (isGuaranteed || Math.random() < chargeChance) {
                 this.fever.value++;
 
-                // 初めて溜まった(Lv1)タイミングでタイプを決定
                 if (this.fever.value === 1) {
-                    // スキル偏向の適用 (基本50%)
                     const sunBonus = this.getFeverBiasBonus('sun');
                     const moonBonus = this.getFeverBiasBonus('moon');
-
-                    // 太陽の確率: 0.5 + 太陽ボーナス - 月ボーナス
                     const sunChance = 0.5 + sunBonus - moonBonus;
-
                     this.fever.type = Math.random() < sunChance ? 'sun' : 'moon';
-                    console.log(`🔥 フィーバータイプ抽選: Sun ${Math.round(sunChance * 100)}% (Base 50% + ${Math.round(sunBonus * 100)}% - ${Math.round(moonBonus * 100)}%)`);
                 }
 
-                // 発動判定 (Lv6到達)
                 if (this.fever.value >= 6) {
                     this.fever.isActive = true;
                     this.fever.value = 6;
@@ -1937,7 +2009,6 @@ const GameState = {
                 }
                 return { message: 'charging' };
             }
-            // 蓄積しなかった
             return { message: 'none' };
         }
     }
