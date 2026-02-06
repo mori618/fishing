@@ -1,24 +1,18 @@
 ID,名前,Tier,価格,効果タイプ,効果値,説明,グループ,アイコン
-cosmic_blessing_1,宇宙の加護 I,1,10000,cosmic_blessing,1.5,"太陽・月の加護を同時適用 (効果1.5倍)",特殊スキルグループ,workspace_premium
-cosmic_blessing_2,宇宙の加護 II,2,30000,cosmic_blessing,2.5,"太陽・月の加護を同時適用 (効果2.5倍)",特殊スキルグループ,workspace_premium
-cosmic_blessing_3,宇宙の加護 III,3,80000,cosmic_blessing,5,"太陽・月の加護を同時適用 (効果5倍)",特殊スキルグループ,workspace_premium
-cosmic_blessing_4,宇宙の加護 極,4,250000,cosmic_blessing,10,"全加護同時適用 (10倍) & 全レベル上昇速度2倍",特殊スキルグループ,workspace_premium
-eternal_fever_1,永遠の熱狂 I,1,10000,eternal_fever,0.5,"フィーバー蓄積+50% & 継続率+30%",特殊スキルグループ,workspace_premium
-eternal_fever_2,永遠の熱狂 II,2,30000,eternal_fever,1,"フィーバー蓄積+100% & 継続率+60%",特殊スキルグループ,workspace_premium
-eternal_fever_3,永遠の熱狂 III,3,80000,eternal_fever,2,"フィーバー蓄積3倍 & フィーバーが減らなくなる",特殊スキルグループ,workspace_premium
-eternal_fever_4,永遠の熱狂 極,4,250000,eternal_fever,4,"蓄積5倍 & 常時維持 & フィーバー報酬3倍",特殊スキルグループ,workspace_premium
-godly_power_1,神の力 I,1,10000,godly_power,50,"パワー+50 & 失敗時ロスト率50%低減",特殊スキルグループ,workspace_premium
-godly_power_2,神の力 II,2,30000,godly_power,80,"パワー+80 & 失敗時ロスト率75%低減",特殊スキルグループ,workspace_premium
-godly_power_3,神の力 III,3,80000,godly_power,120,"パワー+120 & 失敗ペナルティを完全に無効化",特殊スキルグループ,workspace_premium
-godly_power_4,神の力 極,4,250000,godly_power,200,"パワー+200 & ペナルティ無効 & パワー1.5倍",特殊スキルグループ,workspace_premium
-golden_touch_1,黄金の指先 I,1,10000,golden_touch,,"売値+50% & 闇取引の没収を50%回避",特殊スキルグループ,workspace_premium
-golden_touch_2,黄金の指先 II,2,30000,golden_touch,,"売値+100% & 闇取引の没収を75%回避",特殊スキルグループ,workspace_premium
-golden_touch_3,黄金の指先 III,3,80000,golden_touch,,"売値+200% & 闇取引のペナルティを無効化",特殊スキルグループ,workspace_premium
-golden_touch_4,黄金の指先 極,4,250000,golden_touch,,"売値+400% & ペナルティ無効 & 全売却価格2倍",特殊スキルグループ,workspace_premium
-master_angler_1,Master Angler I,1,10000,master_angler,0.3,"キャッチ率+30% & 赤ゾーン+50%",特殊スキルグループ,workspace_premium
-master_angler_2,Master Angler II,2,30000,master_angler,0.5,"キャッチ率+50% & 赤ゾーン+100%",特殊スキルグループ,workspace_premium
-master_angler_3,Master Angler III,3,80000,master_angler,0.8,"キャッチ率+80% & 赤ゾーン+150%",特殊スキルグループ,workspace_premium
-master_angler_4,Master Angler 極,4,250000,master_angler,1.5,"キャッチ率+150% & 赤ゾーン+300% & ゲージ低速化",特殊スキルグループ,workspace_premium
+cosmic_blessing,宇宙の加護,0,250000,cosmic_blessing,,"フィーバー中、30%の確率でゲージがLv6にリセットされる",特殊スキル,workspace_premium
+eternal_mania,永遠の熱狂,0,200000,eternal_mania,,"フィーバー終了時にゲージが4溜まった状態になる",特殊スキル,workspace_premium
+good_feel,手応え,0,200000,good_feel,,"パワー2倍 & ガチャチケットのドロップを確定させる",特殊スキル,workspace_premium
+hard_mode,ハードモード,0,500000,hard_mode,,"パワー5倍 & 魚の売却額8倍",特殊スキル,workspace_premium
+infinite_bait,無限餌,0,250000,infinite_bait,,"釣り時に餌を消費しなくなる",特殊スキル,workspace_premium
+magnet,マグネット,0,200000,magnet,,"宝箱の抽選から木の宝箱を除外する",特殊スキル,workspace_premium
+master_angler_special,太公望,0,250000,master_angler_special,,"釣果が常に2倍になり、ドロップ獲得量も2倍になる",特殊スキル,workspace_premium
+master_needle,達人の針,0,150000,master_needle,,"ゲージ赤ゾーンで停止時、捕獲率が100%になる",特殊スキル,workspace_premium
+mobile_shop,出張売店,0,150000,mobile_shop,,"釣り上げ成功時に自動で魚を売却する",特殊スキル,workspace_premium
+perpetual_engine,永久機関,0,300000,perpetual_engine,,"船の燃料を消費しなくなる",特殊スキル,workspace_premium
+rank_sniper_a,Aランクスナイパー,0,200000,rank_sniper_fixed,,"Aランクの魚しか釣れなくなる",特殊スキル,workspace_premium
+rank_sniper_b,Bランクスナイパー,0,150000,rank_sniper_fixed,,"Bランクの魚しか釣れなくなる",特殊スキル,workspace_premium
+rank_sniper_c,Cランクスナイパー,0,120000,rank_sniper_fixed,,"Cランクの魚しか釣れなくなる",特殊スキル,workspace_premium
+rank_sniper_s,Sランクスナイパー,0,300000,rank_sniper_fixed,,"Sランクの魚しか釣れなくなる",特殊スキル,workspace_premium
 gauge_slow_1,ゲージ減速 I,1,300,gauge_slow,0.1,"ゲージ速度-10%",強化グループ,bolt
 gauge_slow_2,ゲージ減速 II,2,1000,gauge_slow,0.2,"ゲージ速度-20%",強化グループ,bolt
 gauge_slow_3,ゲージ減速 III,3,5000,gauge_slow,0.3,"ゲージ速度-30%",強化グループ,bolt
@@ -111,10 +105,14 @@ big_game_hunter_1,大物狙い I,1,1200,big_game_boost,1.5,"上位ランクの�
 big_game_hunter_2,大物狙い II,2,4500,big_game_boost,2.5,"上位ランクの出現率が2.5倍",探索グループ,radar
 big_game_hunter_3,大物狙い III,3,12000,big_game_boost,5,"上位ランクの出現率が5.0倍",探索グループ,radar
 big_game_hunter_4,大物狙い 極,4,45000,big_game_boost,10,"上位ランクの出現率が10倍",探索グループ,radar
-rank_sniper_1,ランクスナイパー I,1,2000,rank_sniper,C,"Cランク以上の魚しか釣れなくなる",探索グループ,radar
-rank_sniper_2,ランクスナイパー II,2,6000,rank_sniper,B,"Bランク以上の魚しか釣れなくなる",探索グループ,radar
-rank_sniper_3,ランクスナイパー III,3,20000,rank_sniper,A,"Aランク以上の魚しか釣れなくなる",探索グループ,radar
-rank_sniper_4,ランクスナイパー 極,4,100000,rank_sniper,S,"Sランク以上の魚しか釣れなくなる",探索グループ,radar
+rank_collector_a,Aランク愛好家,3,20000,rank_collector,,"Aランクの魚が釣れやすくなる",探索グループ,radar
+rank_collector_b,Bランク愛好家,2,6000,rank_collector,,"Bランクの魚が釣れやすくなる",探索グループ,radar
+rank_collector_c,Cランク愛好家,1,2000,rank_collector,,"Cランクの魚が釣れやすくなる",探索グループ,radar
+rank_collector_s,Sランク愛好家,4,100000,rank_collector,,"Sランクの魚が釣れやすくなる",探索グループ,radar
+rank_license_a,Aランク免許,3,20000,rank_sniper,A,"Aランク以上の魚しか釣れなくなる",探索グループ,radar
+rank_license_b,Bランク免許,2,6000,rank_sniper,B,"Bランク以上の魚しか釣れなくなる",探索グループ,radar
+rank_license_c,Cランク免許,1,2000,rank_sniper,C,"Cランク以上の魚しか釣れなくなる",探索グループ,radar
+rank_license_s,Sランク免許,4,100000,rank_sniper,S,"Sランク以上の魚しか釣れなくなる",探索グループ,radar
 rare_up_1,レア魚UP I,1,600,rare_boost,0.2,"レア魚出現率+20%",探索グループ,radar
 rare_up_2,レア魚UP II,2,2400,rare_boost,0.5,"レア魚出現率+50%",探索グループ,radar
 rare_up_3,レア魚UP III,3,10000,rare_boost,1,"レア魚出現率+100%",探索グループ,radar
@@ -139,14 +137,14 @@ treasure_hunter_1,トレジャーハンター I,1,1500,treasure_boost,0.02,"宝�
 treasure_hunter_2,トレジャーハンター II,2,5000,treasure_boost,0.05,"宝箱出現率 +5%",宝物グループ,card_giftcard
 treasure_hunter_3,トレジャーハンター III,3,15000,treasure_boost,0.1,"宝箱出現率 +10%",宝物グループ,card_giftcard
 treasure_hunter_4,トレジャーハンター 極,4,50000,treasure_boost,0.2,"宝箱出現率 +20%",宝物グループ,card_giftcard
-fever_bias_moon_1,月の好意 I,1,5000,fever_bias_moon,0.1,"おさかなフィーバー確率 +10%",特殊効果グループ,auto_awesome
-fever_bias_moon_2,月の好意 II,2,15000,fever_bias_moon,0.2,"おさかなフィーバー確率 +20%",特殊効果グループ,auto_awesome
-fever_bias_moon_3,月の好意 III,3,50000,fever_bias_moon,0.35,"おさかなフィーバー確率 +35%",特殊効果グループ,auto_awesome
-fever_bias_moon_4,月の好意 極,4,150000,fever_bias_moon,0.6,"おさかなフィーバー確率 +60%",特殊効果グループ,auto_awesome
-fever_bias_sun_1,太陽の好意 I,1,5000,fever_bias_sun,0.1,"おたからフィーバー確率 +10%",特殊効果グループ,auto_awesome
-fever_bias_sun_2,太陽の好意 II,2,15000,fever_bias_sun,0.2,"おたからフィーバー確率 +20%",特殊効果グループ,auto_awesome
-fever_bias_sun_3,太陽の好意 III,3,50000,fever_bias_sun,0.35,"おたからフィーバー確率 +35%",特殊効果グループ,auto_awesome
-fever_bias_sun_4,太陽の好意 極,4,150000,fever_bias_sun,0.6,"おたからフィーバー確率 +60%",特殊効果グループ,auto_awesome
+fever_bias_moon_1,月の加護 I,1,5000,fever_bias_moon,0.1,"おさかなフィーバー確率 +10%",特殊効果グループ,auto_awesome
+fever_bias_moon_2,月の加護 II,2,15000,fever_bias_moon,0.2,"おさかなフィーバー確率 +20%",特殊効果グループ,auto_awesome
+fever_bias_moon_3,月の加護 III,3,50000,fever_bias_moon,0.35,"おさかなフィーバー確率 +35%",特殊効果グループ,auto_awesome
+fever_bias_moon_4,月の加護 極,4,150000,fever_bias_moon,0.6,"おさかなフィーバー確率 +60%",特殊効果グループ,auto_awesome
+fever_bias_sun_1,太陽の加護 I,1,5000,fever_bias_sun,0.1,"おたからフィーバー確率 +10%",特殊効果グループ,auto_awesome
+fever_bias_sun_2,太陽の加護 II,2,15000,fever_bias_sun,0.2,"おたからフィーバー確率 +20%",特殊効果グループ,auto_awesome
+fever_bias_sun_3,太陽の加護 III,3,50000,fever_bias_sun,0.35,"おたからフィーバー確率 +35%",特殊効果グループ,auto_awesome
+fever_bias_sun_4,太陽の加護 極,4,150000,fever_bias_sun,0.6,"おたからフィーバー確率 +60%",特殊効果グループ,auto_awesome
 fever_treasure_boost_1,フィーバーリッチ I,1,2000,fever_treasure_boost,0.1,"フィーバー中の宝箱出現率 +10%",特殊効果グループ,auto_awesome
 fever_treasure_boost_2,フィーバーリッチ II,2,8000,fever_treasure_boost,0.2,"フィーバー中の宝箱出現率 +20%",特殊効果グループ,auto_awesome
 fever_treasure_boost_3,フィーバーリッチ III,3,25000,fever_treasure_boost,0.35,"フィーバー中の宝箱出現率 +35%",特殊効果グループ,auto_awesome

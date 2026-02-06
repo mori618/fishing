@@ -5802,3 +5802,19 @@ body {
 .skill-select-card.tier-4 .name {
     color: #f59e0b;
 }
+
+.selection-msg {
+    margin-top: 5px;
+    font-size: 0.85em;
+    color: #ef4444;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.selection-msg::before {
+    content: 'info';
+    font-family: 'Material Icons';
+    font-size: 1.2em;
+}

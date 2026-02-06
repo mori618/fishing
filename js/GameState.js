@@ -403,6 +403,15 @@ const GameState = {
             if (effect.multiplier) multiplier *= effect.multiplier;
         });
 
+        // 特殊スキルの倍率補正
+        const masterAnglerSpecial = this.getEffectsByType('master_angler_special').length > 0;
+        const goodFeel = this.getEffectsByType('good_feel').length > 0;
+        const hardMode = this.getEffectsByType('hard_mode').length > 0;
+
+        if (masterAnglerSpecial) multiplier *= 2.0;
+        if (goodFeel) multiplier *= 2.0;
+        if (hardMode) multiplier *= 5.0;
+
         power = Math.floor(power * multiplier);
 
         // ========================================
@@ -663,6 +672,11 @@ const GameState = {
         // 動的補正を加算
         bonus += this.getDynamicSellMultiplier();
 
+        // ハードモード補正 (売値8倍)
+        if (this.getEffectsByType('hard_mode').length > 0) {
+            multiplier *= 8.0;
+        }
+
         // 互換性のために倍率をボーナスに統合して返す
         const totalBonus = Math.max(bonus, -0.9);
         return (1 + totalBonus) * multiplier - 1;
@@ -765,6 +779,11 @@ const GameState = {
     // 餌の消費回避確率を取得
     // ========================================
     getBaitSaveChance() {
+        // 無限餌スキル
+        if (this.getEffectsByType('infinite_bait').length > 0) {
+            return 1.0;
+        }
+
         let chance = 0;
         this.getEffectsByType('bait_save').forEach(effect => {
             chance += effect.value;
@@ -2094,7 +2113,14 @@ const GameState = {
     // 達人の針（赤ゾーン確定）所持判定
     // ========================================
     hasPerfectMaster() {
-        return this.getEffectsByType('perfect_catch').length > 0;
+        return this.getEffectsByType('master_needle').length > 0;
+    },
+
+    // ========================================
+    // 永久機関（燃料消費なし）所持判定
+    // ========================================
+    hasPerpetualEngine() {
+        return this.getEffectsByType('perpetual_engine').length > 0;
     },
 
     // ========================================
@@ -2112,6 +2138,11 @@ const GameState = {
                 this.fever.value++;
             } else if (roll < (75 * (1.0 - longBonus * 0.5))) {
                 this.fever.value++;
+            } else if (this.getEffectsByType('cosmic_blessing').length > 0 && Math.random() < 0.3) {
+                // 宇宙の加護: 30%の確率でLv6にリセット（延長）
+                this.fever.value = 6;
+                console.log('✨ 宇宙の加護発動！フィーバーゲージをリセットしました');
+                return { message: 'active' };
             } else if (longBonus >= 1.0) {
                 // 維持
             } else if (roll < 85) {
@@ -2128,7 +2159,13 @@ const GameState = {
 
             if (this.fever.value > 12) {
                 this.fever.isActive = false;
-                this.fever.value = 0;
+                // 永遠の熱狂: フィーバー終了時にゲージが4溜まった状態になる
+                if (this.getEffectsByType('eternal_mania').length > 0) {
+                    this.fever.value = 4;
+                    console.log('✨ 永遠の熱狂期待！ゲージ4からリスタート');
+                } else {
+                    this.fever.value = 0;
+                }
                 this.fever.type = null;
                 return { message: 'end' };
             }
@@ -2144,7 +2181,7 @@ const GameState = {
             if (isGuaranteed || Math.random() < chargeChance) {
                 this.fever.value++;
 
-                if (this.fever.value === 1) {
+                if (this.fever.value >= 1 && !this.fever.type) {
                     const sunBonus = this.getFeverBiasBonus('sun');
                     const moonBonus = this.getFeverBiasBonus('moon');
                     const sunChance = 0.5 + sunBonus - moonBonus;

@@ -232,18 +232,29 @@ const SynthesisManager = {
         }
 
         skills.forEach(skill => {
+            const otherSlotId = this.activeSlot === 1 ? this.selectedSlot2 : this.selectedSlot1;
+            const isAlreadySelected = (skill.id === otherSlotId);
+            const count = GameState.skillInventory[skill.id];
+            const insufficientCount = isAlreadySelected && count < 2;
+
             // 合成不可の除外
             const isHybrid = skill.effect.type === 'hybrid';
             const isTier4 = skill.tier === 4;
-            const isDisabled = isHybrid || isTier4;
+            const isDisabled = isHybrid || isTier4 || insufficientCount;
+
+            let reason = '';
+            if (isHybrid) reason = 'ハイブリッドは素材にできません';
+            else if (isTier4) reason = 'Tier 4は素材にできません';
+            else if (insufficientCount) reason = 'すでに選択済み（所持数不足）';
 
             const card = document.createElement('div');
             card.className = `skill-select-card tier-${skill.tier} ${isDisabled ? 'disabled' : ''}`;
             card.innerHTML = `
                 <div class="skill-info">
                     <div class="name">${skill.name}</div>
-                    <div class="tier">Tier ${skill.tier} / 所持: ${GameState.skillInventory[skill.id]}</div>
+                    <div class="tier">Tier ${skill.tier} / 所持: ${count}</div>
                     <div class="desc">${skill.description}</div>
+                    ${reason ? `<div class="selection-msg">${reason}</div>` : ''}
                 </div>
             `;
             if (!isDisabled) {
