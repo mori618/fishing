@@ -27,6 +27,9 @@ const ShopManager = {
         } else if (category === 'synthesis') {
             UIManager.showScreen('synthesis');
             SynthesisManager.render();
+        } else if (category === 'debug') {
+            UIManager.showScreen('debug');
+            DebugManager.render();
         } else {
             UIManager.showScreen('shop');
             this.renderShop();
@@ -162,6 +165,13 @@ const ShopManager = {
                 <div class="building-info">
                     <div class="building-name">合成工房</div>
                     <div class="building-desc">スキルの融合と強化</div>
+                </div>
+            </div>
+            <div class="shop-building debug" onclick="ShopManager.setCategory('debug')" style="border-color: #f43f5e; opacity: 0.8;">
+                <div class="building-icon" style="color: #f43f5e;"><span class="material-icons">admin_panel_settings</span></div>
+                <div class="building-info">
+                    <div class="building-name">デバッグルーム</div>
+                    <div class="building-desc">管理者向けのテスト操作画面</div>
                 </div>
             </div>
         `;

@@ -317,6 +317,25 @@
         </main>
     </div>
 
+    <div id="debug-screen" class="screen">
+        <header class="shop-header">
+            <button class="btn-header-back" onclick="ShopManager.setCategory('town')">
+                <span class="material-icons">arrow_back</span>
+            </button>
+            <h2 class="shop-title"><span class="material-icons">admin_panel_settings</span> デバッグルーム</h2>
+            <div class="shop-money">
+                <span class="status-icon"><span class="material-icons">construction</span></span>
+                <span>DEVELOPER MODE</span>
+            </div>
+        </header>
+
+        <main class="shop-content">
+            <div id="debug-main-area">
+                <!-- Debug content injected here -->
+            </div>
+        </main>
+    </div>
+
     <!-- ========================================
          図鑑画面
          ======================================== -->
@@ -413,6 +432,7 @@
     <script src="js/UIManager.js"></script>
     <script src="js/PortManager.js"></script>
     <script src="js/SynthesisManager.js"></script>
+    <script src="js/DebugManager.js"></script>
     <script src="js/main.js"></script>
 </body>
 

@@ -150,6 +150,8 @@ const UIManager = {
             this.prepareGachaScreen();
         } else if (screenId === 'port') {
             ShopManager.renderPort();
+        } else if (screenId === 'debug') {
+            DebugManager.render();
         }
     },
 
