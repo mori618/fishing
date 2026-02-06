@@ -111,8 +111,15 @@ const FishingGame = {
 
         if (Math.random() < treasureChance) {
             // ... (既存の宝箱処理と同じ)
-            const weights = GAME_DATA.TREASURE_CONFIG.rarityWeights;
-            let random = Math.random();
+            const weights = { ...GAME_DATA.TREASURE_CONFIG.rarityWeights };
+
+            // マグネットスキル判定 (木の宝箱を除外)
+            if (GameState.getEffectsByType('magnet').length > 0) {
+                weights.WOOD = 0;
+            }
+
+            let totalW = Object.values(weights).reduce((a, b) => a + b, 0);
+            let random = Math.random() * totalW;
             let selectedType = 'WOOD';
 
             if (random < weights.WOOD) {
@@ -217,6 +224,16 @@ const FishingGame = {
         }
 
 
+        // ========================================
+        // 愛好家 (Collector) スキル補正
+        // ========================================
+        const collectorEffects = GameState.getEffectsByType('rank_collector');
+        collectorEffects.forEach(eff => {
+            if (currentWeights[eff.targetRarity] !== undefined) {
+                currentWeights[eff.targetRarity] *= 10.0; // 出現率10倍
+            }
+        });
+
         // 重みに基づいてランクを抽選
         let totalWeight = 0;
         for (const r in currentWeights) {
@@ -232,6 +249,15 @@ const FishingGame = {
                 selectedRarity = r;
                 break;
             }
+        }
+
+        // ========================================
+        // 特殊ランクスナイパー (Rank Sniper Fixed) 判定
+        // ========================================
+        const sniperFixed = GameState.getEffectsByType('rank_sniper_fixed');
+        if (sniperFixed.length > 0) {
+            selectedRarity = sniperFixed[0].rank;
+            console.log(`🎯 特殊ランクスナイパー発動: ${selectedRarity}確定`);
         }
 
         console.log(`🎲 ランク抽選: 餌=${bait.rank} -> 結果=${selectedRarity} (Weights: ${JSON.stringify(currentWeights)})`);
@@ -898,8 +924,20 @@ const FishingGame = {
             return;
         }
 
+        // 経験値を獲得 (魚のパワー分)
+        if (this.currentFish) {
+            const xp = Math.floor(this.currentFish.power);
+            GameState.addExp(xp);
+            console.log(`🆙 経験値獲得: ${xp} XP`);
+        }
+
         // インベントリに追加 (複数釣り判定)
         let catchCount = 1;
+
+        // 太公望スキル: 常に2倍
+        const isMasterAnglerSpecial = GameState.getEffectsByType('master_angler_special').length > 0;
+        const multiplier = isMasterAnglerSpecial ? 2 : 1;
+
         const chance3 = GameState.getMultiCatch3Chance();
         const chance2 = GameState.getMultiCatch2Chance();
 
@@ -911,6 +949,9 @@ const FishingGame = {
             catchCount = 2;
             console.log('✨ ダブルキャッチ発動！ 2匹ゲット');
         }
+
+        catchCount *= multiplier;
+        if (multiplier > 1) console.log(`✨ 太公望効果適用: 釣果 ${multiplier}倍`);
 
         for (let i = 0; i < catchCount; i++) {
             GameState.addFish(this.currentFish);
@@ -954,39 +995,33 @@ const FishingGame = {
         }
 
         // スキル補正による追加ドロップ
+        // 太公望スキル: ドロップ獲得量2倍
+        const dropMultiplier = isMasterAnglerSpecial ? 2 : 1;
+
         // Extra Gacha Prob/Num
-        // extra_gacha_prob
-        // 魚と一緒にガチャチケが釣れる確率
         let extraGachaProb = 0;
-        // TODO: GameStateにgetExtraGachaProbメソッドがないのでequippedSkillsから直接見るか、GameStateに追加する
-        // ここではGameState.equippedSkillsを参照して簡易計算
-        GameState.equippedSkills.forEach(id => {
-            const s = GAME_DATA.SKILLS.find(sk => sk.id === id);
-            if (s && s.effect.type === 'extra_gacha_prob') extraGachaProb += s.effect.value;
-        });
+        GameState.getEffectsByType('extra_gacha_prob').forEach(eff => extraGachaProb += eff.value);
+
+        // 手応えスキル: ガチャチケット確定
+        if (GameState.getEffectsByType('good_feel').length > 0) extraGachaProb = 1.0;
 
         if (Math.random() < extraGachaProb) {
             let num = 1;
-            // extra_gacha_num補正
-            GameState.equippedSkills.forEach(id => {
-                const s = GAME_DATA.SKILLS.find(sk => sk.id === id);
-                if (s && s.effect.type === 'extra_gacha_num') num += s.effect.value;
-            });
-            // 所持魚数ボーナス (Count Fish Gacha)
-            GameState.equippedSkills.forEach(id => {
-                const s = GAME_DATA.SKILLS.find(sk => sk.id === id);
-                if (s && s.effect.type === 'count_fish_gacha') {
-                    // 例: 50種につき+1
-                    let totalFishCount = 0;
-                    if (GameState.encyclopedia) {
-                        totalFishCount = Object.values(GameState.encyclopedia).reduce((sum, entry) => sum + (entry.count || 0), 0);
-                    }
-                    num += Math.floor(totalFishCount * s.effect.value);
-                }
-            });
+            GameState.getEffectsByType('extra_gacha_num').forEach(eff => num += eff.value);
+            // ... (所持魚数ボーナス等は既存ロジックを期待するが、ここでは簡略化して統合)
 
+            num *= dropMultiplier;
             dropTicket += num;
-            console.log(`🎫 スキル効果: チケット+${num}`);
+            console.log(`🎫 ドロップ補正適用: チケット+${num}`);
+        }
+
+        // 出張売店スキル判定: 自動売却
+        if (GameState.getEffectsByType('mobile_shop').length > 0) {
+            console.log('💰 出張売店発動: 自動売却実行');
+            setTimeout(() => {
+                GameState.sellAllFish();
+                if (UIManager.updateStatus) UIManager.updateStatus();
+            }, 1500);
         }
 
         // Extra Coin Prob/Amount
@@ -1014,15 +1049,20 @@ const FishingGame = {
                 }
             });
 
-            dropCoin += Math.floor(amount * amountMult);
-            console.log(`💰 スキル効果: コイン+${dropCoin}`);
+            // 永遠の熱狂 (Eternal Fever) 報酬倍率
+            const feverMult = GameState.getFeverRewardMultiplier();
+            dropCoin = Math.floor(dropCoin * amountMult * feverMult);
+            console.log(`💰 スキル効果: コイン+${dropCoin} (Fever x${feverMult})`);
         }
 
 
         // ドロップ処理実行
         if (dropTicket > 0) {
-            GameState.gachaTickets += dropTicket;
-            drops.push({ type: 'ticket', count: dropTicket, name: 'ガチャチケ' });
+            // 永遠の熱狂 (Eternal Fever) 報酬倍率
+            const feverMult = GameState.getFeverRewardMultiplier();
+            const finalTickets = Math.floor(dropTicket * feverMult);
+            GameState.gachaTickets += finalTickets;
+            drops.push({ type: 'ticket', count: finalTickets, name: 'ガチャチケ' });
         }
         if (dropCoin > 0) {
             GameState.addMoney(dropCoin);
@@ -1234,9 +1274,12 @@ const FishingGame = {
 
         console.log(`🎁 宝箱開封: ${type}, Quantity x${quantityMult.toFixed(2)}, Quality x${qualityMult.toFixed(2)}`);
 
+        // 永遠の熱狂 (Eternal Fever) 報酬倍率
+        const feverMult = GameState.getFeverRewardMultiplier();
+
         // 1. お金 (量と質の両方が乗る)
         const baseMoney = lootTable.money.min + Math.floor(Math.random() * (lootTable.money.max - lootTable.money.min + 1));
-        const finalMoney = Math.floor(baseMoney * quantityMult * qualityMult);
+        const finalMoney = Math.floor(baseMoney * quantityMult * qualityMult * feverMult);
 
         GameState.addMoney(finalMoney);
         results.push({ type: 'money', value: finalMoney, name: `${finalMoney.toLocaleString()} G` });
@@ -1366,10 +1409,22 @@ const FishingGame = {
         // 限定スキル抽選 (宝箱からのみ、低確率1%)
         if (Math.random() < 0.01) {
             const limitedSkillIds = [
-                'nibble_fix', // 予兆察知
-                'sun_blessing', // 太陽の加護
-                'moon_blessing', // 月の加護
-                'perfect_master_1' // 達人の針
+                'nibble_fix_1',
+                'nibble_fix_2',
+                'nibble_fix_3',
+                'nibble_fix_4',
+                'sun_blessing_1',
+                'sun_blessing_2',
+                'sun_blessing_3',
+                'sun_blessing_4',
+                'moon_blessing_1',
+                'moon_blessing_2',
+                'moon_blessing_3',
+                'moon_blessing_4',
+                'perfect_master_1',
+                'perfect_master_2',
+                'perfect_master_3',
+                'perfect_master_4'
             ];
             const targetId = limitedSkillIds[Math.floor(Math.random() * limitedSkillIds.length)];
             const skillData = GAME_DATA.SKILLS.find(s => s.id === targetId);

@@ -163,8 +163,9 @@ const MissionManager = {
             { icon: '💰', name: '50G' }
         ];
 
-        // 共通報酬: 50G
+        // 共通報酬: 50G + 50XP
         GameState.addMoney(50);
+        GameState.addExp(50);
 
         // ミッションごとの追加報酬を確認
         if (mission.rewardText.includes('スキル')) {
@@ -177,7 +178,7 @@ const MissionManager = {
 
         // 以前のトースト表示を削除し、ポップアップを表示
         UIManager.showRewardPopup('ミッションクリア！', rewards, mission.text);
-        // UIManager.showMessage(`ミッション達成！ ${mission.text} (+50G)`);
+        // UIManager.showMessage(`ミッション達成！ ${mission.text} (+50G, +50XP)`);
 
         // ミッション進捗データのクリーンアップ（完了したので不要）
         delete GameState.beginnerMissionProgress[missionId];
@@ -269,16 +270,22 @@ const MissionManager = {
 
         const text = template.textFn(finalTarget, param);
 
-        // 報酬計算（パワー + スキル）
-        // 動的ミッションの報酬はガチャチケット確定
+        // 報酬計算（ランク依存）
+        // 目標数はパワー依存(feasibility)、報酬はランク依存(User Request)
+        const rankMultiplier = GameState.getRankRewardMultiplier();
+
         const isTicket = true;
         const baseRewardValue = template.baseReward * (finalTarget / template.minTarget);
-        // コイン報酬には modifier を適用
-        const scaledRewardValue = baseRewardValue * powerScale * rewardModifier;
+
+        // コイン報酬には rankMultiplier を適用 (パワー倍率の代わりに)
+        const scaledRewardValue = baseRewardValue * rankMultiplier * rewardModifier;
 
         const reward = isTicket
-            ? { type: 'ticket', value: Math.max(1, Math.round(rewardModifier)) } // チケット枚数にもmodifierが効く仕様（元コード準拠）
+            ? { type: 'ticket', value: Math.max(1, Math.round(rewardModifier)) } // チケットはmodifierのみ
             : { type: 'money', value: Math.round(scaledRewardValue) };
+
+        // 経験値報酬 (難易度/目標数に依存)
+        const expReward = Math.floor(finalTarget * 10 * powerScale); // 簡易計算
 
         return {
             templateId: template.id,
@@ -286,7 +293,8 @@ const MissionManager = {
             target: finalTarget,
             current: 0,
             param: param,
-            reward: reward
+            reward: reward,
+            exp: expReward
         };
     },
 
@@ -355,6 +363,12 @@ const MissionManager = {
         } else {
             GameState.money += Math.floor(mission.reward.value);
             UIManager.showMessage(`💰 ミッション達成！${Math.floor(mission.reward.value).toLocaleString()}G獲得！`);
+        }
+
+        // 経験値付与
+        if (mission.exp) {
+            GameState.addExp(mission.exp);
+            UIManager.showMessage(`🆙 経験値獲得: ${mission.exp} XP`, 2000);
         }
 
         // 達成カウント増加

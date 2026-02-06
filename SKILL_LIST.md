@@ -140,12 +140,18 @@ HIT受付時間（ウキが沈んでから逃げるまでの時間）を延長�
 | `mania_3` | 熱狂 III | 3 | 40,000 | フィーバー終了率 -30% | `fever_long`: -30% |
 
 ## 加護系 (Blessing)
-特定のフィーバータイプが出やすくなります。Tier 3 高級スキル。
+特定のフィーバータイプが出やすくなります。
 
 | ID | 名前 | Tier | 価格 | 説明 | 効果詳細 |
 |---|---|---|---|---|---|
-| `sun_blessing` | 太陽の加護 | 3 | 50,000 | おたからフィーバー率 +25% | `fever_bias_sun`: +25% |
-| `moon_blessing` | 月の加護 | 3 | 50,000 | おさかなフィーバー率 +25% | `fever_bias_moon`: +25% |
+| `fever_bias_sun_1` | 太陽の加護 I | 1 | 2,000 | おたからフィーバー率 +10% | `fever_bias_sun`: +10% |
+| `fever_bias_sun_2` | 太陽の加護 II | 2 | 8,000 | おたからフィーバー率 +20% | `fever_bias_sun`: +20% |
+| `fever_bias_sun_3` | 太陽の加護 III | 3 | 25,000 | おたからフィーバー率 +35% | `fever_bias_sun`: +35% |
+| `fever_bias_sun_4` | 太陽の加護 極 | 4 | 80,000 | おたからフィーバー率 +60% | `fever_bias_sun`: +60% |
+| `fever_bias_moon_1` | 月の加護 I | 1 | 2,000 | おさかなフィーバー率 +10% | `fever_bias_moon`: +10% |
+| `fever_bias_moon_2` | 月の加護 II | 2 | 8,000 | おさかなフィーバー率 +20% | `fever_bias_moon`: +20% |
+| `fever_bias_moon_3` | 月の加護 III | 3 | 25,000 | おさかなフィーバー率 +35% | `fever_bias_moon`: +35% |
+| `fever_bias_moon_4` | 月の加護 極 | 4 | 80,000 | おさかなフィーバー率 +60% | `fever_bias_moon`: +60% |
 
 ## 特殊効果系 (Unique)
 
@@ -216,7 +222,27 @@ HIT受付時間（ウキが沈んでから逃げるまでの時間）を延長�
 | `gacha_mission_up_2` | チケットハンター II | 2 | 3,500 | チケミッション率 +20% | `gacha_mission_up`: +20% |
 | `gacha_mission_up_3` | チケットハンター III | 3 | 9,000 | チケミッション率 +30% | `gacha_mission_up`: +30% |
 
-## リスク＆リターン系 (High Risk)
+## 免許系 (License)
+特定のランク以下の魚が釣れなくなります。
+
+| ID | 名前 | Tier | 価格 | 説明 | 効果詳細 |
+|---|---|---|---|---|---|
+| `rank_license_c` | 免許【C級】 | 1 | 2,000 | Cランク以上のみ出現 | `rank_sniper`: Min Rarity C |
+| `rank_license_b` | 免許【B級】 | 2 | 6,000 | Bランク以上のみ出現 | `rank_sniper`: Min Rarity B |
+| `rank_license_a` | 免許【A級】 | 3 | 20,000 | Aランク以上のみ出現 | `rank_sniper`: Min Rarity A |
+| `rank_license_s` | 免許【S級】 | 4 | 60,000 | Sランク以上のみ出現 | `rank_sniper`: Min Rarity S |
+
+## 愛好家系 (Enthusiast)
+特定のランクの魚が出現しやすくなります。
+
+| ID | 名前 | Tier | 価格 | 説明 | 効果詳細 |
+|---|---|---|---|---|---|
+| `rank_collector_c` | Cランク愛好家 | 1 | 2,000 | Cランク出現率 大幅UP | `rank_collector`: C x10 |
+| `rank_collector_b` | Bランク愛好家 | 2 | 6,000 | Bランク出現率 大幅UP | `rank_collector`: B x10 |
+| `rank_collector_a` | Aランク愛好家 | 3 | 20,000 | Aランク出現率 大幅UP | `rank_collector`: A x10 |
+| `rank_collector_s` | Sランク愛好家 | 4 | 60,000 | Sランク出現率 大幅UP | `rank_collector`: S x10 |
+
+## ペナルティ系 (High Risk)
 強力な効果の代わりにペナルティがあります。
 
 | ID | 名前 | Tier | 価格 | 説明 | 効果詳細 |
@@ -227,8 +253,6 @@ HIT受付時間（ウキが沈んでから逃げるまでの時間）を延長�
 | `high_risk_sell_3` | 闇取引 III | 3 | 15,000 | 売値x3 / 失敗時ペナ(大) | `high_risk_sell`: x3.0, Pen 30% |
 | `quick_hit_penalty_2` | 早打ち II | 2 | 3,000 | 待ち-30% / 売値-20% | `quick_hit_penalty`: Wait-30%, Price-20% |
 | `quick_hit_penalty_3` | 早打ち III | 3 | 8,000 | 待ち-50% / 売値-40% | `quick_hit_penalty`: Wait-50%, Price-40% |
-| `rank_sniper_2` | ランクスナイパー II | 2 | 6,000 | Bランク以上のみ出現 | `rank_sniper`: Min Rarity B |
-| `rank_sniper_3` | ランクスナイパー III | 3 | 20,000 | Aランク以上のみ出現 | `rank_sniper`: Min Rarity A |
 | `ultimate_risk` | 究極の賭け | 3 | 50,000 | パワー+100% / 失敗時全ロスト | `ultimate_risk`: Pow+100%, Lost All |
 
 ## その他便利系 (Misc)
@@ -292,3 +316,37 @@ HIT受付時間（ウキが沈んでから逃げるまでの時間）を延長�
 | `slot_expansion_1` | 拡張モジュール I | 1 | 5,000 | スキルスロット+2 (実質+1) | `skill_slot_expansion`: +2 |
 | `slot_expansion_2` | 拡張モジュール II | 2 | 20,000 | スキルスロット+3 (実質+2) | `skill_slot_expansion`: +3 |
 | `slot_expansion_3` | 拡張モジュール III | 3 | 50,000 | スキルスロット+4 (実質+3) | `skill_slot_expansion`: +4 |
+
+## ランク関連系 (Rank & XP)
+ランクアップや経験値に関連するスキルです。
+
+| ID | 名前 | Tier | 価格 | 説明 | 効果詳細 |
+|---|---|---|---|---|---|
+| `xp_boost_1` | 経験値アップ I | 1 | 2,000 | 経験値 +10% | `xp_boost`: +10% |
+| `xp_boost_2` | 経験値アップ II | 2 | 8,000 | 経験値 +20% | `xp_boost`: +20% |
+| `xp_boost_3` | 経験値アップ III | 3 | 25,000 | 経験値 +50% | `xp_boost`: +50% |
+| `xp_boost_4` | 知識の探求者 極 | 4 | 80,000 | 経験値 +100% | `xp_boost`: +100% |
+| `rank_power_boost_1` | ランク熟練 I | 1 | 5,000 | ランクパワーボーナス +50% | `rank_power_boost`: +50% |
+| `rank_power_boost_2` | ランク熟練 II | 2 | 15,000 | ランクパワーボーナス +100% | `rank_power_boost`: +100% |
+| `rank_power_boost_3` | ランク熟練 III | 3 | 50,000 | ランクパワーボーナス +200% | `rank_power_boost`: +200% |
+| `rank_power_boost_4` | 王者の風格 極 | 4 | 150,000 | ランクパワーボーナス +400% | `rank_power_boost`: +400% |
+
+## 特殊合成スキル (Special Synthesis)
+特定のスキル同士を合成することで生まれる、非常に強力なスキルです。Tierは素材と同じになりますが、効果は格段に高まります。
+
+| ID | 名前 | Tier | 説明 | 効果詳細 |
+|---|---|---|---|---|
+| `master_needle_X` | 達人の針 | 1-4 | 赤ゾーン停止で捕獲率100% | `master_needle` |
+| `mobile_shop_X` | 出張売店 | 1-4 | 魚を釣った瞬間に自動売却 | `mobile_shop` |
+| `master_angler_special_X` | 太公望 | 1-4 | 常に2匹分釣り上げ & ドロップ2倍 | `master_angler_special` |
+| `eternal_mania_X` | 永遠の熱狂 | 1-4 | フィーバー延長 & 終了時ゲージ維持 | `eternal_mania` |
+| `cosmic_blessing_X` | 宇宙の加護 | 1-4 | フィーバー中、30%でゲージLv6に戻る | `cosmic_blessing` |
+| `rank_sniper_c_X` | ピンポイント【C】 | 1-4 | Cランクの魚しか釣れなくなる | `rank_sniper_fixed`: C |
+| `rank_sniper_b_X` | ピンポイント【B】 | 1-4 | Bランクの魚しか釣れなくなる | `rank_sniper_fixed`: B |
+| `rank_sniper_a_X` | ピンポイント【A】 | 1-4 | Aランクの魚しか釣れなくなる | `rank_sniper_fixed`: A |
+| `rank_sniper_s_X` | ピンポイント【S】 | 1-4 | Sランクの魚しか釣れなくなる | `rank_sniper_fixed`: S |
+| `infinite_bait_X` | 無限餌 | 1-4 | 餌を一切消費しなくなる | `infinite_bait` |
+| `good_feel_X` | 手応え | 1-4 | パワー2倍 & ガチャチケット確定 | `good_feel` |
+| `hard_mode_X` | ハードモード | 1-4 | パワーx5 / 売値x8 | `hard_mode` |
+| `perpetual_engine_X` | 永久機関 | 1-4 | 漁船の燃料を一切消費しなくなる | `perpetual_engine` |
+| `magnet_X` | マグネット | 1-4 | 宝箱から「木の宝箱」が出なくなる | `magnet` |

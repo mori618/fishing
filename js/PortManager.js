@@ -65,7 +65,9 @@ const PortManager = {
                 // 1分経過処理
                 // エコ航行スキル判定 (getShipFuelEfficiency)
                 const ecoEfficiency = GameState.getShipFuelEfficiency();
-                if (Math.random() >= ecoEfficiency) {
+                if (GameState.hasPerpetualEngine && GameState.hasPerpetualEngine()) {
+                    // 永久機関！消費なし
+                } else if (Math.random() >= ecoEfficiency) {
                     // 船ごとの消費量を取得 (デフォルト1)
                     const consumption = ship.fuelConsumption || 1;
                     currentFuel -= consumption;
@@ -198,7 +200,9 @@ const PortManager = {
             while (this.minutesTimer >= this.MINUTE_MS) {
                 this.minutesTimer -= this.MINUTE_MS;
 
-                if (Math.random() >= ecoEfficiency) {
+                if (GameState.hasPerpetualEngine && GameState.hasPerpetualEngine()) {
+                    // 永久機関
+                } else if (Math.random() >= ecoEfficiency) {
                     // 船ごとの消費量
                     const consumption = ship.fuelConsumption || 1;
                     GameState.port.fuelMinutes -= consumption;

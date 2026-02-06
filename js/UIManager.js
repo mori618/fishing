@@ -150,6 +150,8 @@ const UIManager = {
             this.prepareGachaScreen();
         } else if (screenId === 'port') {
             ShopManager.renderPort();
+        } else if (screenId === 'debug') {
+            DebugManager.render();
         }
     },
 
@@ -873,6 +875,7 @@ const UIManager = {
         this.updateInventory();
         this.updateRodInfo();
         this.updateBaitInfo();
+        this.updateRankInfo();
     },
 
     // ========================================
@@ -943,6 +946,57 @@ const UIManager = {
         if (powerDisplay) {
             powerDisplay.textContent = `${GameState.getTotalPower()} P`;
         }
+        if (powerDisplay) {
+            powerDisplay.textContent = `${GameState.getTotalPower()} P`;
+        }
+    },
+
+    // ========================================
+    // ランク表示更新
+    // ========================================
+    updateRankInfo() {
+        let rankDisplay = document.getElementById('rank-display');
+        if (!rankDisplay) {
+            // Create if missing, try to place near power-display
+            const powerDisplay = document.getElementById('power-display');
+            if (powerDisplay && powerDisplay.parentNode) {
+                rankDisplay = document.createElement('div');
+                rankDisplay.id = 'rank-display';
+                rankDisplay.className = 'status-item';
+                rankDisplay.style.marginRight = '10px';
+                rankDisplay.style.fontWeight = 'bold';
+                rankDisplay.style.color = '#fbbf24'; // Goldish
+                // Insert before power display
+                powerDisplay.parentNode.insertBefore(rankDisplay, powerDisplay);
+            } else {
+                return; // Can't find place
+            }
+        }
+        const nextExp = GameState.getNextRankExp ? GameState.getNextRankExp() : '-';
+        const percent = GameState.getNextRankExp ? Math.floor((GameState.exp / GameState.getNextRankExp()) * 100) : 0;
+        rankDisplay.innerHTML = `RANK ${GameState.rank} <span style="font-size:0.8em; opacity:0.8;">(${percent}%)</span>`;
+    },
+
+    // ========================================
+    // ランクアップ演出
+    // ========================================
+    // ========================================
+    // ランクアップ演出
+    // ========================================
+    showRankUp(newRank, coinReward, ticketReward) {
+        const rewards = [
+            { icon: '⭐', name: `Rank ${newRank}!` },
+            { icon: '💰', name: `${coinReward.toLocaleString()}G` }
+        ];
+
+        if (ticketReward > 0) {
+            rewards.push({ icon: '🎫', name: `x${ticketReward}` });
+        }
+
+        this.showRewardPopup('RANK UP!', rewards, 'パワーボーナス & 報酬獲得！');
+
+        // エフェクト（紙吹雪などあればベストだが、簡易的にメッセージ）
+        this.updateRankInfo();
     },
 
     // ========================================
