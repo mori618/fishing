@@ -545,7 +545,7 @@ const UIManager = {
     // ========================================
     // 釣り上げ成功
     // ========================================
-    showCatchSuccess(fish, onClose, count = 1) {
+    showCatchSuccess(fish, onClose, count = 1, extraRewards = []) {
         const fishingArea = document.getElementById('fishing-area');
         if (!fishingArea) return;
 
@@ -554,6 +554,34 @@ const UIManager = {
         let countBadge = '';
         if (count > 1) {
             countBadge = `<div class="multi-catch-badge">${count}匹釣れた！</div>`;
+        }
+
+        // 追加報酬のHTML生成
+        let extraRewardsHtml = '';
+        if (extraRewards && extraRewards.length > 0) {
+            const rewardItemsHtml = extraRewards.map(reward => {
+                let icon = 'card_giftcard';
+                if (reward.type === 'money') icon = 'paid';
+                else if (reward.type === 'ticket') icon = 'confirmation_number';
+                else if (reward.type === 'skill') icon = 'auto_fix_high';
+                else if (reward.type === 'bait') icon = 'set_meal';
+                
+                return `
+                    <div class="extra-reward-pill">
+                        <span class="material-icons extra-reward-icon">${icon}</span>
+                        <span>${reward.name} ${reward.count > 1 ? 'x' + reward.count : ''}</span>
+                    </div>
+                `;
+            }).join('');
+
+            extraRewardsHtml = `
+                <div class="extra-rewards-section">
+                    <div class="extra-rewards-title">BONUS REWARDS</div>
+                    <div class="extra-rewards-list">
+                        ${rewardItemsHtml}
+                    </div>
+                </div>
+            `;
         }
 
         fishingArea.innerHTML = `
@@ -588,6 +616,8 @@ const UIManager = {
                                 <span class="value">¥${fish.price.toLocaleString()}</span>
                             </div>
                         </div>
+
+                        ${extraRewardsHtml}
                     </div>
                     
                     <div class="tap-hint">TAP TO CLOSE</div>
@@ -1192,21 +1222,11 @@ const UIManager = {
     // ========================================
     // イベントメッセージ表示
     // ========================================
+    // ========================================
+    // イベントメッセージ表示
+    // ========================================
     showEventMessage(text, icon = 'info') {
-        const fishingArea = document.getElementById('fishing-screen');
-        if (!fishingArea) return;
-
-        const msg = document.createElement('div');
-        msg.className = 'event-message';
-        msg.innerHTML = `
-            <span class="material-icons">${icon}</span>
-            <span>${text}</span>
-        `;
-        fishingArea.appendChild(msg);
-
-        setTimeout(() => {
-            msg.remove();
-        }, 4000);
+        this.showNotification('EVENT', text, icon, 4000);
     },
 
     // ========================================
@@ -1261,23 +1281,43 @@ const UIManager = {
     // ========================================
     // 一時メッセージ表示
     // ========================================
-    showMessage(message, duration = 2000) {
-        // 既存のメッセージを削除
-        const existing = document.querySelector('.toast-message');
+    // ========================================
+    // 一時メッセージ表示 (廃止 -> showNotificationへ)
+    // ========================================
+    showMessage(message, duration = 3000) {
+        this.showNotification('INFO', message, 'info', duration);
+    },
+
+    // ========================================
+    // 通知バナー表示 (New!)
+    // ========================================
+    showNotification(title, message, icon = 'info', duration = 3000) {
+        // 既存のバナーを削除（または積み重ねることもできるが今は入れ替え）
+        const existing = document.querySelector('.notification-banner');
         if (existing) existing.remove();
 
-        const toast = document.createElement('div');
-        toast.className = 'toast-message';
-        toast.textContent = message;
-        document.body.appendChild(toast);
+        const banner = document.createElement('div');
+        banner.className = 'notification-banner';
+        
+        banner.innerHTML = `
+            <span class="material-icons notification-icon">${icon}</span>
+            <div class="notification-content">
+                ${title ? `<div class="notification-title">${title}</div>` : ''}
+                <div class="notification-message">${message}</div>
+            </div>
+        `;
 
-        // フェードイン
-        setTimeout(() => toast.classList.add('show'), 10);
+        document.body.appendChild(banner);
 
-        // フェードアウトして削除
+        // Slide Down
+        requestAnimationFrame(() => {
+            banner.classList.add('show');
+        });
+
+        // Slide Up & Remove
         setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => toast.remove(), 300);
+            banner.classList.remove('show');
+            setTimeout(() => banner.remove(), 400); 
         }, duration);
     },
 
@@ -1494,69 +1534,25 @@ const UIManager = {
     // ========================================
     // 報酬獲得ポップアップ
     // ========================================
+    // ========================================
+    // 報酬獲得ポップアップ (通知バナー版)
+    // ========================================
     showRewardPopup(title, items, missionName = '') {
         console.log('🎉 showRewardPopup called:', title, items, missionName);
-        // アイテム形式: { icon: '💰', name: '50G' }
-        const overlay = document.createElement('div');
-        overlay.className = 'reward-popup-overlay';
+        
+        // 通知バナーに表示するテキストを作成
+        let message = '';
+        if (missionName) {
+            message += `${missionName}\n`;
+        }
+        
+        const rewardsText = items.map(item => `${item.name}`).join(', ');
+        if (rewardsText) {
+            message += `報酬: ${rewardsText}`;
+        }
 
-        // メインコンテンツ生成
-        let itemsHtml = '';
-        items.forEach(item => {
-            itemsHtml += `
-                <div class="reward-item">
-                    <div class="reward-icon-container">${item.icon}</div>
-                    <div class="reward-name">${item.name}</div>
-                </div>
-            `;
-        });
-
-        // ミッション名の表示
-        const missionNameHtml = missionName ? `<div class="reward-mission-name">${missionName}</div>` : '';
-
-        overlay.innerHTML = `
-            <div class="reward-popup">
-                <div class="reward-title">${title}</div>
-                ${missionNameHtml}
-                <div class="reward-content">
-                    ${itemsHtml}
-                </div>
-            </div>
-        `;
-
-        document.body.appendChild(overlay);
-
-        // アニメーション用
-        requestAnimationFrame(() => {
-            overlay.classList.add('show');
-        });
-
-        // 閉じる処理
-        const close = () => {
-            overlay.classList.remove('show');
-            setTimeout(() => overlay.remove(), 300);
-        };
-
-        // 自動消去（2.5秒後）
-        const autoCloseTimer = setTimeout(close, 2500);
-
-        // タップでも閉じる（イベント伝播を止める）
-        overlay.addEventListener('click', (e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            clearTimeout(autoCloseTimer);
-            close();
-        });
-
-        // スペースキーでも閉じる
-        const handleKeydown = (e) => {
-            if (e.code === 'Space' || e.key === ' ') {
-                e.preventDefault();
-                close();
-                document.removeEventListener('keydown', handleKeydown);
-            }
-        };
-        document.addEventListener('keydown', handleKeydown);
+        // 通知を表示
+        this.showNotification(title, message, 'emoji_events', 4000);
     },
 
     // ========================================

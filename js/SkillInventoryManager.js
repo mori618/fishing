@@ -15,7 +15,7 @@ const SkillInventoryManager = {
                         <span class="material-icons" style="font-size: 16px; vertical-align: text-bottom; margin-right: 4px;">style</span>
                         スキルセット
                     </div>
-                    <button class="btn btn-sm btn-primary" onclick="SkillInventoryManager.promptSaveSet()" style="font-size: 12px; padding: 4px 8px;">
+                    <button class="btn-action" onclick="SkillInventoryManager.promptSaveSet()" style="font-size: 12px; padding: 4px 8px;">
                         <span class="material-icons" style="font-size: 14px;">save</span> 現在の装備を保存
                     </button>
                 </div>
@@ -99,7 +99,7 @@ const SkillInventoryManager = {
         const inventory = GameState.skillInventory || {};
 
         for (const [id, count] of Object.entries(inventory)) {
-            const data = GAME_DATA.SKILLS.find(s => s.id === id);
+            const data = GameState.getSkillData(id);
             if (!data) continue;
 
             // 装備中の個数を計算

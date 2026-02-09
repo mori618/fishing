@@ -598,6 +598,15 @@ const ShopManager = {
         const config = GAME_DATA.GACHA_CONFIG;
         const tickets = GameState.gachaTickets;
         const money = GameState.money;
+        
+        // チケット所持数表示 (New!)
+        html += `
+            <div class="ticket-status-display">
+                <span class="material-icons ticket-icon">confirmation_number</span>
+                <span class="ticket-label">所持チケット:</span>
+                <span class="ticket-count">${tickets} 枚</span>
+            </div>
+        `;
 
         const tiers = [
             { id: 'BRONZE', name: 'ブロンズガチャ', color: '#cd7f32', desc: 'Tier1 (85%), Tier2 (14%), Tier3 (1%)' },
