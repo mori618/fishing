@@ -5818,3 +5818,128 @@ body {
     font-family: 'Material Icons';
     font-size: 1.2em;
 }
+/* ========================================
+   通知バナー (Top Notification)
+   ======================================== */
+.notification-banner {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: rgba(30, 41, 59, 0.95);
+    border: 2px solid #fbbf24;
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 50px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 300px;
+    max-width: 90%;
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: none; /* 下の操作を邪魔しない */
+}
+
+.notification-banner.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+.notification-icon {
+    font-size: 24px;
+    color: #fbbf24;
+}
+
+.notification-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.notification-title {
+    font-weight: bold;
+    font-size: 14px;
+    color: #fbbf24;
+    margin-bottom: 2px;
+}
+
+.notification-message {
+    font-size: 13px;
+    color: #f1f5f9;
+}
+
+/* ========================================
+   キャッチ結果の追加報酬表示
+   ======================================== */
+.extra-rewards-section {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    width: 100%;
+}
+
+.extra-rewards-title {
+    font-size: 0.75rem;
+    color: #fbbf24;
+    font-weight: bold;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.extra-rewards-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+}
+
+.extra-reward-pill {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: 12px;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    color: #fff;
+}
+
+.extra-reward-icon {
+    font-size: 14px;
+    color: #fbbf24;
+}
+
+/* ========================================
+   Ticket Status Display (Gacha Shop)
+   ======================================== */
+.ticket-status-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ticket-status-display .ticket-icon {
+    color: #fbbf24;
+    font-size: 24px;
+}
+
+.ticket-status-display .ticket-label {
+    font-size: 16px;
+    color: #e2e8f0;
+}
+
+.ticket-status-display .ticket-count {
+    font-size: 20px;
+    font-weight: bold;
+    color: #fbbf24;
+}

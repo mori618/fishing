@@ -1599,6 +1599,12 @@ const GameState = {
         if (!check.can) return check;
 
         this.equippedSkills.push(skillId);
+
+        // ミッション判定: スキルを装備
+        if (typeof MissionManager !== 'undefined') {
+            MissionManager.checkMission('equip_skill');
+        }
+
         // オートセーブ
         SaveManager.save(this);
         console.log(`⚔️ スキル装備: ${skillId}`);

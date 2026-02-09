@@ -356,19 +356,25 @@ const MissionManager = {
         const mission = GameState.dynamicMissions[slot];
         if (!mission) return;
 
+        const rewards = [];
+        let rewardText = '';
+
         // 報酬付与
         if (mission.reward.type === 'ticket') {
             GameState.gachaTickets += mission.reward.value;
-            UIManager.showMessage(`🎫 ミッション達成！チケット${mission.reward.value}枚獲得！`);
+            rewards.push({ name: `${mission.reward.value} Tickets` });
+            rewardText = `${mission.reward.value} Tickets`;
         } else {
-            GameState.money += Math.floor(mission.reward.value);
-            UIManager.showMessage(`💰 ミッション達成！${Math.floor(mission.reward.value).toLocaleString()}G獲得！`);
+            const money = Math.floor(mission.reward.value);
+            GameState.money += money;
+            rewards.push({ name: `${money.toLocaleString()} G` });
+            rewardText = `${money.toLocaleString()} G`;
         }
 
         // 経験値付与
         if (mission.exp) {
             GameState.addExp(mission.exp);
-            UIManager.showMessage(`🆙 経験値獲得: ${mission.exp} XP`, 2000);
+            rewards.push({ name: `${mission.exp} XP` });
         }
 
         // 達成カウント増加
@@ -383,6 +389,9 @@ const MissionManager = {
         UIManager.updateStatus();
         UIManager.updateMissionUI();
         SaveManager.save(GameState);
+
+        // 通知表示
+        UIManager.showRewardPopup('MISSION COMPLETE!', rewards, mission.text);
     }
 };
 

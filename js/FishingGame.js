@@ -1083,11 +1083,11 @@ const FishingGame = {
         }
 
         // Drops情報をUIに渡す（必要ならshowCatchSuccessの引数を拡張）
-        if (drops.length > 0) {
-            // 簡易的にメッセージで表示
-            const dropNames = drops.map(d => `${d.name} x${d.count}`).join(', ');
-            UIManager.showMessage(`🎁 追加報酬: ${dropNames}`, 3000);
-        }
+        // if (drops.length > 0) {
+        //     // 簡易的にメッセージで表示 (廃止: showCatchSuccessに統合)
+        //     // const dropNames = drops.map(d => `${d.name} x${d.count}`).join(', ');
+        //     // UIManager.showMessage(`🎁 追加報酬: ${dropNames}`, 3000);
+        // }
 
         // 初心者ミッション判定 + 動的ミッション判定（魚情報付き）
         MissionManager.checkMission('catch_success', {
@@ -1126,7 +1126,7 @@ const FishingGame = {
             UIManager.showIdle();
             // イベント判定
             this.triggerRandomEvent();
-        }, catchCount); // catchCountを渡す
+        }, catchCount, drops); // dropsを渡す
 
         console.log(`🎉 ${this.currentFish.name}を釣り上げた！ (x${catchCount})`);
     },

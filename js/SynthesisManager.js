@@ -164,9 +164,22 @@ const SynthesisManager = {
 
         // 基本バリデーション
         if (this.selectedSlot1 === this.selectedSlot2) {
-            if (GameState.getSkillCount(this.selectedSlot1) < 2) return false;
+            const total = GameState.getSkillCount(this.selectedSlot1);
+            const equipped = GameState.getEquippedSkillCount(this.selectedSlot1);
+            if ((total - equipped) < 2) return false;
+
             if (skill1.tier >= 4) return false;
         } else {
+            // Slot 1 Check
+            const total1 = GameState.getSkillCount(this.selectedSlot1);
+            const equipped1 = GameState.getEquippedSkillCount(this.selectedSlot1);
+            if ((total1 - equipped1) < 1) return false;
+
+            // Slot 2 Check
+            const total2 = GameState.getSkillCount(this.selectedSlot2);
+            const equipped2 = GameState.getEquippedSkillCount(this.selectedSlot2);
+            if ((total2 - equipped2) < 1) return false;
+
             if (skill1.tier !== skill2.tier) return false;
             if (skill1.tier >= 4 || skill2.tier >= 4) return false; // Tier 4は素材不可
             if (skill1.effect.type === 'hybrid' || skill2.effect.type === 'hybrid') return false;
@@ -234,8 +247,13 @@ const SynthesisManager = {
         skills.forEach(skill => {
             const otherSlotId = this.activeSlot === 1 ? this.selectedSlot2 : this.selectedSlot1;
             const isAlreadySelected = (skill.id === otherSlotId);
-            const count = GameState.skillInventory[skill.id];
-            const insufficientCount = isAlreadySelected && count < 2;
+            
+            const totalCount = GameState.skillInventory[skill.id] || 0;
+            const equippedCount = GameState.getEquippedSkillCount(skill.id);
+            const availableCount = totalCount - equippedCount;
+            
+            const needed = isAlreadySelected ? 2 : 1;
+            const insufficientCount = availableCount < needed;
 
             // 合成不可の除外
             const isHybrid = skill.effect.type === 'hybrid';
@@ -245,14 +263,20 @@ const SynthesisManager = {
             let reason = '';
             if (isHybrid) reason = 'ハイブリッドは素材にできません';
             else if (isTier4) reason = 'Tier 4は素材にできません';
-            else if (insufficientCount) reason = 'すでに選択済み（所持数不足）';
+            else if (insufficientCount) {
+                if (equippedCount > 0) {
+                    reason = `残りすべて装備中 (所持:${totalCount}, 装備:${equippedCount})`;
+                } else {
+                    reason = '所持数が足りません';
+                }
+            }
 
             const card = document.createElement('div');
             card.className = `skill-select-card tier-${skill.tier} ${isDisabled ? 'disabled' : ''}`;
             card.innerHTML = `
                 <div class="skill-info">
                     <div class="name">${skill.name}</div>
-                    <div class="tier">Tier ${skill.tier} / 所持: ${count}</div>
+                    <div class="tier">Tier ${skill.tier} / 所持: ${totalCount} (余り: ${availableCount})</div>
                     <div class="desc">${skill.description}</div>
                     ${reason ? `<div class="selection-msg">${reason}</div>` : ''}
                 </div>
