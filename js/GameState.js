@@ -1802,8 +1802,26 @@ const GameState = {
         const base2 = id2.replace(/_\d$/, '');
         const tier = skill1.tier;
 
-        if (id1 === id2) {
-            // 同名ランクアップ合成 (通常 + 通常, 特殊 + 特殊)
+        // 優先順位: 1. 特殊合成 (レシピ一致) -> 2. ランクアップ (同名) -> 3. ハイブリッド (異名)
+        const key1 = base1 + '+' + base2;
+        const key2 = base2 + '+' + base1;
+        const specialResultBase = (skill1.tier === skill2.tier && GAME_DATA.SPECIAL_RECIPES)
+            ? (GAME_DATA.SPECIAL_RECIPES[key1] || GAME_DATA.SPECIAL_RECIPES[key2])
+            : null;
+
+        if (specialResultBase) {
+            // 特殊合成 (Tier無し)
+            resultId = specialResultBase;
+            resultSkill = GAME_DATA.SKILLS.find(s => s.id === resultId);
+
+            if (!resultSkill) {
+                return { success: false, message: '特殊スキルのデータが見つかりません' };
+            }
+
+            const specialCosts = { 1: 3000, 2: 15000, 3: 60000 };
+            cost = specialCosts[tier] || 100000;
+        } else if (id1 === id2) {
+            // 同名ランクアップ合成
             const nextTier = skill1.tier + 1;
             resultId = `${base1}_${nextTier}`;
             resultSkill = GAME_DATA.SKILLS.find(s => s.id === resultId);
@@ -1821,46 +1839,28 @@ const GameState = {
                 cost *= 2;
             }
         } else {
-            // 異名合成 (特殊 or ハイブリッド)
+            // 通常ハイブリッド合成
             if (skill1.tier !== skill2.tier) {
                 return { success: false, message: 'Tierが一致していません' };
             }
 
-            // 特殊レシピチェック
-            const recipeKey = [base1, base2].sort().join('+');
-            const resultBaseId = GAME_DATA.SPECIAL_RECIPES ? GAME_DATA.SPECIAL_RECIPES[recipeKey] : null;
+            resultId = `hybrid_${id1}_${id2}`;
+            if (id1 > id2) resultId = `hybrid_${id2}_${id1}`;
 
-            if (resultBaseId) {
-                // 特殊合成成功
-                resultId = `${resultBaseId}_${tier}`;
-                resultSkill = GAME_DATA.SKILLS.find(s => s.id === resultId);
+            resultSkill = {
+                id: resultId,
+                name: `${skill1.name.split(' ')[0]}と${skill2.name.split(' ')[0]}の融合`,
+                description: `${skill1.name}と${skill2.name}の効果を併せ持つ`,
+                tier: tier,
+                effect: {
+                    type: 'hybrid',
+                    effects: [skill1.effect, skill2.effect]
+                },
+                isHybrid: true
+            };
 
-                if (!resultSkill) {
-                    return { success: false, message: '特殊スキルのデータが見つかりません' };
-                }
-
-                const specialCosts = { 1: 3000, 2: 15000, 3: 60000 };
-                cost = specialCosts[tier] || 100000;
-            } else {
-                // 通常ハイブリッド合成
-                resultId = `hybrid_${id1}_${id2}`;
-                if (id1 > id2) resultId = `hybrid_${id2}_${id1}`;
-
-                resultSkill = {
-                    id: resultId,
-                    name: `${skill1.name.split(' ')[0]}と${skill2.name.split(' ')[0]}の融合`,
-                    description: `${skill1.name}と${skill2.name}の効果を併せ持つ`,
-                    tier: tier,
-                    effect: {
-                        type: 'hybrid',
-                        effects: [skill1.effect, skill2.effect]
-                    },
-                    isHybrid: true
-                };
-
-                const hybridCosts = { 1: 1500, 2: 7500, 3: 30000 };
-                cost = hybridCosts[tier] || 75000;
-            }
+            const hybridCosts = { 1: 1500, 2: 7500, 3: 30000 };
+            cost = hybridCosts[tier] || 75000;
         }
 
         if (this.money < cost) {
