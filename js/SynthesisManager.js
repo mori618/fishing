@@ -105,7 +105,28 @@ const SynthesisManager = {
         const base2 = this.selectedSlot2.replace(/_\d$/, '');
         const tier = skill1.tier;
 
-        if (this.selectedSlot1 === this.selectedSlot2) {
+        // 優先順位: 1. 特殊合成 (レシピ一致) -> 2. ランクアップ (同名) -> 3. ハイブリッド (異名)
+        const key1 = base1 + '+' + base2;
+        const key2 = base2 + '+' + base1;
+        const resultBaseId = GAME_DATA.SPECIAL_RECIPES[key1] || GAME_DATA.SPECIAL_RECIPES[key2];
+
+        if (skill1.tier === skill2.tier && resultBaseId) {
+            // 特殊合成 (Tier無し)
+            const resultId = resultBaseId;
+            const resultSkill = GAME_DATA.SKILLS.find(s => s.id === resultId);
+
+            if (resultSkill) {
+                return `
+                     <div class="result-success special">
+                         <div class="result-label" style="color: #ffca28; font-weight: bold;">SPECIAL!</div>
+                         <div class="item-name rarity-SS" style="text-shadow: 0 0 5px #ffeb3b;">${resultSkill.name}</div>
+                         <div class="item-desc">${resultSkill.description}</div>
+                     </div>
+                 `;
+            } else {
+                return `<div class="result-error">特殊スキルのデータが見つかりません</div>`;
+            }
+        } else if (this.selectedSlot1 === this.selectedSlot2) {
             // ランクアップ
             if (skill1.tier >= 4) return `<div class="result-error">これ以上強化できません</div>`;
             const nextTier = skill1.tier + 1;
@@ -122,34 +143,15 @@ const SynthesisManager = {
                 </div>
             `;
         } else {
-            // 特殊合成 または ハイブリッド
+            // ハイブリッド
             if (skill1.tier !== skill2.tier) return `<div class="result-error">Tierが一致していません</div>`;
             if (skill1.tier >= 4 || skill2.tier >= 4) return `<div class="result-error">Tier 4は素材不可</div>`;
             if (skill1.effect.type === 'hybrid' || skill2.effect.type === 'hybrid') return `<div class="result-error">ハイブリッドは素材不可</div>`;
 
-            // 特殊レシピチェック
-            const recipeKey = [base1, base2].sort().join('+');
-            const resultBaseId = GAME_DATA.SPECIAL_RECIPES[recipeKey];
-
-            if (resultBaseId) {
-                const resultId = `${resultBaseId}_${tier}`;
-                const resultSkill = GAME_DATA.SKILLS.find(s => s.id === resultId);
-                if (resultSkill) {
-                    return `
-                        <div class="result-success special">
-                            <div class="result-label" style="color: #ffca28; font-weight: bold;">SPECIAL!</div>
-                            <div class="item-name rarity-SS" style="text-shadow: 0 0 5px #ffeb3b;">${resultSkill.name}</div>
-                            <div class="item-desc">${resultSkill.description}</div>
-                        </div>
-                    `;
-                }
-            }
-
-            // 通常ハイブリッド
             return `
                 <div class="result-success">
-                    <div class="result-label">HYBRID!</div>
-                    <div class="item-name rarity-A">${skill1.name.split(' ')[0]} + ${skill2.name.split(' ')[0]}</div>
+                    <div class="result-label">HYBRID</div>
+                    <div class="item-name rarity-A">${skill1.name.split(' ')[0]}と${skill2.name.split(' ')[0]}の融合</div>
                     <div class="item-desc">両方の効果を併せ持つ</div>
                 </div>
             `;
@@ -247,11 +249,11 @@ const SynthesisManager = {
         skills.forEach(skill => {
             const otherSlotId = this.activeSlot === 1 ? this.selectedSlot2 : this.selectedSlot1;
             const isAlreadySelected = (skill.id === otherSlotId);
-            
+
             const totalCount = GameState.skillInventory[skill.id] || 0;
             const equippedCount = GameState.getEquippedSkillCount(skill.id);
             const availableCount = totalCount - equippedCount;
-            
+
             const needed = isAlreadySelected ? 2 : 1;
             const insufficientCount = availableCount < needed;
 
