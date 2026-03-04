@@ -70,6 +70,7 @@ const FISH = [
     },
     {
         id: 'fish_d1', name: 'メダカ', power: 5, price: 10, rarity: 'D', weight: 15, frequency: 'そこそこ釣れる', specialTitle: '水たまりの', icon: 'water_drop',
+        image: 'images/fish/medaka.webp',
         description: '小さな淡水魚。群れで泳ぐ姿が可愛らしい。',
         titleDescription: '水たまりの主として君臨する巨大メダカ。'
     },
