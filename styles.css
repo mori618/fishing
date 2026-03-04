@@ -1890,8 +1890,10 @@ body {
     overflow-y: auto;
     padding: var(--spacing-md);
     /* スクロールバー非表示 */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE/Edge */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE/Edge */
 }
 
 .upgrade-section {
@@ -2075,8 +2077,10 @@ body {
     max-height: 80vh;
     overflow-y: auto;
     /* スクロールバー非表示 */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE/Edge */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE/Edge */
 }
 
 .gacha-items-grid {
@@ -2257,6 +2261,7 @@ body {
         align-items: center;
         line-height: 1.1;
     }
+
     .bait-name-text {
         font-size: 9px !important;
         max-width: 60px;
@@ -2265,6 +2270,7 @@ body {
         text-overflow: ellipsis;
         display: block;
     }
+
     .bait-count-text {
         font-size: 9px !important;
     }
@@ -2359,6 +2365,13 @@ body {
 .encyclopedia-item .fish-icon .material-icons {
     font-size: 32px;
     color: var(--text-primary);
+}
+
+.fish-illustration {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 50%;
 }
 
 .fish-info-col {
@@ -2869,8 +2882,10 @@ body {
     padding: 4px;
     /* スクロールバー用 */
     /* スクロールバー非表示 */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE/Edge */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE/Edge */
 }
 
 .recycle-item {
@@ -4408,8 +4423,10 @@ body {
     max-height: 50vh;
     overflow-y: auto;
     /* スクロールバー非表示 */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE/Edge */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE/Edge */
     padding: 10px;
 }
 
@@ -4616,6 +4633,7 @@ body {
     text-align: left;
     width: 100%;
 }
+
 .mission-icon-small {
     font-size: 1.3rem;
     margin-right: 8px;
@@ -4638,9 +4656,11 @@ body {
     opacity: 0;
     transition: opacity 0.3s;
 }
+
 .reward-popup-overlay.show {
     opacity: 1;
 }
+
 .reward-popup {
     background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
     border: 2px solid #ffd700;
@@ -4652,9 +4672,11 @@ body {
     box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
     min-width: 280px;
 }
+
 .reward-popup-overlay.show .reward-popup {
     transform: scale(1);
 }
+
 .reward-title {
     color: #ffd700;
     font-size: 1.5rem;
@@ -4662,16 +4684,19 @@ body {
     margin-bottom: 16px;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
+
 .reward-icon-container {
     font-size: 4rem;
     margin-bottom: 12px;
     filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
 }
+
 .reward-name {
     color: #fff;
     font-size: 1.2rem;
     margin-bottom: 20px;
 }
+
 .reward-close-btn {
     background: #2563eb;
     color: white;
@@ -4682,6 +4707,7 @@ body {
     cursor: pointer;
     transition: background 0.2s;
 }
+
 .reward-close-btn:hover {
     background: #1d4ed8;
 }
@@ -4694,17 +4720,20 @@ body {
     width: 100%;
     margin-top: 12px;
 }
+
 .gacha-button-group {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 8px;
 }
+
 .gacha-group-label {
     font-size: 0.85rem;
     color: #a0aec0;
     min-width: 80px;
 }
+
 .btn-ticket {
     background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
     color: white;
@@ -4714,13 +4743,16 @@ body {
     cursor: pointer;
     font-size: 0.9rem;
 }
+
 .btn-ticket:hover:not(.disabled) {
     filter: brightness(1.1);
 }
+
 .btn-ticket.disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
+
 .item-ticket-cost {
     color: #a78bfa;
     font-size: 0.85rem;
@@ -4730,6 +4762,7 @@ body {
 /* ========================================
    霑ｽ蜉縺ｮ繝｢繝舌う繝ｫ繝ｬ繧ｹ繝昴Φ繧ｷ繝門ｯｾ蠢・   ======================================== */
 @media (max-width: 768px) {
+
     /* 驥｣繧顔ｫｿ蜷阪・繝・く繧ｹ繝育怐逡･蟇ｾ蠢・*/
     .rod-badge {
         max-width: 80px !important;
@@ -4803,12 +4836,15 @@ body {
     0% {
         transform: scale(0.65) rotate(45deg) translateY(100px);
     }
+
     30% {
         transform: scale(0.65) rotate(60deg) translateY(150px);
     }
+
     40% {
         transform: scale(0.65) rotate(60deg) translateY(150px);
     }
+
     100% {
         transform: scale(0.65) rotate(-10deg) translateY(0);
     }
@@ -4818,9 +4854,11 @@ body {
     0% {
         transform: scale(0.65) rotate(-15deg) translateY(10px);
     }
+
     40% {
         transform: scale(0.65) rotate(-20deg) translateY(15px);
     }
+
     100% {
         transform: scale(0.65) rotate(10deg) translateY(20px) translateX(10px);
     }
@@ -4870,6 +4908,7 @@ body {
         opacity: 0;
         transform: translateY(20px) scale(0.95);
     }
+
     to {
         opacity: 1;
         transform: translateY(0) scale(1);
@@ -4918,12 +4957,15 @@ body {
     overflow-x: auto;
     border-bottom: 2px solid rgba(255, 255, 255, 0.1);
     /* スクロールバー非表示 */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE/Edge */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE/Edge */
 }
 
 .help-tabs::-webkit-scrollbar {
-    display: none; /* Chrome/Safari */
+    display: none;
+    /* Chrome/Safari */
 }
 
 .help-tab {
@@ -4969,14 +5011,18 @@ body {
 .help-body {
     padding: var(--spacing-lg);
     overflow-y: auto;
-    flex: 1; /* 残りの高さを埋める */
+    flex: 1;
+    /* 残りの高さを埋める */
     /* スクロールバー非表示 */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE/Edge */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE/Edge */
 }
 
 .help-body::-webkit-scrollbar {
-    display: none; /* Chrome/Safari */
+    display: none;
+    /* Chrome/Safari */
 }
 
 .help-section {
@@ -5049,7 +5095,8 @@ body {
 }
 
 /* リストスタイル */
-.help-list, .help-simple-list {
+.help-list,
+.help-simple-list {
     list-style: none;
     padding: 0;
     margin: 0;
@@ -5321,7 +5368,7 @@ body {
     top: 6px;
     right: 6px;
     font-size: 10px;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0, 0, 0, 0.5);
     padding: 2px 6px;
     border-radius: 10px;
     color: var(--accent-color);
@@ -5371,7 +5418,7 @@ body {
     font-weight: bold;
     padding: 2px 6px;
     border-radius: 4px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     z-index: 10;
 }
 
@@ -5397,15 +5444,24 @@ body {
     width: 90%;
     max-width: 400px;
     padding: 24px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
     border: 2px solid #4a5568;
     position: relative;
     animation: slideUp 0.3s;
 }
 
-.skill-detail-modal.rarity-S { border-color: #ffd700; background: linear-gradient(135deg, #2d3748 0%, #3e2723 100%); }
-.skill-detail-modal.rarity-B { border-color: #c0c0c0; }
-.skill-detail-modal.rarity-D { border-color: #cd7f32; }
+.skill-detail-modal.rarity-S {
+    border-color: #ffd700;
+    background: linear-gradient(135deg, #2d3748 0%, #3e2723 100%);
+}
+
+.skill-detail-modal.rarity-B {
+    border-color: #c0c0c0;
+}
+
+.skill-detail-modal.rarity-D {
+    border-color: #cd7f32;
+}
 
 .modal-header {
     display: flex;
@@ -5421,12 +5477,12 @@ body {
 }
 
 .tier-badge-large {
-    background: rgba(0,0,0,0.3);
+    background: rgba(0, 0, 0, 0.3);
     padding: 4px 12px;
     border-radius: 12px;
     font-size: 12px;
     color: var(--accent-light);
-    border: 1px solid rgba(255,255,255,0.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .modal-body {
@@ -5438,7 +5494,7 @@ body {
     font-size: 64px;
     color: var(--accent-color);
     margin-bottom: 16px;
-    filter: drop-shadow(0 0 10px rgba(255,255,255,0.3));
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
 }
 
 .skill-desc-large {
@@ -5449,7 +5505,7 @@ body {
 }
 
 .skill-effect-detail {
-    background: rgba(0,0,0,0.2);
+    background: rgba(0, 0, 0, 0.2);
     padding: 12px;
     border-radius: 8px;
     display: inline-block;
@@ -5466,7 +5522,7 @@ body {
     justify-content: space-between;
     margin-top: auto;
     padding-top: 16px;
-    border-top: 1px solid rgba(255,255,255,0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .btn-close-text {
@@ -5492,13 +5548,25 @@ body {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 @keyframes slideUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 /* ========================================
@@ -5512,27 +5580,27 @@ body {
     padding: 10px 5px !important;
     margin: 5px 0;
     transition: transform 0.1s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
     position: relative;
     overflow: hidden;
 }
 
 .gacha-actions-grid .btn:active {
     transform: scale(0.95) translateY(2px) !important;
-    box-shadow: 0 2px 0 rgba(0,0,0,0.2) !important;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2) !important;
 }
 
 /* Ticket Button - Cute Pink */
 .gacha-actions-grid .btn-ticket {
     background: linear-gradient(to bottom, #ff9a9e 0%, #ff6f91 100%) !important;
-    box-shadow: 0 4px 0 #d64d6d, 0 5px 10px rgba(0,0,0,0.2) !important;
+    box-shadow: 0 4px 0 #d64d6d, 0 5px 10px rgba(0, 0, 0, 0.2) !important;
     color: #fff !important;
 }
 
 /* Money Button - Cute Orange/Yellow */
 .gacha-actions-grid .btn-buy {
     background: linear-gradient(to bottom, #ffd166 0%, #ff9f1c 100%) !important;
-    box-shadow: 0 4px 0 #e08e0b, 0 5px 10px rgba(0,0,0,0.2) !important;
+    box-shadow: 0 4px 0 #e08e0b, 0 5px 10px rgba(0, 0, 0, 0.2) !important;
     color: #fff !important;
 }
 
@@ -5544,7 +5612,7 @@ body {
     left: 0;
     width: 100%;
     height: 50%;
-    background: linear-gradient(rgba(255,255,255,0.4), transparent);
+    background: linear-gradient(rgba(255, 255, 255, 0.4), transparent);
     border-radius: 50px 50px 0 0;
     pointer-events: none;
 }
@@ -5818,6 +5886,7 @@ body {
     font-family: 'Material Icons';
     font-size: 1.2em;
 }
+
 /* ========================================
    通知バナー (Top Notification)
    ======================================== */
@@ -5840,7 +5909,8 @@ body {
     max-width: 90%;
     opacity: 0;
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    pointer-events: none; /* 下の操作を邪魔しない */
+    pointer-events: none;
+    /* 下の操作を邪魔しない */
 }
 
 .notification-banner.show {

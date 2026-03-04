@@ -39,7 +39,10 @@ const EncyclopediaManager = {
 
                 normalItem.innerHTML = `
                     <div class="fish-icon">
-                        <span class="material-icons">${fish.icon || 'set_meal'}</span>
+                        ${fish.image
+                        ? `<img src="${fish.image}" alt="${fish.name}" class="fish-illustration">`
+                        : `<span class="material-icons">${fish.icon || 'set_meal'}</span>`
+                    }
                     </div>
                     <div class="fish-info-col">
                         <div class="fish-header">
@@ -76,7 +79,10 @@ const EncyclopediaManager = {
                 specialItem.innerHTML = `
                     <span class="material-icons special-mark">stars</span>
                     <div class="fish-icon special-icon-bg">
-                        <span class="material-icons">${fish.icon || 'set_meal'}</span>
+                        ${fish.image
+                        ? `<img src="${fish.image}" alt="${fish.name}" class="fish-illustration">`
+                        : `<span class="material-icons">${fish.icon || 'set_meal'}</span>`
+                    }
                     </div>
                     <div class="fish-info-col">
                         <div class="fish-header">
