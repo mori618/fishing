@@ -336,15 +336,91 @@ const UIManager = {
             rodView.classList.add(state);
         }
 
-        // スキル色を適用
+        // ========================================
+        // SVG竿のしなり形状を状態に応じて更新
+        // ベジェ曲線: M (始点) Q (制御点) (終点)
+        // 制御点のX座標が大きいほど右に弧を描く = 強くしなる
+        // ========================================
+        // [cx, cy] = 制御点の座標。右にズレるとしなり強。
+        const bendMap = {
+            'idle': { cx: 20, cy: 300 }, // まっすぐ（持っている）
+            'casting': { cx: 20, cy: 300 }, // キャスト（全体アニメで対応）
+            'waiting': { cx: 20, cy: 300 }, // 垂らし中（ほぼ直線）
+            'nibble': { cx: 30, cy: 270 }, // 微小なしなり
+            'hit': { cx: 68, cy: 230 }, // 強いしなり
+            'strike': { cx: 48, cy: 270 }, // 中程度（合わせる途中）
+            'battle': { cx: 68, cy: 230 }, // 強いしなり（維持）
+            'success': { cx: 20, cy: 300 }, // しなり解放
+        };
+
+        const bend = bendMap[state] || { cx: 20, cy: 300 };
+        this._updateRodBend(bend.cx, bend.cy);
+
+        // スキル色を適用（SVG版: linearGradientの色を変更）
         const skin = GameState.getCurrentSkin();
-        const rodShaft = rodView.querySelector('.rod-shaft');
-        if (rodShaft) {
-            rodShaft.style.backgroundColor = skin.rodColor;
-            // 枠線の色も少し暗くして調整（簡易的）
-            rodShaft.style.borderColor = skin.rodColor;
+        if (skin && skin.rodColor) {
+            const stops = rodView.querySelectorAll('#rodGrad stop');
+            const hexToRgb = (hex) => {
+                const r = parseInt(hex.slice(1, 3), 16);
+                const g = parseInt(hex.slice(3, 5), 16);
+                const b = parseInt(hex.slice(5, 7), 16);
+                return `rgb(${r},${g},${b})`;
+            };
+            if (stops.length >= 2) {
+                stops[0].style.stopColor = skin.rodColor;
+                stops[2].style.stopColor = skin.rodColor;
+            }
         }
     },
+
+    // ========================================
+    // SVG竿パスの制御点を更新（しなり形状変更）
+    // cx, cy = ベジェ制御点の座標
+    // ========================================
+    _updateRodBend(cx, cy) {
+        // 太い左辺（メイン）: オフセット cx-2
+        const pathL = document.getElementById('rod-path-left');
+        // 細い右辺: オフセット cx+2
+        const pathR = document.getElementById('rod-path-right');
+        // ハイライト: オフセット cx
+        const pathH = document.getElementById('rod-highlight');
+
+        if (pathL) pathL.setAttribute('d', `M 18 510 Q ${cx - 2} ${cy} 4 0`);
+        if (pathR) pathR.setAttribute('d', `M 22 510 Q ${cx + 2} ${cy} 8 0`);
+        if (pathH) pathH.setAttribute('d', `M 20 510 Q ${cx}     ${cy} 6 0`);
+
+        // 釣り糸の先端も制御点に合わせる（糸が穂先に繋がる）
+        const lineP = document.getElementById('rod-line-path');
+        if (lineP) {
+            // 穂先 = (4, 0)付近、画面外へ適当に延ばす
+            const tipX = 4 + (cx - 20) * 0.1; // cx変化に連動して少し揺れる
+            lineP.setAttribute('d', `M ${tipX} 5 Q ${tipX + 40} 150 80 520`);
+        }
+
+        // 糸ガイド（リング）の位置も補正 — 竿の曲線に沿わせる
+        // 2次ベジェ上の点: t=0.2, 0.5, 0.8 を計算して配置
+        const guides = rodView => {
+            const circles = rodView.querySelectorAll('circle');
+            const tValues = [0.2, 0.5, 0.8];
+            // 2次ベジェ B(t) = (1-t)^2 * P0 + 2t(1-t) * P1 + t^2 * P2
+            const bezier = (t, p0, p1, p2) =>
+                (1 - t) * (1 - t) * p0 + 2 * t * (1 - t) * p1 + t * t * p2;
+
+            tValues.forEach((t, i) => {
+                if (!circles[i]) return;
+                // Y座標: P0=510(グリップ), P1=cy, P2=0(穂先)
+                const y = bezier(t, 510, cy, 0);
+                // X座標: P0=18, P1=cx-2, P2=4
+                const x = bezier(t, 18, cx - 2, 4);
+                circles[i].setAttribute('cx', x.toFixed(1));
+                circles[i].setAttribute('cy', y.toFixed(1));
+            });
+        };
+        const rv = document.getElementById('fishing-rod-view');
+        if (rv) guides(rv);
+    },
+
+
 
     // ========================================
     // 釣り画面: キャスト
@@ -565,7 +641,7 @@ const UIManager = {
                 else if (reward.type === 'ticket') icon = 'confirmation_number';
                 else if (reward.type === 'skill') icon = 'auto_fix_high';
                 else if (reward.type === 'bait') icon = 'set_meal';
-                
+
                 return `
                     <div class="extra-reward-pill">
                         <span class="material-icons extra-reward-icon">${icon}</span>
@@ -1298,7 +1374,7 @@ const UIManager = {
 
         const banner = document.createElement('div');
         banner.className = 'notification-banner';
-        
+
         banner.innerHTML = `
             <span class="material-icons notification-icon">${icon}</span>
             <div class="notification-content">
@@ -1317,7 +1393,7 @@ const UIManager = {
         // Slide Up & Remove
         setTimeout(() => {
             banner.classList.remove('show');
-            setTimeout(() => banner.remove(), 400); 
+            setTimeout(() => banner.remove(), 400);
         }, duration);
     },
 
@@ -1539,13 +1615,13 @@ const UIManager = {
     // ========================================
     showRewardPopup(title, items, missionName = '') {
         console.log('🎉 showRewardPopup called:', title, items, missionName);
-        
+
         // 通知バナーに表示するテキストを作成
         let message = '';
         if (missionName) {
             message += `${missionName}\n`;
         }
-        
+
         const rewardsText = items.map(item => `${item.name}`).join(', ');
         if (rewardsText) {
             message += `報酬: ${rewardsText}`;

@@ -708,8 +708,8 @@ const GAUGE_CONFIG = {
 // ========================================
 const FISHING_CONFIG = {
     // ウキが揺れるまでの待機時間（ミリ秒）
-    waitTimeMin: 2000,
-    waitTimeMax: 6000,
+    waitTimeMin: 1000,
+    waitTimeMax: 5000,
 
     // 予兆（ウキ揺れ）の設定
     nibbleCountMin: 1,
