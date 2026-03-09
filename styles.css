@@ -1004,6 +1004,16 @@ body {
     transform-origin: 90% 100%;
     transition: transform 0.3s ease-out;
     pointer-events: none;
+
+    /* アニメーション姿勢の基準値 */
+    --rod-idle-rot: 30deg;
+    --rod-idle-y: 60px;
+    --rod-waiting-rot: -10deg;
+    --rod-waiting-y: 0px;
+    --rod-hit-rot: -25deg;
+    --rod-hit-y: 15px;
+    --rod-strike-rot: 20deg;
+    --rod-strike-y: -10px;
 }
 
 /* SVG模時の対应: rod-shaft ・ rod-line を非表示 */
@@ -1046,7 +1056,7 @@ body {
 
 /* 待機（手前で持っている） */
 .fishing-rod-view.idle {
-    transform: rotate(25deg) translateY(50px);
+    transform: rotate(var(--rod-idle-rot)) translateY(var(--rod-idle-y));
     transition: all 0.5s ease-out;
 }
 
