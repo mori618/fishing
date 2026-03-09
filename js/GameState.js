@@ -702,7 +702,7 @@ const GameState = {
     // ========================================
     getFeverChargeBonus() {
         let bonus = 0;
-        this.getEffectsByType('fever_charge_boost').forEach(eff => bonus += eff.value);
+        this.getEffectsByType('fever_charge').forEach(eff => bonus += eff.value);
         // 永遠の熱狂 (Eternal Fever) - 蓄積
         this.getEffectsByType('eternal_fever').forEach(eff => bonus += eff.charge);
         return bonus;
@@ -796,7 +796,7 @@ const GameState = {
     // ========================================
     getFeverLongBonus() {
         let reduction = 0;
-        this.getEffectsByType('fever_long_boost').forEach(eff => reduction += eff.value);
+        this.getEffectsByType('fever_long').forEach(eff => reduction += eff.value);
         // 永遠の熱狂 (Eternal Fever) - 継続
         this.getEffectsByType('eternal_fever').forEach(eff => reduction += eff.sustain);
         return Math.min(reduction, 1.0);
