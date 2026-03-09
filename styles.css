@@ -1032,6 +1032,11 @@ body {
     filter: drop-shadow(-2px 0 4px rgba(0, 0, 0, 0.4));
 }
 
+/* SVGのパスが切り替わる際に、滑らかに変形させる */
+.rod-svg path {
+    transition: d 0.2s ease-out;
+}
+
 /* リール（旧::after代替） */
 .rod-reel {
     position: absolute;
@@ -1074,32 +1079,38 @@ body {
 
 /* キャスト（投げる） */
 .fishing-rod-view.casting {
-    animation: rodCast 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    /* 0.8秒から0.5秒へ短縮してサクサク感アップ */
+    animation: rodCast 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 @keyframes rodCast {
     0% {
-        transform: rotate(45deg) translateY(100px);
+        transform: rotate(var(--rod-idle-rot)) translateY(var(--rod-idle-y));
     }
 
     30% {
-        transform: rotate(60deg) translateY(150px);
+        transform: rotate(60deg) translateY(120px);
     }
 
-    40% {
-        transform: rotate(60deg) translateY(150px);
+    /* 振りかぶり */
+    45% {
+        transform: rotate(65deg) translateY(130px);
     }
 
+    /* ため */
     100% {
-        transform: rotate(-10deg) translateY(0);
+        transform: rotate(var(--rod-waiting-rot)) translateY(var(--rod-waiting-y));
     }
+
+    /* 着水位置 */
 }
 
-/* 待機（水面に垂らしている） → 载荷なし: ほぼ直線 */
+/* 待機（水面に垂らしている） */
 .fishing-rod-view.waiting {
-    transform: rotate(-5deg);
+    transform: rotate(var(--rod-waiting-rot)) translateY(var(--rod-waiting-y));
     animation: rodBreathe 4s ease-in-out infinite;
-    transition: none;
+    transition: transform 0.5s ease-out;
+    /* キャストからの着地用 */
 }
 
 .fishing-rod-view.waiting #rod-path-left {
@@ -1118,18 +1129,20 @@ body {
 
     0%,
     100% {
-        transform: rotate(-5deg) translateY(0);
+        transform: rotate(var(--rod-waiting-rot)) translateY(var(--rod-waiting-y));
     }
 
     50% {
-        transform: rotate(-4deg) translateY(2px);
+        transform: rotate(-8deg) translateY(2px);
     }
 }
 
 /* 予兆（ピクピク） → 载荷载か: 微小しなり */
 .fishing-rod-view.nibble {
-    transform: rotate(-5deg);
-    animation: rodNibble 0.3s ease-in-out infinite;
+    /* waiting状態と角度を揃えてワープを防止 */
+    transform: rotate(var(--rod-waiting-rot)) translateY(var(--rod-waiting-y));
+    /* 0.3秒から0.15秒へ短縮し、細かくピクピクさせる */
+    animation: rodNibble 0.15s ease-in-out infinite;
 }
 
 .fishing-rod-view.nibble #rod-path-left {
@@ -1148,11 +1161,11 @@ body {
 
     0%,
     100% {
-        transform: rotate(-5deg);
+        transform: rotate(var(--rod-waiting-rot)) translateY(var(--rod-waiting-y));
     }
 
     50% {
-        transform: rotate(-7deg) translateY(2px);
+        transform: rotate(-14deg) translateY(4px);
     }
 }
 
@@ -1176,7 +1189,8 @@ body {
 
 @keyframes rodHit {
     0% {
-        transform: rotate(-5deg);
+        /* waiting/nibbleの角度から自然に繋げる */
+        transform: rotate(var(--rod-waiting-rot)) translateY(var(--rod-waiting-y));
     }
 
     100% {
@@ -1186,7 +1200,8 @@ body {
 
 /* 合わせ（ストライク） → はじきで弶のように戦わる: 強載から釋放 */
 .fishing-rod-view.strike {
-    animation: rodStrike 0.25s ease-out forwards;
+    /* 0.25秒から0.15秒へ短縮し、「ビシッ！」の鋭さアップ */
+    animation: rodStrike 0.15s ease-out forwards;
 }
 
 .fishing-rod-view.strike #rod-path-left {
@@ -1259,7 +1274,8 @@ body {
 
 /* 成功（引き上げ） → 荷重が消える: くびれから直線へ房張り */
 .fishing-rod-view.success {
-    animation: rodSuccess 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    /* 0.9秒から0.6秒へ短縮し、硬直時間を削減 */
+    animation: rodSuccess 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .fishing-rod-view.success #rod-path-left {
@@ -4882,15 +4898,18 @@ body {
 
     /* 驥｣繧顔ｫｿ繧｢繝九Γ繝ｼ繧ｷ繝ｧ繝ｳ - 繝｢繝舌う繝ｫ逕ｨ縺ｫ隱ｿ謨ｴ */
     .fishing-rod-view.idle {
-        transform: scale(0.65) rotate(25deg) translateY(50px) !important;
+        /* castアニメ開始(45deg/100px)と揃えてワープを防止 */
+        transform: scale(0.65) rotate(45deg) translateY(100px) !important;
     }
 
     .fishing-rod-view.waiting {
-        transform: scale(0.65) rotate(-5deg) !important;
+        /* castアニメ終了(-10deg/0)と揃えてワープを防止 */
+        transform: scale(0.65) rotate(-10deg) translateY(0) !important;
     }
 
     .fishing-rod-view.nibble {
-        transform: scale(0.65) rotate(-5deg) !important;
+        /* waitingと角度を揃えてワープを防止 */
+        transform: scale(0.65) rotate(-10deg) translateY(0) !important;
     }
 
     .fishing-rod-view.hit {
@@ -4906,11 +4925,13 @@ body {
     }
 
     .fishing-rod-view.casting {
-        animation: rodCastMobile 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
+        /* 0.8秒から0.5秒へ短縮（モバイル版） */
+        animation: rodCastMobile 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
     }
 
     .fishing-rod-view.success {
-        animation: rodSuccessMobile 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
+        /* 0.8秒から0.5秒へ短縮（モバイル版） */
+        animation: rodSuccessMobile 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
     }
 }
 
