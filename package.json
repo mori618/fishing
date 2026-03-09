@@ -1,0 +1,20 @@
+{
+    "name": "fishing",
+    "version": "1.0.0",
+    "description": "Fishing game on GitHub Pages",
+    "main": "index.html",
+    "homepage": "https://mori618.github.io/fishing/",
+    "scripts": {
+        "predeploy": "echo 'Prepared for deployment'",
+        "deploy": "gh-pages -d ."
+    },
+    "keywords": [
+        "fishing",
+        "game"
+    ],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "gh-pages": "^6.1.1"
+    }
+}
