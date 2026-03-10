@@ -8,7 +8,6 @@ magnet,マグネット,0,200000,magnet,,"宝箱の抽選から木の宝箱を除
 master_angler_special,太公望,0,250000,master_angler_special,,"釣果が常に2倍になり、ドロップ獲得量も2倍になる",特殊スキル,workspace_premium
 master_needle,達人の針,0,150000,master_needle,,"ゲージ赤ゾーンで停止時、捕獲率が100%になる",特殊スキル,workspace_premium
 mobile_shop,出張売店,0,150000,mobile_shop,,"釣り上げ成功時に自動で魚を売却する",特殊スキル,workspace_premium
-perpetual_engine,永久機関,0,300000,perpetual_engine,,"船の燃料を消費しなくなる",特殊スキル,workspace_premium
 rank_sniper_a,Aランクスナイパー,0,200000,rank_sniper_fixed,,"Aランクの魚しか釣れなくなる",特殊スキル,workspace_premium
 rank_sniper_b,Bランクスナイパー,0,150000,rank_sniper_fixed,,"Bランクの魚しか釣れなくなる",特殊スキル,workspace_premium
 rank_sniper_c,Cランクスナイパー,0,120000,rank_sniper_fixed,,"Cランクの魚しか釣れなくなる",特殊スキル,workspace_premium
@@ -45,10 +44,6 @@ price_up_1,売値UP I,1,400,price_boost,0.1,"魚の売却価格+10%",商売グ�
 price_up_2,売値UP II,2,1500,price_boost,0.25,"魚の売却価格+25%",商売グループ,payments
 price_up_3,売値UP III,3,4000,price_boost,0.45,"魚の売却価格+45%",商売グループ,payments
 price_up_4,売値UP 極,4,12000,price_boost,0.7,"魚の売却価格+70%",商売グループ,payments
-ship_fuel_discount_1,港の顔馴染み I,1,3000,ship_fuel_discount,0.15,"燃料購入価格 15%割引",商売グループ,payments
-ship_fuel_discount_2,港の顔馴染み II,2,10000,ship_fuel_discount,0.3,"燃料購入価格 30%割引",商売グループ,payments
-ship_fuel_discount_3,港の顔馴染み III,3,30000,ship_fuel_discount,0.5,"燃料購入価格 50%割引",商売グループ,payments
-ship_fuel_discount_4,港の顔馴染み 極,4,100000,ship_fuel_discount,0.8,"燃料購入価格 80%割引",商売グループ,payments
 shop_discount_1,ショップ割引 I,1,5000,shop_discount,0.1,"ショップのアイテム価格 -10%",商売グループ,payments
 shop_discount_2,ショップ割引 II,2,20000,shop_discount,0.2,"ショップのアイテム価格 -20%",商売グループ,payments
 shop_discount_3,ショップ割引 III,3,60000,shop_discount,0.3,"ショップのアイテム価格 -30%",商売グループ,payments
@@ -129,10 +124,6 @@ luxury_hunter_1,ラグジュアリーハンター I,1,5000,treasure_quality,1.2,
 luxury_hunter_2,ラグジュアリーハンター II,2,20000,treasure_quality,1.5,"宝箱報酬質UP(中)",宝物グループ,card_giftcard
 luxury_hunter_3,ラグジュアリーハンター III,3,50000,treasure_quality,2,"宝箱報酬質UP(大)",宝物グループ,card_giftcard
 luxury_hunter_4,ラグジュアリーハンター 極,4,150000,treasure_quality,3,"宝箱報酬質UP(特大)",宝物グループ,card_giftcard
-sailor_intuition_1,船乗りの勘 I,1,2000,boat_event_boost,0.05,"ボートイベント出現率 +5%",宝物グループ,card_giftcard
-sailor_intuition_2,船乗りの勘 II,2,8000,boat_event_boost,0.1,"ボートイベント出現率 +10%",宝物グループ,card_giftcard
-sailor_intuition_3,船乗りの勘 III,3,25000,boat_event_boost,0.15,"ボートイベント出現率 +15%",宝物グループ,card_giftcard
-sailor_intuition_4,船乗りの勘 極,4,80000,boat_event_boost,0.3,"ボートイベント出現率 +30%",宝物グループ,card_giftcard
 treasure_hunter_1,トレジャーハンター I,1,1500,treasure_boost,0.02,"宝箱出現率 +2%",宝物グループ,card_giftcard
 treasure_hunter_2,トレジャーハンター II,2,5000,treasure_boost,0.05,"宝箱出現率 +5%",宝物グループ,card_giftcard
 treasure_hunter_3,トレジャーハンター III,3,15000,treasure_boost,0.1,"宝箱出現率 +10%",宝物グループ,card_giftcard
@@ -201,18 +192,6 @@ recycle_boost_1,リサイクル強化 I,1,2000,recycle_boost,,"リサイクル�
 recycle_boost_2,リサイクル強化 II,2,8000,recycle_boost,,"リサイクルの必要スキル数 -2",便利グループ,build
 recycle_boost_3,リサイクル強化 III,3,25000,recycle_boost,,"リサイクル時の獲得スキル数 +1",便利グループ,build
 recycle_boost_4,リサイクル強化 極,4,80000,recycle_boost,,"リサイクル必要数-3 & 獲得数+2",便利グループ,build
-ship_amount_up_1,大型網 I,1,6000,ship_amount_up,1-2,"一度の漁獲量 +1〜2匹",便利グループ,build
-ship_amount_up_2,大型網 II,2,25000,ship_amount_up,3-5,"一度の漁獲量 +3〜5匹",便利グループ,build
-ship_amount_up_3,大型網 III,3,80000,ship_amount_up,6-10,"一度の漁獲量 +6〜10匹",便利グループ,build
-ship_amount_up_4,大型網 極,4,250000,ship_amount_up,15-25,"一度の漁獲量 +15〜25匹",便利グループ,build
-ship_fuel_eco_1,エコ航行 I,1,4000,ship_fuel_eco,0.2,"20%の確率で燃料消費を回避",便利グループ,build
-ship_fuel_eco_2,エコ航行 II,2,15000,ship_fuel_eco,0.4,"40%の確率で燃料消費を回避",便利グループ,build
-ship_fuel_eco_3,エコ航行 III,3,45000,ship_fuel_eco,0.6,"60%の確率で燃料消費を回避",便利グループ,build
-ship_fuel_eco_4,エコ航行 極,4,150000,ship_fuel_eco,0.9,"90%の確率で燃料消費を回避",便利グループ,build
-ship_interval_down_1,高速エンジン I,1,5000,ship_interval_down,0.1,"漁獲間隔を10%短縮",便利グループ,build
-ship_interval_down_2,高速エンジン II,2,20000,ship_interval_down,0.25,"漁獲間隔を25%短縮",便利グループ,build
-ship_interval_down_3,高速エンジン III,3,60000,ship_interval_down,0.45,"漁獲間隔を45%短縮",便利グループ,build
-ship_interval_down_4,高速エンジン 極,4,180000,ship_interval_down,0.7,"漁獲間隔を70%短縮",便利グループ,build
 slot_expansion_1,拡張モジュール I,1,5000,skill_slot_expansion,1,"スキルスロット数 +1",便利グループ,build
 slot_expansion_2,拡張モジュール II,2,20000,skill_slot_expansion,2,"スキルスロット数 +2",便利グループ,build
 slot_expansion_3,拡張モジュール III,3,50000,skill_slot_expansion,3,"スキルスロット数 +3",便利グループ,build
