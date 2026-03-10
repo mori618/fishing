@@ -68,14 +68,17 @@ const FishingGame = {
         }
 
         // ========================================
+        // 釣り場データの取得
+        // ========================================
+        const locId = GameState.currentLocation || 'loc_river';
+        const locationData = GAME_DATA.LOCATIONS[locId] || Object.values(GAME_DATA.LOCATIONS)[0];
+
+        // ========================================
         // フィーバーモード (太陽) の場合: 宝箱確定
         // ========================================
         if (GameState.fever.isActive && GameState.fever.type === 'sun') {
             console.log('🔥 太陽フィーバー: 宝箱確定！');
             // 宝箱ロジックを再利用するが、100%出現させる
-            // ただし、タイプ抽選は通常通り行う
-            // 必要あればフィーバー用ボーナスを加算しても良い
-
             const weights = { WOOD: 0.6, SILVER: 0.3, GOLD: 0.1 };
             let random = Math.random();
             let selectedType = 'WOOD';
@@ -89,8 +92,7 @@ const FishingGame = {
             }
 
             const chestData = GAME_DATA.TREASURE_CONFIG.chestData[selectedType];
-
-            return {
+            return this._applyLevelAndTitle({
                 id: `treasure_${selectedType.toLowerCase()}`,
                 name: chestData.name,
                 rarity: chestData.rarity,
@@ -100,17 +102,14 @@ const FishingGame = {
                 description: chestData.description,
                 isTreasure: true,
                 treasureType: selectedType
-            };
+            });
         }
 
         // ========================================
         // 宝箱の抽選 (通常)
         // ========================================
         const treasureChance = GAME_DATA.TREASURE_CONFIG.baseChance + GameState.getTreasureChanceBonus();
-        // ... (既存の宝箱ログ削除)
-
         if (Math.random() < treasureChance) {
-            // ... (既存の宝箱処理と同じ)
             const weights = { ...GAME_DATA.TREASURE_CONFIG.rarityWeights };
 
             // マグネットスキル判定 (木の宝箱を除外)
@@ -131,8 +130,7 @@ const FishingGame = {
             }
 
             const chestData = GAME_DATA.TREASURE_CONFIG.chestData[selectedType];
-
-            return {
+            return this._applyLevelAndTitle({
                 id: `treasure_${selectedType.toLowerCase()}`,
                 name: chestData.name,
                 rarity: chestData.rarity,
@@ -142,112 +140,36 @@ const FishingGame = {
                 description: chestData.description,
                 isTreasure: true,
                 treasureType: selectedType
-            };
+            });
         }
 
-        const bait = GAME_DATA.BAITS.find(b => b.id === GameState.baitType) || GAME_DATA.BAITS[0]; // デフォルトD
+        // ========================================
+        // 通常の魚抽選プールを作成
+        // ========================================
+        const rankValue = { 'D': 1, 'C': 2, 'B': 3, 'A': 4, 'S': 5, 'SS': 6, 'GOD': 7 };
+        let availableFish = locationData.fishList.map(id => GAME_DATA.FISH.find(f => f.id === id)).filter(Boolean);
 
-        // 餌ごとのランク出現重み設定 (ユーザー要望に基づく)
-        // ... (既存コメント)
+        if (availableFish.length === 0) {
+            console.warn(`⚠ 釣り場の魚が設定されていません。Dランクで代替します。`);
+            availableFish = [GAME_DATA.FISH[0]];
+        }
 
         // ========================================
         // 上位魚確定イベント (鳥)
         // ========================================
         if (GameState.highTierGuaranteed) {
-            console.log('🦅 鳥イベント効果: 上位魚確定で抽選！');
-
-            // フラグ消費
+            console.log('🦅 鳥イベント効果: 釣り場内で最もレアリティの高い魚群から抽選！');
             GameState.setHighTierGuaranteed(false);
 
-            // 現在の餌ランクより一つ上のランクを計算
-            const rankOrder = ['D', 'C', 'B', 'A', 'S', 'SS'];
-            const currentRankIndex = rankOrder.indexOf(bait.rank);
-            let targetRank = 'S'; // デフォルト
-
-            if (currentRankIndex !== -1 && currentRankIndex < rankOrder.length - 1) {
-                targetRank = rankOrder[currentRankIndex + 1];
-            } else if (currentRankIndex === rankOrder.length - 1) {
-                // 既に最高ランク(SS)の場合はSS維持（またはS以上など）
-                // ここではSS維持とする
-                targetRank = 'SS';
-            } else {
-                // 餌ランクが不明(D扱い)ならCへ
-                targetRank = 'C';
-            }
-
-            console.log(`🦅 ランクアップ: ${bait.rank} -> ${targetRank} 確定`);
-
-            // ターゲットランクの魚を抽出
-            const targetPool = GAME_DATA.FISH.filter(f => f.rarity === targetRank);
-
-            if (targetPool.length > 0) {
-                // ランダムに選択 (重み考慮)
-                let totalHWeight = 0;
-                targetPool.forEach(f => totalHWeight += f.weight);
-                let r = Math.random() * totalHWeight;
-
-                for (const fish of targetPool) {
-                    r -= fish.weight;
-                    if (r < 0) {
-                        return { ...fish };
-                    }
-                }
-                return { ...targetPool[0] };
-            }
-        }
-        // 餌ごとの出現確率DCBAS
-        const spawnWeights = {
-            'D': { D: 0.9, C: 0.1, S: 0.01 },
-            'C': { C: 0.8, D: 0.2, B: 0.1 },
-            'B': { B: 0.8, C: 0.2, D: 0.1, A: 0.05 },
-            'A': { A: 0.6, B: 0.4, C: 0.2, S: 0.05 },
-            'S': { A: 0.6, S: 0.2, B: 0.2, SS: 0.033 }
-        };
-
-        let currentWeights = spawnWeights[bait.rank] || spawnWeights['D'];
-
-        // ========================================
-        // フィーバーモード (月) の場合: 指定されたランク出現率を適用
-        // ========================================
-        if (GameState.fever.isActive && GameState.fever.type === 'moon') {
-            console.log('🔥 月フィーバー: 餌ごとの刷新されたランク出現率を適用！');
-
-            const feverWeights = {
-                'D': { D: 10, C: 85, B: 1, A: 2, S: 2 },
-                'C': { C: 24, B: 76 },
-                'B': { B: 30, A: 70 },
-                'A': { A: 70, S: 30 },
-                'S': { A: 40, S: 50, SS: 10 }
-            };
-
-            currentWeights = feverWeights[bait.rank] || feverWeights['D'];
-        }
-
-
-        // ========================================
-        // 愛好家 (Collector) スキル補正
-        // ========================================
-        const collectorEffects = GameState.getEffectsByType('rank_collector');
-        collectorEffects.forEach(eff => {
-            if (currentWeights[eff.targetRarity] !== undefined) {
-                currentWeights[eff.targetRarity] *= 10.0; // 出現率10倍
-            }
-        });
-
-        // 重みに基づいてランクを抽選
-        let totalWeight = 0;
-        for (const r in currentWeights) {
-            totalWeight += currentWeights[r];
-        }
-
-        let random = Math.random() * totalWeight;
-        let selectedRarity = 'D'; // デフォルト
-
-        for (const r in currentWeights) {
-            random -= currentWeights[r];
-            if (random < 0) {
-                selectedRarity = r;
-                break;
+            let maxVal = 0;
+            availableFish.forEach(f => {
+                const val = rankValue[f.rarity] || 1;
+                if (val > maxVal) maxVal = val;
+            });
+            const topFish = availableFish.filter(f => (rankValue[f.rarity] || 1) === maxVal);
+            if (topFish.length > 0) {
+                const selected = topFish[Math.floor(Math.random() * topFish.length)];
+                return this._applyLevelAndTitle({ ...selected }, true); // 強制称号アップあり
             }
         }
 
@@ -256,19 +178,12 @@ const FishingGame = {
         // ========================================
         const sniperFixed = GameState.getEffectsByType('rank_sniper_fixed');
         if (sniperFixed.length > 0) {
-            selectedRarity = sniperFixed[0].rank;
-            console.log(`🎯 特殊ランクスナイパー発動: ${selectedRarity}確定`);
-        }
-
-        console.log(`🎲 ランク抽選: 餌=${bait.rank} -> 結果=${selectedRarity} (Weights: ${JSON.stringify(currentWeights)})`);
-
-        // 選択されたランクの魚プールを作成
-        const fishPool = GAME_DATA.FISH.filter(f => f.rarity === selectedRarity);
-
-        // 万が一プールが空ならDランクから再抽選 (フェイルセーフ)
-        if (fishPool.length === 0) {
-            console.warn(`⚠ ランク ${selectedRarity} の魚が見つかりませんでした。Dランクから抽選します。`);
-            return GAME_DATA.FISH[0];
+            const targetRank = sniperFixed[0].rank;
+            const snipedList = availableFish.filter(f => f.rarity === targetRank);
+            if (snipedList.length > 0) {
+                console.log(`🎯 特殊ランクスナイパー発動: ${targetRank}に絞り込み`);
+                availableFish = snipedList;
+            }
         }
 
         // ========================================
@@ -276,48 +191,51 @@ const FishingGame = {
         // ========================================
         const penaltyStatus = GameState.getPenaltyStatus();
         if (penaltyStatus.rankSniper) {
-            // ランクの強さ定義
-            const rankValue = { 'D': 1, 'C': 2, 'B': 3, 'A': 4, 'S': 5, 'SS': 6, 'GOD': 7 };
-            const currentRankVal = rankValue[selectedRarity] || 0;
-            const targetRankVal = rankValue[penaltyStatus.rankSniper] || 0;
-
-            if (currentRankVal < targetRankVal) {
-                console.log(`⛔ Rank Sniper: ${selectedRarity}ランクは対象外 (Min: ${penaltyStatus.rankSniper}) -> 再抽選`);
-                // 条件を満たさない場合、プール内から条件を満たす魚を探すか、強制的に対象ランク以上の魚を抽選し直す
-                // 簡易実装: 無理やり対象ランクの魚を抽選する
-                // もしフィーバーや他の要素でランクが決まっていたとしても、スナイパーはそれを上書きする（強力な制約）
-
-                // 対象ランク以上の魚を全候補から抽出
-                const validFish = GAME_DATA.FISH.filter(f => (rankValue[f.rarity] || 0) >= targetRankVal);
-
-                if (validFish.length > 0) {
-                    // ランダムに1匹選出
-                    const fallbackFish = validFish[Math.floor(Math.random() * validFish.length)];
-                    return { ...fallbackFish };
-                }
+            const minRankVal = rankValue[penaltyStatus.rankSniper] || 0;
+            const validFish = availableFish.filter(f => (rankValue[f.rarity] || 0) >= minRankVal);
+            if (validFish.length > 0) {
+                availableFish = validFish;
             }
         }
 
-        // 同ランク内での抽選 (個別のweightを考慮)
-        // レア魚出現率UPスキルの適用: 頻度が低い(weight < 15)魚の出現率を底上げ
-        const rareBonus = GameState.getRareBonus();
+        // ========================================
+        // フィーバーモード (月): 基礎出現率とレアボーナスの強化
+        // ========================================
+        const isMoonFever = GameState.fever.isActive && GameState.fever.type === 'moon';
+        if (isMoonFever) {
+            console.log('🔥 月フィーバー: 全ての魚の基本Weightをレア度に応じて強化！');
+        }
 
-        // プールの各魚に重みを適用
-        const weightedPool = fishPool.map(f => {
+        // 同ランク内や全プール内での抽選 (個別のweightを考慮)
+        const rareBonus = GameState.getRareBonus();
+        const collectorEffects = GameState.getEffectsByType('rank_collector');
+
+        const weightedPool = availableFish.map(f => {
             let effectiveWeight = f.weight;
+
+            // 愛好家スキルの適用
+            collectorEffects.forEach(eff => {
+                if (f.rarity === eff.targetRarity) {
+                    effectiveWeight *= 10.0;
+                }
+            });
+
             // weight < 15 は「あまり釣れない」以下 (頻度プロパティ連携)
             if (rareBonus > 0 && f.weight < 15) {
-                // ボーナスを適用 (効果を実感しやすくするため係数を2.0とする)
-                // 例: bonus 0.2 (+20%) -> weight * 1.4 
-                effectiveWeight = f.weight * (1 + rareBonus * 2.0);
+                effectiveWeight = effectiveWeight * (1 + rareBonus * 2.0);
             }
 
-            // 未登録魚ボーナス (New Fish Finder)
+            if (isMoonFever) {
+                // レアリティが高いほど強烈に重みを増やす
+                const val = rankValue[f.rarity] || 1;
+                effectiveWeight *= Math.pow(val, 2); // Sなら 25倍, Dなら 1倍
+            }
+
+            // 未登録魚ボーナス
             const newFishBonus = GameState.getNewFishBonus();
             const isUnknown = !GameState.encyclopedia[f.id] || GameState.encyclopedia[f.id].count === 0;
             if (newFishBonus > 1.0 && isUnknown) {
                 effectiveWeight *= newFishBonus;
-                // console.log(`🔍 未登録ボーナス適用: ${f.name} (x${newFishBonus})`);
             }
             return { fish: f, weight: effectiveWeight };
         });
@@ -326,46 +244,55 @@ const FishingGame = {
         let poolTotalWeight = 0;
         weightedPool.forEach(item => poolTotalWeight += item.weight);
 
-        random = Math.random() * poolTotalWeight;
+        let random = Math.random() * poolTotalWeight;
         let selectedFish = weightedPool[0].fish;
 
         for (const item of weightedPool) {
             random -= item.weight;
             if (random < 0) {
-                selectedFish = { ...item.fish }; // コピーを作成
+                selectedFish = { ...item.fish };
                 break;
             }
         }
 
-        // 称号付きの抽選
-        let titleChanceMult = GameState.getTitleChanceMultiplier();
+        return this._applyLevelAndTitle(selectedFish, false);
+    },
 
-        // ユーザー要望の「特定条件下での称号確率アップ」
-        if ((bait.rank === 'B' && selectedRarity === 'D') ||
-            (bait.rank === 'A' && selectedRarity === 'C') ||
-            (bait.rank === 'S' && selectedRarity === 'B')) {
-            console.log('✨ 特定条件ボーナス: 称号確率アップ適用！');
-            titleChanceMult *= 3.0; // 3倍に設定（調整可能）
+    // 内部補助関数: レベルと称号の適用
+    _applyLevelAndTitle(selectedFish, forceTitleUpgrade = false) {
+        if (selectedFish.isTreasure) {
+            return selectedFish; // 宝箱は称号・レベル補正をスキップ
         }
 
-        // ========================================
-        // フィーバーモード (月) の場合: 称号出現率超アップ
-        // ========================================
+        let titleChanceMult = GameState.getTitleChanceMultiplier();
+
+        if (forceTitleUpgrade) {
+            titleChanceMult *= 3.0;
+        }
+
         if (GameState.fever.isActive && GameState.fever.type === 'moon') {
-            console.log('🔥 月フィーバー: 称号出現率超アップ！');
-            titleChanceMult *= 5.0; // さらに5倍 (合計最大15倍以上)
+            titleChanceMult *= 5.0; 
         }
 
         if (Math.random() < GAME_DATA.TITLE_CONFIG.chance * titleChanceMult) {
             selectedFish.hasTitle = true;
             selectedFish.name = `${selectedFish.specialTitle}${selectedFish.name}`;
             selectedFish.price = Math.floor(selectedFish.price * GAME_DATA.TITLE_CONFIG.priceMultiplier);
-            // 称号説明文があれば追加
             if (selectedFish.titleDescription) {
                 selectedFish.originalDescription = selectedFish.description;
-                // selectedFish.description = selectedFish.titleDescription; // 必要なら説明文も置き換え
             }
             console.log(`✨ 称号付き出現！: ${selectedFish.name} (倍率: ${titleChanceMult})`);
+        }
+
+        // ========================================
+        // エリアレベルの適用
+        // ========================================
+        const locId = GameState.currentLocation || 'loc_river';
+        const currentLevel = GameState.getActiveLocationLevel(locId);
+        if (currentLevel > 1) {
+            // 例: Lv2 -> パワー2倍、価格2倍
+            selectedFish.power = Math.floor(selectedFish.power * currentLevel);
+            selectedFish.price = Math.floor(selectedFish.price * currentLevel);
         }
 
         return selectedFish;
@@ -376,15 +303,6 @@ const FishingGame = {
     // ========================================
     cast() {
         if (this.state !== 'idle') return false;
-
-        // 餌のチェック (ガチャモードは無視)
-        if (!this.isGachaMode) {
-            const currentBaitCount = GameState.getCurrentBaitCount();
-            if (currentBaitCount === 0) {
-                UIManager.showBaitPurchaseDialog(GameState.baitType);
-                return false;
-            }
-        }
 
         this.state = 'casting';
         UIManager.showCasting();
@@ -404,21 +322,12 @@ const FishingGame = {
         if (this.isGachaMode) {
             waitTime = 1500; // ガチャは短め
         } else {
-            // 餌を使用している場合は時間短縮
-            let waitTimeReduction = 0;
-            if (GameState.baitType) {
-                const bait = GAME_DATA.BAITS.find(b => b.id === GameState.baitType);
-                if (bait && bait.hitTimeReduction) {
-                    waitTimeReduction = bait.hitTimeReduction;
-                }
-            }
-
             const baseWaitTime = GAME_DATA.FISHING_CONFIG.waitTimeMin +
                 Math.random() * (GAME_DATA.FISHING_CONFIG.waitTimeMax - GAME_DATA.FISHING_CONFIG.waitTimeMin);
 
             // 忍耐力スキルの反映
             const patienceReduction = GameState.getWaitTimeReduction();
-            waitTime = baseWaitTime * (1 - waitTimeReduction) * (1 - patienceReduction);
+            waitTime = baseWaitTime * (1 - patienceReduction);
         }
 
         // キャストアニメーション後に待機状態へ

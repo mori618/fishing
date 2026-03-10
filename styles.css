@@ -6181,6 +6181,32 @@ body {
 }
 
 /* ========================================
+   エリアレベルUI (Location Level)
+   ======================================== */
+.location-level-badge {
+    background: rgba(56, 189, 248, 0.2);
+    border: 1px solid #38bdf8;
+    color: #38bdf8;
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 0.8em;
+    font-weight: bold;
+    margin-left: 8px;
+    transition: all 0.2s ease;
+}
+
+.location-level-badge:active {
+    transform: scale(0.9);
+    background: rgba(56, 189, 248, 0.4);
+}
+
+.location-level-badge.max {
+    background: rgba(251, 191, 36, 0.2);
+    border-color: #fbbf24;
+    color: #fbbf24;
+}
+
+/* ========================================
    釣り場移動 トランジション
    ======================================== */
 .location-transition-overlay {

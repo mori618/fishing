@@ -7,6 +7,12 @@ const GameState = {
     // ========================================
     money: 0,
     currentLocation: 'loc_river',
+    // ========================================
+    // エリアステータス
+    // ========================================
+    locationLevels: {},       // 各エリアの解放済み最大レベル { 'loc_river': 1 }
+    activeLocationLevels: {}, // 各エリアで現在設定しているレベル { 'loc_river': 1 }
+    locationExp: {},          // 各エリアの獲得経験値 { 'loc_river': 0 }
 
     // ========================================
     // ランク (Rank)
@@ -261,6 +267,11 @@ const GameState = {
                     lastProcessTime: Date.now()
                 };
             }
+            // 初期エリアレベル設定
+            this.locationLevels = saveData.locationLevels || { 'loc_river': 1 };
+            this.activeLocationLevels = saveData.activeLocationLevels || { 'loc_river': 1 };
+            this.locationExp = saveData.locationExp || { 'loc_river': 0 };
+
         } else {
             // 新規ゲーム
             const defaultData = SaveManager.getDefaultData();
@@ -268,6 +279,9 @@ const GameState = {
 
             // 初期位置の設定
             this.currentLocation = 'loc_river';
+            this.locationLevels = { 'loc_river': 1 };
+            this.activeLocationLevels = { 'loc_river': 1 };
+            this.locationExp = { 'loc_river': 0 };
 
             this.rank = 1;
             this.exp = 0;
@@ -583,6 +597,82 @@ const GameState = {
             }
         }
         return multiplierAdd;
+    },
+
+    // ========================================
+    // エリアレベル関連メソッド
+    // ========================================
+    // 現在のエリアの最大レベルを取得
+    getLocationLevel(locId) {
+        return this.locationLevels[locId] || 1;
+    },
+
+    // 現在のエリアで設定されているアクティブレベルを取得
+    getActiveLocationLevel(locId) {
+        const defaultLevel = this.getLocationLevel(locId);
+        return this.activeLocationLevels[locId] !== undefined ? this.activeLocationLevels[locId] : defaultLevel;
+    },
+
+    // 現在設定可能か（レベル下げが可能か）
+    canDecreaseLocationLevel(locId) {
+        return this.getActiveLocationLevel(locId) > 1;
+    },
+
+    canIncreaseLocationLevel(locId) {
+        return this.getActiveLocationLevel(locId) < this.getLocationLevel(locId);
+    },
+
+    // レベル変更操作
+    changeActiveLocationLevel(locId, delta) {
+        const currentActive = this.getActiveLocationLevel(locId);
+        const maxLevel = this.getLocationLevel(locId);
+        const newLevel = Math.max(1, Math.min(currentActive + delta, maxLevel));
+        
+        if (this.activeLocationLevels[locId] !== newLevel) {
+            this.activeLocationLevels[locId] = newLevel;
+            return true;
+        }
+        return false;
+    },
+
+    // エリアEXPを取得
+    getLocationExp(locId) {
+        return this.locationExp[locId] || 0;
+    },
+
+    // エリアレベルの必要経験値を計算する (例: レベル * 100)
+    getLocationExpRequired(level) {
+        return level * 100;
+    },
+
+    // エリアEXPを加算し、レベルアップ判定を行う
+    addLocationExp(locId, amount) {
+        if (!this.locationLevels[locId]) this.locationLevels[locId] = 1;
+        if (!this.locationExp[locId]) this.locationExp[locId] = 0;
+
+        this.locationExp[locId] += amount;
+        let currentLevel = this.locationLevels[locId];
+        let requiredExp = this.getLocationExpRequired(currentLevel);
+        let leveledUp = false;
+
+        // レベルアップループ
+        while (this.locationExp[locId] >= requiredExp) {
+            this.locationExp[locId] -= requiredExp;
+            this.locationLevels[locId] += 1;
+            currentLevel = this.locationLevels[locId];
+            requiredExp = this.getLocationExpRequired(currentLevel);
+            leveledUp = true;
+            
+            // 最大レベルが上がった際、アクティブレベルも追従させる
+            this.activeLocationLevels[locId] = currentLevel;
+        }
+
+        if (leveledUp && typeof UIManager !== 'undefined' && UIManager.showLocationLevelUp) {
+            // UIにレベルアップ通知を送る処理
+            UIManager.showLocationLevelUp(locId, currentLevel);
+        }
+
+        return leveledUp;
     },
 
     // ========================================

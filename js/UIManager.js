@@ -1138,11 +1138,196 @@ const UIManager = {
     // ========================================
     updateLocationDisplay() {
         const locNameEl = document.getElementById('current-location-name');
+        const locLevelEl = document.getElementById('location-level-display');
+        
         if (!locNameEl) return;
         const locId = GameState.currentLocation || 'loc_river';
         const locData = GAME_DATA.LOCATIONS[locId];
         if (locData) {
             locNameEl.textContent = locData.name;
+        }
+
+        if (locLevelEl) {
+            const currentActiveLevel = GameState.getActiveLocationLevel(locId);
+            const maxLevel = GameState.getLocationLevel(locId);
+            
+            if (currentActiveLevel === maxLevel && maxLevel > 1) {
+                // 最大レベルの場合は特別なスタイル (例えば文字だけLv MAXにするとか)
+                locLevelEl.textContent = `Lv ${currentActiveLevel}`;
+                locLevelEl.classList.add('max');
+            } else {
+                locLevelEl.textContent = `Lv ${currentActiveLevel} / ${maxLevel}`;
+                locLevelEl.classList.remove('max');
+            }
+        }
+    },
+
+    // ========================================
+    // エリアレベル調整モーダル表示
+    // ========================================
+    showLocationLevelModal() {
+        const modal = document.getElementById('location-level-modal');
+        if (!modal) return;
+        
+        this.updateLocationLevelModalUI();
+        
+        modal.classList.remove('hidden');
+        requestAnimationFrame(() => {
+            modal.classList.add('active');
+        });
+    },
+
+    hideLocationLevelModal() {
+        const modal = document.getElementById('location-level-modal');
+        if (!modal) return;
+        
+        modal.classList.remove('active');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 300);
+    },
+
+    updateLocationLevelModalUI() {
+        const locId = GameState.currentLocation || 'loc_river';
+        const activeLevel = GameState.getActiveLocationLevel(locId);
+        const maxLevel = GameState.getLocationLevel(locId);
+
+        const activeEl = document.getElementById('modal-active-level');
+        const maxEl = document.getElementById('modal-max-level');
+        const upBtn = document.getElementById('level-up-btn');
+        const downBtn = document.getElementById('level-down-btn');
+
+        if (activeEl) activeEl.textContent = activeLevel;
+        if (maxEl) maxEl.textContent = maxLevel;
+
+        if (upBtn) {
+            upBtn.disabled = !GameState.canIncreaseLocationLevel(locId);
+            upBtn.style.opacity = upBtn.disabled ? '0.5' : '1';
+        }
+        if (downBtn) {
+            downBtn.disabled = !GameState.canDecreaseLocationLevel(locId);
+            downBtn.style.opacity = downBtn.disabled ? '0.5' : '1';
+        }
+    },
+
+    changeLocationLevel(delta) {
+        const locId = GameState.currentLocation || 'loc_river';
+        if (GameState.changeActiveLocationLevel(locId, delta)) {
+            // 変更成功
+            SaveManager.saveGame();
+            
+            // UI更新
+            this.updateLocationLevelModalUI();
+            this.updateLocationDisplay();
+            
+            // 少しエフェクトを入れるなら
+            const activeEl = document.getElementById('modal-active-level');
+            if (activeEl) {
+                activeEl.style.transform = 'scale(1.3)';
+                setTimeout(() => {
+                    activeEl.style.transform = 'scale(1)';
+                }, 150);
+            }
+        }
+    },
+
+    // ========================================
+    // エリアレベルアップ通知 (GameStateから呼ばれる)
+    // ========================================
+    showLocationLevelUp(locId, newLevel) {
+        const locData = GAME_DATA.LOCATIONS[locId] || { name: 'エリア' };
+        
+        // 画面中央に大きく表示
+        const overlay = document.createElement('div');
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.background = 'rgba(0,0,0,0.6)';
+        overlay.style.display = 'flex';
+        overlay.style.justifyContent = 'center';
+        overlay.style.alignItems = 'center';
+        overlay.style.zIndex = '9999';
+        overlay.style.opacity = '0';
+        overlay.style.transition = 'opacity 0.3s';
+
+        const content = document.createElement('div');
+        content.style.textAlign = 'center';
+        content.style.background = 'linear-gradient(135deg, #1e3a5f, #0f172a)';
+        content.style.border = '2px solid #38bdf8';
+        content.style.borderRadius = '15px';
+        content.style.padding = '30px 40px';
+        content.style.boxShadow = '0 0 30px rgba(56, 189, 248, 0.5)';
+        content.style.transform = 'scale(0.8)';
+        content.style.transition = 'transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+        
+        content.innerHTML = `
+            <h2 style="color: #38bdf8; font-size: 24px; margin-bottom: 10px;">エリアレベルアップ！</h2>
+            <div style="font-size: 20px; color: white; margin-bottom: 20px;">
+                <span class="material-icons" style="vertical-align: middle; color: #fbbf24;">stars</span>
+                ${locData.name}が <strong style="color: #fbbf24; font-size: 28px;">Lv ${newLevel}</strong> になりました！
+            </div>
+            <p style="color: #cbd5e1; font-size: 14px;">魚のパワーと売却価格が上昇します。</p>
+        `;
+
+        overlay.appendChild(content);
+        document.body.appendChild(overlay);
+
+        // 表示アニメーション
+        requestAnimationFrame(() => {
+            overlay.style.opacity = '1';
+            content.style.transform = 'scale(1)';
+            
+            // パーティクル演出 (既存のメソッド利用)
+            this.createLevelUpParticles(window.innerWidth / 2, window.innerHeight / 2 - 50);
+        });
+
+        // UI表示更新
+        this.updateLocationDisplay();
+        if (!document.getElementById('location-level-modal').classList.contains('hidden')) {
+            this.updateLocationLevelModalUI();
+        }
+
+        // 数秒後に自動で閉じる
+        setTimeout(() => {
+            overlay.style.opacity = '0';
+            content.style.transform = 'scale(0.8)';
+            setTimeout(() => {
+                overlay.remove();
+            }, 300);
+        }, 3500);
+    },
+
+    // 補助: レベルアップ用パーティクル
+    createLevelUpParticles(x, y) {
+        const colors = ['#38bdf8', '#fbbf24', '#ffffff'];
+        for (let i = 0; i < 30; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            // styles.cssのparticleクラスは背景色が固定なので、インラインでオーバーライド
+            particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            
+            const size = Math.random() * 8 + 4;
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            
+            const endX = x + (Math.random() * 200 - 100);
+            const endY = y + (Math.random() * 200 - 100);
+            const duration = Math.random() * 0.5 + 0.5;
+
+            document.body.appendChild(particle);
+
+            particle.animate([
+                { transform: `translate(${x}px, ${y}px) scale(1)`, opacity: 1 },
+                { transform: `translate(${endX}px, ${endY}px) scale(0)`, opacity: 0 }
+            ], {
+                duration: duration * 1000,
+                easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                fill: 'forwards'
+            });
+
+            setTimeout(() => particle.remove(), duration * 1000);
         }
     },
 

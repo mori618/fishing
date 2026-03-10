@@ -12,11 +12,11 @@ const SaveManager = {
         return {
             version: this.VERSION,
             saveDate: new Date().toISOString(),
+            locationLevels: { 'loc_river': 1 },
+            activeLocationLevels: { 'loc_river': 1 },
+            locationExp: { 'loc_river': 0 },
             player: {
                 money: 0,
-                baitCount: 0,
-                baitCount: 0,
-                baitType: null,
                 selectedSkin: 'skin_default'
             },
             rod: {
@@ -61,14 +61,11 @@ const SaveManager = {
             const saveData = {
                 version: this.VERSION,
                 saveDate: new Date().toISOString(),
+                locationLevels: { ...gameState.locationLevels },
+                activeLocationLevels: { ...gameState.activeLocationLevels },
+                locationExp: { ...gameState.locationExp },
                 player: {
                     money: gameState.money,
-                    baitCount: gameState.baitCount,
-                    // baitTypeなど他のプロパティも必要に応じて保存
-                    // baitInventoryも保存した方が安全
-                    baitInventory: { ...gameState.baitInventory },
-                    baitInventory: { ...gameState.baitInventory },
-                    baitType: gameState.baitType,
                     selectedSkin: gameState.selectedSkin,
                     selectedSky: gameState.selectedSky,
                     skillSets: [...(gameState.skillSets || [])]
