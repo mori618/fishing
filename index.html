@@ -148,16 +148,21 @@
 
 
 
-        <!-- 中央下部HUD（餌・竿・町） -->
+        <!-- 中央下部HUD（釣り場・竿・町） -->
         <div class="bottom-hud-center">
             <!-- 町へボタン -->
             <button id="shop-btn-top" class="floating-btn btn-town">
                 <span class="material-icons">holiday_village</span>
                 <span class="btn-label">町へ</span>
             </button>
-            <!-- 餌情報 -->
-            <div id="bait-status-display" class="bait-status-large">
-                <div id="bait-info" class="bait-value"></div>
+            <!-- 釣り場情報 -->
+            <div id="location-status-display" class="bait-status-large" onclick="ShopManager.setCategory('locations')">
+                <div id="location-info" class="bait-value">
+                    <span class="bait-label-container" style="cursor: pointer; justify-content: center;">
+                        <span class="material-icons" style="vertical-align: middle; font-size: 1.1em; margin-right: 4px; color: #8ecae6;">directions_boat</span>
+                        <span id="current-location-name" class="bait-name-text" style="font-size: 1.1em; font-weight: bold; color: white;">始まりの小川</span>
+                    </span>
+                </div>
             </div>
             <!-- 装備中の竿 -->
             <div id="rod-info" class="rod-badge">

@@ -349,10 +349,10 @@ const SKILLS = [
     { id: 'quick_hit_penalty_2', name: '早打ち II', description: 'ヒット待ち-30% & 売却価格-20%', effect: { type: 'quick_hit_penalty', waitReduc: 0.3, priceReduc: 0.2 }, price: 3000, tier: 2, group: '強化グループ', icon: 'bolt' },
     { id: 'quick_hit_penalty_3', name: '早打ち III', description: 'ヒット待ち-50% & 売却価格-40%', effect: { type: 'quick_hit_penalty', waitReduc: 0.5, priceReduc: 0.4 }, price: 8000, tier: 3, group: '強化グループ', icon: 'bolt' },
     { id: 'quick_hit_penalty_4', name: '早打ち 極', description: 'ヒット待ち-75% & 売却価格-60%', effect: { type: 'quick_hit_penalty', waitReduc: 0.75, priceReduc: 0.6 }, price: 25000, tier: 4, group: '強化グループ', icon: 'bolt' },
-    { id: 'bait_master_1', name: '餌の達人 I', description: '釣り成功時、15%で餌を消費しない', effect: { type: 'bait_save', value: 0.15 }, price: 500, tier: 1, group: '便利グループ', icon: 'build' },
-    { id: 'bait_master_2', name: '餌の達人 II', description: '釣り成功時、30%で餌を消費しない', effect: { type: 'bait_save', value: 0.3 }, price: 2000, tier: 2, group: '便利グループ', icon: 'build' },
-    { id: 'bait_master_3', name: '餌の達人 III', description: '釣り成功時、50%で餌を消費しない', effect: { type: 'bait_save', value: 0.5 }, price: 6000, tier: 3, group: '便利グループ', icon: 'build' },
-    { id: 'bait_master_4', name: '餌の達人 極', description: '釣り成功時、75%で餌を消費しない', effect: { type: 'bait_save', value: 0.75 }, price: 25000, tier: 4, group: '便利グループ', icon: 'build' },
+    { id: 'fever_power_1', name: 'フィーバーパワー I', description: 'フィーバー時のパワー +10%', effect: { type: 'fever_power_boost', value: 0.1 }, price: 500, tier: 1, group: '強化グループ', icon: 'bolt' },
+    { id: 'fever_power_2', name: 'フィーバーパワー II', description: 'フィーバー時のパワー +20%', effect: { type: 'fever_power_boost', value: 0.2 }, price: 2000, tier: 2, group: '強化グループ', icon: 'bolt' },
+    { id: 'fever_power_3', name: 'フィーバーパワー III', description: 'フィーバー時のパワー +40%', effect: { type: 'fever_power_boost', value: 0.4 }, price: 6000, tier: 3, group: '強化グループ', icon: 'bolt' },
+    { id: 'fever_power_4', name: 'フィーバーパワー 極', description: 'フィーバー時のパワー +80%', effect: { type: 'fever_power_boost', value: 0.8 }, price: 25000, tier: 4, group: '強化グループ', icon: 'bolt' },
     { id: 'technician_1', name: 'テクニシャン I', description: '赤ゾーンの幅が20%拡大', effect: { type: 'red_zone_boost', value: 0.2 }, price: 600, tier: 1, group: '技術グループ', icon: 'precision_manufacturing' },
     { id: 'technician_2', name: 'テクニシャン II', description: '赤ゾーンの幅が40%拡大', effect: { type: 'red_zone_boost', value: 0.4 }, price: 2500, tier: 2, group: '技術グループ', icon: 'precision_manufacturing' },
     { id: 'technician_3', name: 'テクニシャン III', description: '赤ゾーンの幅が60%拡大', effect: { type: 'red_zone_boost', value: 0.6 }, price: 7000, tier: 3, group: '技術グループ', icon: 'precision_manufacturing' },
@@ -505,7 +505,7 @@ const SKILLS = [
     { id: 'rank_sniper_b', name: 'Bランクスナイパー', description: 'Bランクの魚しか釣れなくなる', effect: { type: 'rank_sniper_fixed', rank: 'B' }, price: 150000, tier: 0, group: '特殊スキル', icon: 'workspace_premium' },
     { id: 'rank_sniper_a', name: 'Aランクスナイパー', description: 'Aランクの魚しか釣れなくなる', effect: { type: 'rank_sniper_fixed', rank: 'A' }, price: 200000, tier: 0, group: '特殊スキル', icon: 'workspace_premium' },
     { id: 'rank_sniper_s', name: 'Sランクスナイパー', description: 'Sランクの魚しか釣れなくなる', effect: { type: 'rank_sniper_fixed', rank: 'S' }, price: 300000, tier: 0, group: '特殊スキル', icon: 'workspace_premium' },
-    { id: 'infinite_bait', name: '無限餌', description: '釣り時に餌を消費しなくなる', effect: { type: 'infinite_bait' }, price: 250000, tier: 0, group: '特殊スキル', icon: 'workspace_premium' },
+    { id: 'fever_start', name: 'フィーバースターター', description: '釣り開始時、5%の確率で即フィーバー突入', effect: { type: 'fever_start_boost', chance: 0.05 }, price: 250000, tier: 0, group: '特殊スキル', icon: 'workspace_premium' },
     { id: 'good_feel', name: '手応え', description: 'パワー2倍 & ガチャチケットのドロップを確定させる', effect: { type: 'good_feel' }, price: 200000, tier: 0, group: '特殊スキル', icon: 'workspace_premium' },
     { id: 'hard_mode', name: 'ハードモード', description: 'パワー5倍 & 魚の売却額8倍', effect: { type: 'hard_mode' }, price: 500000, tier: 0, group: '特殊スキル', icon: 'workspace_premium' },
     // { id: 'perpetual_engine', name: '永久機関', description: '船の燃料を消費しなくなる', effect: { type: 'perpetual_engine' }, price: 300000, tier: 0, group: '特殊スキル', icon: 'workspace_premium' },
@@ -540,58 +540,23 @@ const SPECIAL_RECIPES = {
     'rank_license_b+rank_collector_b': 'rank_sniper_b',
     'rank_license_a+rank_collector_a': 'rank_sniper_a',
     'rank_license_s+rank_collector_s': 'rank_sniper_s',
-    'bait_master+fever_bias_sun': 'infinite_bait',
+    'fever_power+fever_bias_sun': 'fever_start',
     'overdrive+fever_bias_moon': 'good_feel',
     'amplifier+high_risk_sell': 'hard_mode',
-    // 'bait_master+ship_fuel_eco': 'perpetual_engine',
+    // 'fever_power+ship_fuel_eco': 'perpetual_engine',
     'treasure_hunter+treasure_hunter': 'magnet'
 };
 
 // ========================================
-// 餌データ
+// 釣り場データ
 // ========================================
-const BAITS = [
-    {
-        id: 'bait_d',
-        name: 'Dランクの餌',
-        rank: 'D',
-        description: '基本の餌。Dランクが釣れやすい。釣れても消費されない。',
-        price: 0,
-        quantity: 1
-    },
-    {
-        id: 'bait_c',
-        name: 'Cランクの餌',
-        rank: 'C',
-        description: 'Cランクが釣れやすい。失敗しても消費されない。',
-        price: 50,
-        quantity: 5
-    },
-    {
-        id: 'bait_b',
-        name: 'Bランクの餌',
-        rank: 'B',
-        description: 'Bランクが釣れやすい。失敗しても消費されない。',
-        price: 200,
-        quantity: 5
-    },
-    {
-        id: 'bait_a',
-        name: 'Aランクの餌',
-        rank: 'A',
-        description: 'Aランクが釣れやすい。釣れなくても消費される。',
-        price: 800,
-        quantity: 5
-    },
-    {
-        id: 'bait_s',
-        name: 'Sランクの餌',
-        rank: 'S',
-        description: 'Sランクが釣れやすい。釣れなくても消費される。',
-        price: 3000,
-        quantity: 5
-    }
-];
+const LOCATIONS = {
+    'loc_river': { id: 'loc_river', name: '始まりの小川', description: '穏やかに水が流れる小さな川。初心者におすすめ。', unlockType: 'none', unlockValue: 0, theme: 'river', fishList: ['fish_d1','fish_d2','fish_d3','fish_d4','fish_d5','fish_d7','fish_d8','fish_d9','fish_c4','fish_c8'] },
+    'loc_lake': { id: 'loc_lake', name: '静寂の湖', description: '深く澄んだ水面に木々が映る静かな湖。', unlockType: 'power', unlockValue: 100, theme: 'lake', fishList: ['fish_c1','fish_c2','fish_c3','fish_c5','fish_c6','fish_c7','fish_a3','fish_a6'] },
+    'loc_coast': { id: 'loc_coast', name: '波打ちの海岸', description: '潮の香りが漂う海岸。多くの海の生き物が集まる。', unlockType: 'power', unlockValue: 500, theme: 'coast', fishList: ['fish_d6','fish_b1','fish_b2','fish_b4','fish_b7','fish_a5'] },
+    'loc_sea': { id: 'loc_sea', name: '近海の海', description: '広がる紺碧の海。大型の魚が影を潜めている。', unlockType: 'power', unlockValue: 2500, theme: 'sea', fishList: ['fish_b3','fish_b5','fish_b6','fish_a1','fish_a4','fish_s3','fish_s4'] },
+    'loc_deep_sea': { id: 'loc_deep_sea', name: '未知の外洋', description: '光の届かない深海と荒波の外洋。伝説が眠る場所。', unlockType: 'power', unlockValue: 8000, theme: 'deep_sea', fishList: ['fish_a2','fish_s1','fish_s2','fish_s5','fish_ss1','fish_ss2'] }
+};
 
 
 
@@ -785,20 +750,12 @@ const TREASURE_CONFIG = {
     lootTables: {
         WOOD: {
             money: { min: 100, max: 500 },
-            baits: [
-                { id: 'bait_c', min: 1, max: 3, weight: 0.8 },
-                { id: 'bait_b', min: 1, max: 1, weight: 0.2 }
-            ],
             skills: [
                 { tier: 1, chance: 0.15 } // 15%でTier1スキル
             ]
         },
         SILVER: {
             money: { min: 1000, max: 3000 },
-            baits: [
-                { id: 'bait_b', min: 2, max: 5, weight: 0.6 },
-                { id: 'bait_a', min: 1, max: 2, weight: 0.4 }
-            ],
             skills: [
                 { tier: 1, chance: 0.2 }, // 20%でTier1スキル
                 { tier: 2, chance: 0.15 } // 15%でTier2スキル
@@ -806,9 +763,6 @@ const TREASURE_CONFIG = {
         },
         GOLD: {
             money: { min: 5000, max: 15000 },
-            baits: [
-                { id: 'bait_s', min: 1, max: 3, weight: 1.0 }
-            ],
             skills: [
                 { tier: 2, chance: 0.4 }, // 40%でTier2スキル
                 { tier: 3, chance: 0.2 }  // 20%でTier3スキル

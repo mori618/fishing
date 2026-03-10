@@ -640,7 +640,6 @@ const UIManager = {
                 if (reward.type === 'money') icon = 'paid';
                 else if (reward.type === 'ticket') icon = 'confirmation_number';
                 else if (reward.type === 'skill') icon = 'auto_fix_high';
-                else if (reward.type === 'bait') icon = 'set_meal';
 
                 return `
                     <div class="extra-reward-pill">
@@ -790,29 +789,28 @@ const UIManager = {
         const fishingScreen = document.getElementById('fishing-screen');
         if (!fishingScreen) return;
 
+        // まず現在の釣り場に応じたクラスを設定
+        fishingScreen.className = `screen ${this.currentScreen === 'fishing' ? 'active' : ''}`;
+        if (GameState.currentLocation) {
+            fishingScreen.classList.add(`theme-${GameState.currentLocation}`);
+        }
+
+        // 以下、Skyガチャの色を反映する処理
+        // 海（ocean-bg）の色はCSSクラス側で設定されるが、Skyガチャ（空）は動的にスタイルで上書きする
         const currentSky = GameState.getCurrentSky();
         if (!currentSky) return;
-
-        // Colors are top, bottom of the sky part.
-        // The sky part is roughly 0% to 35% of the screen.
-        // The original CSS was: linear-gradient(180deg, #87CEEB 0%, #3b82f6 30%, #1e3a8a 100%)
-        // We want to replace the top part (0-30%) with our sky gradient, and keep the ocean part (30-100%).
-
-        // Ocean colors (fixed for now, matching original or close to it)
-        // Original: #3b82f6 at 30%, #1e3a8a at 100%
-        // We will construct a multi-stop gradient.
 
         const skyTop = currentSky.colors[0];
         const skyBottom = currentSky.colors[1];
 
-        // Construct the new gradient
-        // 0% -> skyTop
-        // 30% -> skyBottom (Horizon)
-        // 30% -> #3b82f6 (Ocean Surface) - slightly hard transition or smooth? 
-        // Original was #87CEEB 0%, #3b82f6 30%. It was a smooth transition from sky to light blue ocean.
-        // To keep the sky distinct but connected:
+        // 釣り場により海の色を手動で設定（CSSでの定義と合わせるか、透過等を活用する）
+        let seaColor = '#1e3a8a';
+        if (GameState.currentLocation === 'loc_lake') seaColor = '#2563eb';
+        else if (GameState.currentLocation === 'loc_coast') seaColor = '#059669';
+        else if (GameState.currentLocation === 'loc_offshore') seaColor = '#1d4ed8';
+        else if (GameState.currentLocation === 'loc_deepsea') seaColor = '#020617';
 
-        const newGradient = `linear-gradient(180deg, ${skyTop} 0%, ${skyBottom} 30%, #1e3a8a 100%)`;
+        const newGradient = `linear-gradient(180deg, ${skyTop} 0%, ${skyBottom} 30%, ${seaColor} 100%)`;
 
         fishingScreen.style.background = newGradient;
     },
@@ -900,9 +898,6 @@ const UIManager = {
             if (item.type === 'money') {
                 icon = 'payments';
                 className = 'money';
-            } else if (item.type === 'bait') {
-                icon = 'set_meal';
-                className = 'item';
             } else if (item.type === 'skill') {
                 icon = 'school';
                 className = 'skill';
@@ -980,7 +975,7 @@ const UIManager = {
         }
         this.updateInventory();
         this.updateRodInfo();
-        this.updateBaitInfo();
+        this.updateLocationDisplay();
         this.updateRankInfo();
     },
 
@@ -1139,91 +1134,57 @@ const UIManager = {
     },
 
     // ========================================
-    // 餌情報更新（セレクター表示）
+    // 釣り場情報更新
     // ========================================
-    updateBaitInfo() {
-        const baitInfo = document.getElementById('bait-info');
-        if (!baitInfo) return;
-
-        const currentBaitId = GameState.baitType;
-        const bait = GAME_DATA.BAITS.find(b => b.id === currentBaitId);
-        const count = GameState.getCurrentBaitCount();
-        const displayCount = count === -1 ? '∞' : count;
-
-        // user's new UI expects: BAIT (pseudo) < content >
-        // We inject the buttons and the text.
-        baitInfo.innerHTML = `
-            <button class="selector-btn prev" onclick="GameState.switchBait(-1); UIManager.updateBaitInfo();"><span class="material-icons">chevron_left</span></button>
-            <span class="bait-label-container" onclick="UIManager.showBaitPurchaseDialog('${currentBaitId}')" style="cursor: pointer;">
-                <span class="bait-name-text">${bait.name}</span>
-                <span class="bait-count-text">× ${displayCount}</span>
-            </span>
-            <button class="selector-btn next" onclick="GameState.switchBait(1); UIManager.updateBaitInfo();"><span class="material-icons">chevron_right</span></button>
-        `;
+    updateLocationDisplay() {
+        const locNameEl = document.getElementById('current-location-name');
+        if (!locNameEl) return;
+        const locId = GameState.currentLocation || 'loc_river';
+        const locData = GAME_DATA.LOCATIONS[locId];
+        if (locData) {
+            locNameEl.textContent = locData.name;
+        }
     },
 
     // ========================================
-    // 餌購入ダイアログを表示
+    // 釣り場移動トランジション
     // ========================================
-    showBaitPurchaseDialog(baitId) {
-        const bait = GAME_DATA.BAITS.find(b => b.id === baitId);
-        if (!bait) return;
-
-        // Dランク（無限）は購入不可
-        if (bait.rank === 'D') {
-            // 無限なので何もしない
+    startLocationTransition(locId, locName) {
+        if (GameState.currentLocation === locId) {
+            this.showScreen('fishing');
             return;
         }
 
         const overlay = document.createElement('div');
-        overlay.className = 'modal-overlay';
-        overlay.id = 'bait-purchase-modal';
-
-        // 単価 (セット価格 / 個数)
-        const unitPrice = bait.quantity > 0 ? bait.price / bait.quantity : 0;
-
+        overlay.className = 'location-transition-overlay';
         overlay.innerHTML = `
-            <div class="modal-content">
-                <h3>餌を購入</h3>
-                <p>${bait.name} が不足しています。</p>
-                <p>購入しますか？</p>
-                
-                <div class="purchase-options">
-                    <div class="option" data-amount="${bait.quantity}">
-                        <span class="amount">${bait.quantity}個</span>
-                        <span class="price">¥${bait.price}</span>
-                    </div>
-                    <div class="option" data-amount="${bait.quantity * 5}">
-                        <span class="amount">${bait.quantity * 5}個</span>
-                        <span class="price">¥${bait.price * 5}</span>
-                    </div>
-                     <div class="option" data-amount="${bait.quantity * 10}">
-                        <span class="amount">${bait.quantity * 10}個</span>
-                        <span class="price">¥${bait.price * 10}</span>
-                    </div>
-                </div>
-
-                <div class="modal-actions">
-                    <button class="btn-cancel" onclick="document.getElementById('bait-purchase-modal').remove()">キャンセル</button>
-                </div>
+            <div class="transition-content">
+                <span class="material-icons transition-icon moving">directions_boat</span>
+                <h2>${locName} へ移動中...</h2>
             </div>
         `;
-
         document.body.appendChild(overlay);
 
-        // 購入オプションのイベントリスナ
-        overlay.querySelectorAll('.option').forEach(option => {
-            option.addEventListener('click', () => {
-                const amount = parseInt(option.dataset.amount);
-                if (GameState.buyBait(baitId, amount)) {
-                    this.showMessage(`${bait.name}を${amount}個購入しました！`);
-                    this.updateStatus(); // お金と餌の表示更新
-                    overlay.remove();
-                } else {
-                    this.showMessage('お金が足りません！');
-                }
-            });
-        });
+        setTimeout(() => {
+            overlay.classList.add('active');
+        }, 10);
+
+        setTimeout(() => {
+            GameState.currentLocation = locId;
+            SaveManager.save(GameState);
+
+            this.updateLocationDisplay();
+            this.updateSkyVisuals();
+
+            this.showScreen('fishing');
+
+            overlay.classList.remove('active');
+            overlay.classList.add('fade-out');
+
+            setTimeout(() => {
+                overlay.remove();
+            }, 500);
+        }, 1200);
     },
 
     // ========================================
