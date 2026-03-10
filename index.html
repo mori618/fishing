@@ -472,6 +472,14 @@
     <script src="js/SynthesisManager.js"></script>
     <script src="js/DebugManager.js"></script>
     <script src="js/main.js"></script>
+    <!-- デバッグログ表示用オーバーレイ -->
+    <div id="debug-log-overlay" class="debug-log-overlay hidden">
+        <div class="debug-log-header">
+            <span>💻 Debug Log</span>
+            <button class="btn-close" onclick="document.getElementById('debug-log-overlay').classList.add('hidden')"><span class="material-icons">close</span></button>
+        </div>
+        <div id="debug-log-content" class="debug-log-content"></div>
+    </div>
 </body>
 
 </html>

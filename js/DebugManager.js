@@ -3,6 +3,9 @@
  * 各種ステータスの自由な書き換えを提供
  */
 const DebugManager = {
+    // ログ設定
+    logEnabled: false,
+    originalConsole: null,
     /**
      * デバッグ画面のレンダリング
      */
@@ -62,9 +65,16 @@ const DebugManager = {
                 <!-- その他 -->
                 <section class="debug-section" style="margin-bottom: 30px; border: 1px solid #444; padding: 15px; border-radius: 8px;">
                     <h3 style="margin-bottom: 15px; color: #94a3b8; border-bottom: 1px solid #444; padding-bottom: 5px;">⚙️ その他</h3>
-                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
                         <button class="btn-nav" onclick="DebugManager.unlockEncyclopedia()">図鑑コンプ</button>
                         <button class="btn-nav" onclick="DebugManager.clearSave()" style="background: #450a0a; color: #f87171;">データ初期化</button>
+                    </div>
+                    <h3 style="margin-bottom: 15px; color: #10b981; border-bottom: 1px solid #444; padding-bottom: 5px;">💻 画面上デバッグログ</h3>
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+                        <button class="btn-nav" onclick="DebugManager.toggleDebugLog()" style="background: ${this.logEnabled ? '#065f46' : '#efebe9'}; color: ${this.logEnabled ? '#a7f3d0' : '#5d4037'}; border-color: ${this.logEnabled ? '#059669' : '#a1887f'};" id="debug-log-toggle-btn">
+                            ${this.logEnabled ? 'オンスクリーンログ: ON' : 'オンスクリーンログ: OFF'}
+                        </button>
+                        <button class="btn-nav" onclick="document.getElementById('debug-log-content').innerHTML=''" style="font-size: 12px; padding: 5px 10px;">ログクリア</button>
                     </div>
                 </section>
 
@@ -185,8 +195,103 @@ const DebugManager = {
         UIManager.updateMoney();
         SaveManager.saveGame();
         this.render(); // 再描画
+    },
+
+    /**
+     * デバッグログの切り替え
+     */
+    toggleDebugLog() {
+        this.logEnabled = !this.logEnabled;
+        const overlay = document.getElementById('debug-log-overlay');
+        if (overlay) {
+            if (this.logEnabled) {
+                overlay.classList.remove('hidden');
+            } else {
+                overlay.classList.add('hidden');
+            }
+        }
+        this.afterUpdate(`オンスクリーンログを ${this.logEnabled ? 'ON' : 'OFF'} にしました`);
+    },
+
+    /**
+     * ログフックの初期化
+     */
+    initLogger() {
+        if (this.originalConsole) return; // 既に初期化済み
+
+        this.originalConsole = {
+            log: console.log,
+            warn: console.warn,
+            error: console.error,
+            info: console.info
+        };
+
+        const writeToOverlay = (type, args) => {
+            const overlayContent = document.getElementById('debug-log-content');
+            if (overlayContent && this.logEnabled) {
+                const colors = {
+                    log: '#e2e8f0',
+                    warn: '#fbbf24',
+                    error: '#ef4444',
+                    info: '#38bdf8'
+                };
+                
+                const time = new Date().toLocaleTimeString('ja-JP', { hour12: false, hour: '2-digit', minute:'2-digit', second:'2-digit' });
+                
+                // オブジェクトのディープダンプ（簡易）
+                const formattedArgs = args.map(arg => {
+                    if (typeof arg === 'object' && arg !== null) {
+                        try {
+                            return JSON.stringify(arg);
+                        } catch (e) {
+                            return String(arg);
+                        }
+                    }
+                    return String(arg);
+                }).join(' ');
+
+                const logEntry = document.createElement('div');
+                logEntry.style.color = colors[type];
+                logEntry.style.marginBottom = '4px';
+                logEntry.style.borderBottom = '1px solid rgba(255,255,255,0.1)';
+                logEntry.style.paddingBottom = '4px';
+                logEntry.innerHTML = `<span style="color:#94a3b8; font-size:10px; margin-right:5px;">[${time}]</span> ${formattedArgs}`;
+                
+                overlayContent.appendChild(logEntry);
+                
+                // 自動スクロール
+                overlayContent.scrollTop = overlayContent.scrollHeight;
+            }
+        };
+
+        console.log = (...args) => {
+            writeToOverlay('log', args);
+            this.originalConsole.log.apply(console, args);
+        };
+        console.warn = (...args) => {
+            writeToOverlay('warn', args);
+            this.originalConsole.warn.apply(console, args);
+        };
+        console.error = (...args) => {
+            writeToOverlay('error', args);
+            this.originalConsole.error.apply(console, args);
+        };
+        console.info = (...args) => {
+            writeToOverlay('info', args);
+            this.originalConsole.info.apply(console, args);
+        };
+
+        // UI表示の復元
+        const overlay = document.getElementById('debug-log-overlay');
+        if (overlay && this.logEnabled) {
+            overlay.classList.remove('hidden');
+        }
     }
 };
+
+// ロガーを即時初期化
+DebugManager.initLogger();
+
 
 // グローバル公開
 window.DebugManager = DebugManager;

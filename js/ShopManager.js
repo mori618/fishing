@@ -153,6 +153,7 @@ const ShopManager = {
                     <div class="building-desc">運試しとスキルリサイクル</div>
                 </div>
             </div>
+             <!--
              <div class="shop-building port" onclick="ShopManager.setCategory('port')" style="border-color: #3b82f6;">
                 <div class="building-icon" style="color: #3b82f6;"><span class="material-icons">anchor</span></div>
                 <div class="building-info">
@@ -160,6 +161,7 @@ const ShopManager = {
                     <div class="building-desc">自動漁獲船の管理・運用</div>
                 </div>
             </div>
+            -->
             <div class="shop-building synthesis" onclick="ShopManager.setCategory('synthesis')" style="border-color: #a855f7;">
                 <div class="building-icon" style="color: #a855f7;"><span class="material-icons">science</span></div>
                 <div class="building-info">

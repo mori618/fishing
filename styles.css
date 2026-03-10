@@ -1,4 +1,4 @@
-﻿/* ========================================
+/* ========================================
    フィッシング・エボリューション
    メインスタイルシート
    ======================================== */
@@ -6115,4 +6115,67 @@ body {
     font-size: 20px;
     font-weight: bold;
     color: #fbbf24;
+}
+
+/* ========================================
+   Debug Log Overlay
+   ======================================== */
+.debug-log-overlay {
+    position: fixed;
+    top: 60px; /* 右上のボタン類を避けるため少し下げる */
+    right: 10px;
+    width: 250px;
+    height: 300px;
+    background: rgba(15, 23, 42, 0.7); /* 少し投化 */
+    border: 1px solid #38bdf8;
+    border-radius: 8px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+    font-family: 'Roboto Mono', monospace;
+    pointer-events: auto;
+}
+
+.debug-log-header {
+    background: #0f172a;
+    color: #38bdf8;
+    padding: 10px 15px;
+    font-weight: bold;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    border-bottom: 1px solid #38bdf8;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.debug-log-header .btn-close {
+    background: transparent;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+}
+
+.debug-log-content {
+    padding: 10px;
+    overflow-y: auto;
+    flex-grow: 1;
+    font-size: 12px;
+    line-height: 1.4;
+    color: #e2e8f0;
+    text-align: left;
+}
+
+.debug-log-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.debug-log-content::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.2);
+}
+
+.debug-log-content::-webkit-scrollbar-thumb {
+    background: #38bdf8;
+    border-radius: 4px;
 }
