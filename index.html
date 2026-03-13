@@ -148,16 +148,22 @@
 
 
 
-        <!-- 中央下部HUD（餌・竿・町） -->
+        <!-- 中央下部HUD（釣り場・竿・町） -->
         <div class="bottom-hud-center">
             <!-- 町へボタン -->
             <button id="shop-btn-top" class="floating-btn btn-town">
                 <span class="material-icons">holiday_village</span>
                 <span class="btn-label">町へ</span>
             </button>
-            <!-- 餌情報 -->
-            <div id="bait-status-display" class="bait-status-large">
-                <div id="bait-info" class="bait-value"></div>
+            <!-- 釣り場情報 -->
+            <div id="location-status-display" class="bait-status-large" onclick="ShopManager.setCategory('locations')">
+                <div id="location-info" class="bait-value">
+                    <span class="bait-label-container" style="cursor: pointer; justify-content: center; position: relative;">
+                        <span class="material-icons" style="vertical-align: middle; font-size: 1.1em; margin-right: 4px; color: #8ecae6;">directions_boat</span>
+                        <span id="current-location-name" class="bait-name-text" style="font-size: 1.1em; font-weight: bold; color: white;">始まりの小川</span>
+                        <span id="location-level-display" class="location-level-badge" onclick="event.stopPropagation(); UIManager.showLocationLevelModal();">Lv 1</span>
+                    </span>
+                </div>
             </div>
             <!-- 装備中の竿 -->
             <div id="rod-info" class="rod-badge">
@@ -173,6 +179,28 @@
         <!-- 底部ナビゲーション -->
 
 
+    </div>
+
+    <!-- ========================================
+         エリアレベル変更モーダル (小)
+         ======================================== -->
+    <div id="location-level-modal" class="modal-overlay hidden" style="z-index: 1500;">
+        <div class="modal-content" style="max-width: 300px; text-align: center;">
+            <div class="modal-header">
+                <h2>エリアレベル設定</h2>
+                <button id="close-location-level-btn" class="btn-close" onclick="UIManager.hideLocationLevelModal()"><span class="material-icons">close</span></button>
+            </div>
+            <div class="modal-body" style="padding: 20px 10px;">
+                <p style="margin-bottom: 10px; font-size: 0.9em; color: #cbd5e1;">レベルを下げて難易度を調整できます。</p>
+                <div style="display: flex; justify-content: center; align-items: center; gap: 15px; margin: 15px 0;">
+                    <button id="level-down-btn" class="gacha-btn" style="width: 50px; height: 50px; font-size: 1.5rem; padding: 0;" onclick="UIManager.changeLocationLevel(-1)">-</button>
+                    <div style="font-size: 1.8rem; font-weight: bold; color: #fff;">
+                        Lv <span id="modal-active-level">1</span> <span style="font-size: 1rem; color: #94a3b8;">/ <span id="modal-max-level">1</span></span>
+                    </div>
+                    <button id="level-up-btn" class="gacha-btn" style="width: 50px; height: 50px; font-size: 1.5rem; padding: 0;" onclick="UIManager.changeLocationLevel(1)">+</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- ========================================

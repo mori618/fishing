@@ -167,6 +167,9 @@ const MissionManager = {
         GameState.addMoney(50);
         GameState.addExp(50);
 
+        // エリアEXPも同量加算
+        GameState.addLocationExp(GameState.currentLocation, 50);
+
         // ミッションごとの追加報酬を確認
         if (mission.rewardText.includes('スキル')) {
             rewards.push({ icon: '✨', name: 'スキル獲得' });
@@ -375,6 +378,9 @@ const MissionManager = {
         if (mission.exp) {
             GameState.addExp(mission.exp);
             rewards.push({ name: `${mission.exp} XP` });
+            
+            // エリアEXPも同量加算
+            GameState.addLocationExp(GameState.currentLocation, mission.exp);
         }
 
         // 達成カウント増加

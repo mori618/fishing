@@ -6,8 +6,13 @@ const GameState = {
     // 基本ステータス
     // ========================================
     money: 0,
-    baitInventory: {},
-    baitType: 'bait_d',
+    currentLocation: 'loc_river',
+    // ========================================
+    // エリアステータス
+    // ========================================
+    locationLevels: {},       // 各エリアの解放済み最大レベル { 'loc_river': 1 }
+    activeLocationLevels: {}, // 各エリアで現在設定しているレベル { 'loc_river': 1 }
+    locationExp: {},          // 各エリアの獲得経験値 { 'loc_river': 0 }
 
     // ========================================
     // ランク (Rank)
@@ -115,25 +120,8 @@ const GameState = {
             // セーブデータから復元
             this.money = saveData.player.money;
             this.highTierGuaranteed = false; // ロード時はリセット
-            // 互換性チェック: 古いデータの場合は移行
-            if (saveData.player.baitInventory) {
-                this.baitInventory = { ...saveData.player.baitInventory };
-                // 強制的にDランクは無限(-1)にする（バグ修正・保護）
-                this.baitInventory['bait_d'] = -1;
-            } else {
-                // 旧データからの移行: 持っていた餌を現在の餌タイプに追加
-                this.baitInventory = {
-                    'bait_d': -1, // -1は無限
-                    'bait_c': 0,
-                    'bait_b': 0,
-                    'bait_a': 0,
-                    'bait_s': 0
-                };
-                if (saveData.player.baitType && saveData.player.baitCount > 0) {
-                    this.baitInventory[saveData.player.baitType] = saveData.player.baitCount;
-                }
-            }
-            this.baitType = saveData.player.baitType || 'bait_d';
+            // 古い餌データは廃止
+            this.currentLocation = saveData.player.currentLocation || 'loc_river';
 
             this.rodRankIndex = saveData.rod.rankIndex;
 
@@ -279,20 +267,21 @@ const GameState = {
                     lastProcessTime: Date.now()
                 };
             }
+            // 初期エリアレベル設定
+            this.locationLevels = saveData.locationLevels || { 'loc_river': 1 };
+            this.activeLocationLevels = saveData.activeLocationLevels || { 'loc_river': 1 };
+            this.locationExp = saveData.locationExp || { 'loc_river': 0 };
+
         } else {
             // 新規ゲーム
             const defaultData = SaveManager.getDefaultData();
             this.init(defaultData);
 
-            // 初期在庫の設定
-            this.baitInventory = {
-                'bait_d': -1, // 無限
-                'bait_c': 0,
-                'bait_b': 0,
-                'bait_a': 0,
-                'bait_s': 0
-            };
-            this.baitType = 'bait_d';
+            // 初期位置の設定
+            this.currentLocation = 'loc_river';
+            this.locationLevels = { 'loc_river': 1 };
+            this.activeLocationLevels = { 'loc_river': 1 };
+            this.locationExp = { 'loc_river': 0 };
 
             this.rank = 1;
             this.exp = 0;
@@ -611,6 +600,82 @@ const GameState = {
     },
 
     // ========================================
+    // エリアレベル関連メソッド
+    // ========================================
+    // 現在のエリアの最大レベルを取得
+    getLocationLevel(locId) {
+        return this.locationLevels[locId] || 1;
+    },
+
+    // 現在のエリアで設定されているアクティブレベルを取得
+    getActiveLocationLevel(locId) {
+        const defaultLevel = this.getLocationLevel(locId);
+        return this.activeLocationLevels[locId] !== undefined ? this.activeLocationLevels[locId] : defaultLevel;
+    },
+
+    // 現在設定可能か（レベル下げが可能か）
+    canDecreaseLocationLevel(locId) {
+        return this.getActiveLocationLevel(locId) > 1;
+    },
+
+    canIncreaseLocationLevel(locId) {
+        return this.getActiveLocationLevel(locId) < this.getLocationLevel(locId);
+    },
+
+    // レベル変更操作
+    changeActiveLocationLevel(locId, delta) {
+        const currentActive = this.getActiveLocationLevel(locId);
+        const maxLevel = this.getLocationLevel(locId);
+        const newLevel = Math.max(1, Math.min(currentActive + delta, maxLevel));
+        
+        if (this.activeLocationLevels[locId] !== newLevel) {
+            this.activeLocationLevels[locId] = newLevel;
+            return true;
+        }
+        return false;
+    },
+
+    // エリアEXPを取得
+    getLocationExp(locId) {
+        return this.locationExp[locId] || 0;
+    },
+
+    // エリアレベルの必要経験値を計算する (例: レベル * 100)
+    getLocationExpRequired(level) {
+        return level * 100;
+    },
+
+    // エリアEXPを加算し、レベルアップ判定を行う
+    addLocationExp(locId, amount) {
+        if (!this.locationLevels[locId]) this.locationLevels[locId] = 1;
+        if (!this.locationExp[locId]) this.locationExp[locId] = 0;
+
+        this.locationExp[locId] += amount;
+        let currentLevel = this.locationLevels[locId];
+        let requiredExp = this.getLocationExpRequired(currentLevel);
+        let leveledUp = false;
+
+        // レベルアップループ
+        while (this.locationExp[locId] >= requiredExp) {
+            this.locationExp[locId] -= requiredExp;
+            this.locationLevels[locId] += 1;
+            currentLevel = this.locationLevels[locId];
+            requiredExp = this.getLocationExpRequired(currentLevel);
+            leveledUp = true;
+            
+            // 最大レベルが上がった際、アクティブレベルも追従させる
+            this.activeLocationLevels[locId] = currentLevel;
+        }
+
+        if (leveledUp && typeof UIManager !== 'undefined' && UIManager.showLocationLevelUp) {
+            // UIにレベルアップ通知を送る処理
+            UIManager.showLocationLevelUp(locId, currentLevel);
+        }
+
+        return leveledUp;
+    },
+
+    // ========================================
     // パワーのスキル補正を取得
     // ========================================
     getPowerBonus() {
@@ -724,13 +789,7 @@ const GameState = {
             }
         });
 
-        // 餌の補正も加算
-        if (this.baitType) {
-            const bait = GAME_DATA.BAITS.find(b => b.id === this.baitType);
-            if (bait) {
-                bonus += (bait.rareBoost || 0);
-            }
-        }
+        // 餌の補正を削除
 
         return bonus;
     },
@@ -775,21 +834,7 @@ const GameState = {
         return Math.min(reduction, 0.95); // 95%まで
     },
 
-    // ========================================
-    // 餌の消費回避確率を取得
-    // ========================================
-    getBaitSaveChance() {
-        // 無限餌スキル
-        if (this.getEffectsByType('infinite_bait').length > 0) {
-            return 1.0;
-        }
 
-        let chance = 0;
-        this.getEffectsByType('bait_save').forEach(effect => {
-            chance += effect.value;
-        });
-        return Math.min(chance, 1.0); // 最大100%
-    },
 
     // ========================================
     // フィーバー継続時間ボーナス
@@ -1929,47 +1974,30 @@ const GameState = {
 
 
     // ========================================
-    // 餌の購入
+    // 釣り場関連
     // ========================================
-    buyBait(baitId, quantity = null) {
-        const bait = GAME_DATA.BAITS.find(b => b.id === baitId);
-        if (!bait) return false;
-
-        // 指定数量、またはデフォルト数量
-        const amount = quantity || bait.quantity;
-        // 価格計算（数量指定の場合は比例計算、デフォルトの場合は設定価格）
-        // 注: 現在のGAME_DATAでは単価が定義されていないため、セット価格から算出する必要があるかもですが
-        // 一旦、購入時は基本セット単位とします。
-        // 要望により「個数を選べる」とあるので、単価計算ロジックが必要。
-        // ここでは単純に bait.price は bait.quantity 個分の価格と仮定して、単価を算出します。
-        const unitPrice = bait.quantity > 0 ? bait.price / bait.quantity : 0;
-        const baseTotalCost = Math.ceil(unitPrice * amount);
-
-        // 割引適用
-        const discount = this.getShopDiscount();
-        const finalCost = Math.floor(baseTotalCost * (1.0 - discount));
-
-        if (this.money < finalCost) {
-            return false;
+    getUnlockedLocations() {
+        // パワー等の条件を満たしている釣り場を返す
+        const unlocked = [];
+        const currentPower = this.getTotalPower();
+        for (const [locId, locData] of Object.entries(GAME_DATA.LOCATIONS)) {
+            if (locData.unlockType === 'none') {
+                unlocked.push(locId);
+            } else if (locData.unlockType === 'power' && currentPower >= locData.unlockValue) {
+                unlocked.push(locId);
+            }
         }
+        return unlocked;
+    },
 
-        this.money -= finalCost;
-
-        // 餌を追加
-        if (this.baitInventory[baitId] === -1) {
-            // 無限の場合は増えない
-        } else {
-            this.baitInventory[baitId] = (this.baitInventory[baitId] || 0) + amount;
+    changeLocation(locId) {
+        const unlocked = this.getUnlockedLocations();
+        if (unlocked.includes(locId)) {
+            this.currentLocation = locId;
+            SaveManager.save(this);
+            return true;
         }
-
-        // 現在選択中の餌がこれなら切り替え不要、でなければ...自動で切り替えるかはUI次第だが
-        // 購入した餌をすぐに使いたいケースが多いので切り替えても良い
-        this.baitType = baitId;
-
-        // オートセーブ
-        SaveManager.save(this);
-
-        return true;
+        return false;
     },
 
     // ========================================
@@ -1985,22 +2013,7 @@ const GameState = {
         return mult;
     },
 
-    // ========================================
-    // 餌の追加（宝箱などから）
-    // ========================================
-    addBait(baitId, amount) {
-        if (!amount || amount <= 0) return;
 
-        // 餌を追加
-        if (this.baitInventory[baitId] === -1) {
-            // 無限の場合は増えない
-        } else {
-            this.baitInventory[baitId] = (this.baitInventory[baitId] || 0) + amount;
-        }
-
-        // オートセーブ
-        SaveManager.save(this);
-    },
 
     // ========================================
     // 成長速度（Cosmic Blessing用）
@@ -2031,66 +2044,7 @@ const GameState = {
         return bonus;
     },
 
-    // ========================================
-    // 現在の餌の所持数を取得
-    // ========================================
-    getCurrentBaitCount() {
-        if (!this.baitType) return 0;
-        return this.baitInventory[this.baitType] ?? 0;
-    },
 
-    // ========================================
-    // 餌の切り替え
-    // ========================================
-    switchBait(direction) {
-        const baits = GAME_DATA.BAITS;
-        const currentIndex = baits.findIndex(b => b.id === this.baitType);
-        if (currentIndex === -1) {
-            this.baitType = baits[0].id;
-            return;
-        }
-
-        let nextIndex = currentIndex + direction;
-        if (nextIndex >= baits.length) {
-            nextIndex = 0;
-        } else if (nextIndex < 0) {
-            nextIndex = baits.length - 1;
-        }
-
-        this.baitType = baits[nextIndex].id;
-        SaveManager.save(this);
-    },
-
-    // ========================================
-    // 餌を1つ消費
-    // ========================================
-    useBait(isSuccess = true) {
-        if (!this.baitType) return false;
-
-        const bait = GAME_DATA.BAITS.find(b => b.id === this.baitType);
-        if (!bait) return false;
-
-        const currentCount = this.baitInventory[this.baitType];
-        if (currentCount === -1) return true;
-
-        if ((bait.rank === 'C' || bait.rank === 'B') && !isSuccess) {
-            return true;
-        }
-
-        if (currentCount <= 0) return false;
-
-        if (isSuccess) {
-            const saveChance = this.getBaitSaveChance();
-            if (Math.random() < saveChance) {
-                console.log('✨ 餌の達人発動！');
-                return true;
-            }
-        }
-
-        this.baitInventory[this.baitType]--;
-        SaveManager.save(this);
-        return true;
-    },
 
     // ========================================
     // スキン関連

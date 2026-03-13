@@ -92,9 +92,9 @@ const ShopManager = {
                         this.renderGachaShop(container);
                     }
                     break;
-                case 'baits':
-                    title.innerHTML = '<span class="material-icons">grass</span> 万屋 タックル';
-                    this.renderBaitShop();
+                case 'locations':
+                    title.innerHTML = '<span class="material-icons">directions_boat</span> 桟橋';
+                    this.renderLocationShop();
                     break;
                 case 'skins':
                     title.innerHTML = '<span class="material-icons">palette</span> スタイリスト';
@@ -132,11 +132,11 @@ const ShopManager = {
                     <div class="building-desc">スキルの習得・装備</div>
                 </div>
             </div>
-            <div class="shop-building baits" onclick="ShopManager.setCategory('baits')">
-                <div class="building-icon"><span class="material-icons">grass</span></div>
+            <div class="shop-building locations" onclick="ShopManager.setCategory('locations')">
+                <div class="building-icon"><span class="material-icons">directions_boat</span></div>
                 <div class="building-info">
-                    <div class="building-name">万屋 タックル</div>
-                    <div class="building-desc">各種ランクの餌を取り扱っています</div>
+                    <div class="building-name">桟橋（移動）</div>
+                    <div class="building-desc">別の釣り場へ移動します</div>
                 </div>
             </div>
              <div class="shop-building styles" onclick="ShopManager.setCategory('skins')" style="border-color: var(--accent-color);">
@@ -1166,8 +1166,6 @@ const ShopManager = {
         const waitRed = GameState.getWaitTimeReduction();
         if (waitRed > 0) effects.push({ label: '待ち時間', val: `-${Math.round(waitRed * 100)}%` });
 
-        const baitSave = GameState.getBaitSaveChance();
-        if (baitSave > 0) effects.push({ label: '餌節約', val: `${Math.round(baitSave * 100)}%` });
 
         const redZone = GameState.getRedZoneBonus();
         if (redZone > 0) effects.push({ label: '赤ゾーン', val: `+${redZone}` });
@@ -1262,79 +1260,72 @@ const ShopManager = {
     },
 
     // ========================================
-    // 餌ショップ
+    // 釣り場（Location）ショップ/画面
     // ========================================
-    renderBaitShop() {
+    renderLocationShop() {
         const container = document.getElementById('shop-items');
         container.innerHTML = '';
 
-        GAME_DATA.BAITS.filter(b => b.id !== 'bait_d').forEach(bait => {
-            const canBuy = GameState.money >= bait.price;
+        const unlocked = GameState.getUnlockedLocations();
+        
+        for (const [locId, locData] of Object.entries(GAME_DATA.LOCATIONS)) {
+            const isUnlocked = unlocked.includes(locId);
+            const isCurrent = GameState.currentLocation === locId;
 
             const item = document.createElement('div');
-            item.className = `shop-item ${!canBuy ? 'locked' : ''}`;
+            item.className = `shop-item ${isCurrent ? 'equipped' : ''} ${!isUnlocked ? 'locked' : ''}`;
+
+            let actionHtml = '';
+            if (isCurrent) {
+                actionHtml = '<span class="status equipped">滞在中</span>';
+            } else if (isUnlocked) {
+                actionHtml = `
+                    <button class="btn btn-equip" onclick="UIManager.startLocationTransition('${locId}', '${locData.name}')">
+                        移動する
+                    </button>
+                `;
+            } else {
+                let reason = '未開放';
+                if (locData.unlockType === 'power') {
+                    reason = `パワー ${locData.unlockValue} で解放`;
+                }
+                actionHtml = `<span class="status locked-reason"><span class="material-icons" style="font-size:14px;vertical-align:middle;">lock</span> ${reason}</span>`;
+            }
 
             item.innerHTML = `
                 <div class="item-info">
-                    <div class="item-name">${bait.name}</div>
-                    <div class="item-desc">${bait.description}</div>
-                    <div class="item-stats">
-                        ${bait.quantity}個入り
-                    </div>
+                    <div class="item-name">${locData.name}</div>
+                    <div class="item-desc">${locData.description}</div>
                 </div>
-                <div class="item-action bait-purchase-grid" style="display: flex; gap: 8px; flex-direction: column; min-width: 140px;">
-                    ${(() => {
-                    // 割引計算
-                    const discount = GameState.getShopDiscount();
-                    const buttonsHtml = [1, 10].map(multiplier => {
-                        const finalPrice = Math.floor(bait.price * multiplier * (1.0 - discount));
-                        const canBuy = GameState.money >= finalPrice;
-                        const isDiscounted = discount > 0;
-                        const label = multiplier === 1 ? '1セット' : `${multiplier}セット`;
-
-                        return `
-                                <button class="btn btn-buy ${canBuy ? '' : 'disabled'}" 
-                                        style="width: 100%; border-radius: 50px; font-weight: bold; box-shadow: 0 4px 0 #e08e0b;"
-                                        onclick="ShopManager.buyBait('${bait.id}', ${multiplier})" ${canBuy ? '' : 'disabled'}>
-                                    <div style="font-size: 0.9em;">${label}</div>
-                                    <div style="font-size: 1.0em;">¥${finalPrice.toLocaleString()}</div>
-                                </button>
-                            `;
-                    }).join('');
-
-                    return buttonsHtml;
-                })()}
-
+                <div class="item-action">
+                    ${actionHtml}
+                </div>
             `;
-
             container.appendChild(item);
-        });
+        }
 
-        // 現在の餌情報
-        this.renderBaitInfo();
+        // 現在の釣り場情報
+        this.renderLocationInfo();
     },
 
-    // ========================================
-    // 現在の餌情報
-    // ========================================
-    renderBaitInfo() {
+    renderLocationInfo() {
         const container = document.getElementById('upgrade-section');
         if (!container) return;
 
-        const baitCount = GameState.getCurrentBaitCount();
-        const baitType = GameState.baitType;
-        const bait = baitType ? GAME_DATA.BAITS.find(b => b.id === baitType) : null;
+        const locId = GameState.currentLocation;
+        const locData = GAME_DATA.LOCATIONS[locId];
 
         container.innerHTML = `
-            <h3>所持中の餌</h3>
-            <div class="bait-info">
-                ${bait
-                ? `<strong>${bait.name}</strong> × ${baitCount}`
-                : '<span class="none">なし</span>'
-            }
+            <h3>現在の釣り場</h3>
+            <div class="bait-info" style="font-size: 1.2em; text-align: center; margin: 10px 0;">
+                <strong>${locData ? locData.name : '不明'}</strong>
+            </div>
+            <div class="item-desc" style="text-align: center;">
+                ${locData ? locData.description : ''}
             </div>
         `;
     },
+
 
     // ========================================
     // 釣り竿購入
@@ -1417,26 +1408,7 @@ const ShopManager = {
         }
     },
 
-    // ========================================
-    // 餌購入
-    // ========================================
-    buyBait(baitId, multiplier = 1) {
-        const bait = GAME_DATA.BAITS.find(b => b.id === baitId);
-        if (!bait) return;
 
-        const totalQuantity = bait.quantity * multiplier;
-
-        if (GameState.buyBait(baitId, totalQuantity)) {
-            UIManager.showMessage(`${bait.name}を${totalQuantity}個(${multiplier}セット)購入しました！`);
-            this.renderShop();
-            UIManager.updateMoney();
-
-            // 初心者ミッション判定: 餌を買う
-            MissionManager.checkMission('buy_bait');
-        } else {
-            UIManager.showMessage('お金が足りません！');
-        }
-    },
 
     // ========================================
     // 魚を全て売却

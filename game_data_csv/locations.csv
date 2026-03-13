@@ -1,0 +1,6 @@
+ID,名前,説明,解放条件タイプ,解放条件値,テーマ色,魚リスト
+loc_river,始まりの小川,穏やかに水が流れる小さな川。初心者におすすめ。,None,0,river,"fish_d1,fish_d2,fish_d3,fish_d4,fish_d5,fish_d7,fish_d8,fish_d9,fish_c4,fish_c8"
+loc_lake,静寂の湖,深く澄んだ水面に木々が映る静かな湖。,Power,100,lake,"fish_c1,fish_c2,fish_c3,fish_c5,fish_c6,fish_c7,fish_a3,fish_a6"
+loc_coast,波打ちの海岸,潮の香りが漂う海岸。多くの海の生き物が集まる。,Power,500,coast,"fish_d6,fish_b1,fish_b2,fish_b4,fish_b7,fish_a5"
+loc_sea,近海の海,広がる紺碧の海。大型の魚が影を潜めている。,Power,2500,sea,"fish_b3,fish_b5,fish_b6,fish_a1,fish_a4,fish_s3,fish_s4"
+loc_deep_sea,未知の外洋,光の届かない深海と荒波の外洋。伝説が眠る場所。,Power,8000,deep_sea,"fish_a2,fish_s1,fish_s2,fish_s5,fish_ss1,fish_ss2"

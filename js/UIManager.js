@@ -640,7 +640,6 @@ const UIManager = {
                 if (reward.type === 'money') icon = 'paid';
                 else if (reward.type === 'ticket') icon = 'confirmation_number';
                 else if (reward.type === 'skill') icon = 'auto_fix_high';
-                else if (reward.type === 'bait') icon = 'set_meal';
 
                 return `
                     <div class="extra-reward-pill">
@@ -790,29 +789,28 @@ const UIManager = {
         const fishingScreen = document.getElementById('fishing-screen');
         if (!fishingScreen) return;
 
+        // まず現在の釣り場に応じたクラスを設定
+        fishingScreen.className = `screen ${this.currentScreen === 'fishing' ? 'active' : ''}`;
+        if (GameState.currentLocation) {
+            fishingScreen.classList.add(`theme-${GameState.currentLocation}`);
+        }
+
+        // 以下、Skyガチャの色を反映する処理
+        // 海（ocean-bg）の色はCSSクラス側で設定されるが、Skyガチャ（空）は動的にスタイルで上書きする
         const currentSky = GameState.getCurrentSky();
         if (!currentSky) return;
-
-        // Colors are top, bottom of the sky part.
-        // The sky part is roughly 0% to 35% of the screen.
-        // The original CSS was: linear-gradient(180deg, #87CEEB 0%, #3b82f6 30%, #1e3a8a 100%)
-        // We want to replace the top part (0-30%) with our sky gradient, and keep the ocean part (30-100%).
-
-        // Ocean colors (fixed for now, matching original or close to it)
-        // Original: #3b82f6 at 30%, #1e3a8a at 100%
-        // We will construct a multi-stop gradient.
 
         const skyTop = currentSky.colors[0];
         const skyBottom = currentSky.colors[1];
 
-        // Construct the new gradient
-        // 0% -> skyTop
-        // 30% -> skyBottom (Horizon)
-        // 30% -> #3b82f6 (Ocean Surface) - slightly hard transition or smooth? 
-        // Original was #87CEEB 0%, #3b82f6 30%. It was a smooth transition from sky to light blue ocean.
-        // To keep the sky distinct but connected:
+        // 釣り場により海の色を手動で設定（CSSでの定義と合わせるか、透過等を活用する）
+        let seaColor = '#1e3a8a';
+        if (GameState.currentLocation === 'loc_lake') seaColor = '#2563eb';
+        else if (GameState.currentLocation === 'loc_coast') seaColor = '#059669';
+        else if (GameState.currentLocation === 'loc_offshore') seaColor = '#1d4ed8';
+        else if (GameState.currentLocation === 'loc_deepsea') seaColor = '#020617';
 
-        const newGradient = `linear-gradient(180deg, ${skyTop} 0%, ${skyBottom} 30%, #1e3a8a 100%)`;
+        const newGradient = `linear-gradient(180deg, ${skyTop} 0%, ${skyBottom} 30%, ${seaColor} 100%)`;
 
         fishingScreen.style.background = newGradient;
     },
@@ -900,9 +898,6 @@ const UIManager = {
             if (item.type === 'money') {
                 icon = 'payments';
                 className = 'money';
-            } else if (item.type === 'bait') {
-                icon = 'set_meal';
-                className = 'item';
             } else if (item.type === 'skill') {
                 icon = 'school';
                 className = 'skill';
@@ -980,7 +975,7 @@ const UIManager = {
         }
         this.updateInventory();
         this.updateRodInfo();
-        this.updateBaitInfo();
+        this.updateLocationDisplay();
         this.updateRankInfo();
     },
 
@@ -1139,91 +1134,242 @@ const UIManager = {
     },
 
     // ========================================
-    // 餌情報更新（セレクター表示）
+    // 釣り場情報更新
     // ========================================
-    updateBaitInfo() {
-        const baitInfo = document.getElementById('bait-info');
-        if (!baitInfo) return;
+    updateLocationDisplay() {
+        const locNameEl = document.getElementById('current-location-name');
+        const locLevelEl = document.getElementById('location-level-display');
+        
+        if (!locNameEl) return;
+        const locId = GameState.currentLocation || 'loc_river';
+        const locData = GAME_DATA.LOCATIONS[locId];
+        if (locData) {
+            locNameEl.textContent = locData.name;
+        }
 
-        const currentBaitId = GameState.baitType;
-        const bait = GAME_DATA.BAITS.find(b => b.id === currentBaitId);
-        const count = GameState.getCurrentBaitCount();
-        const displayCount = count === -1 ? '∞' : count;
-
-        // user's new UI expects: BAIT (pseudo) < content >
-        // We inject the buttons and the text.
-        baitInfo.innerHTML = `
-            <button class="selector-btn prev" onclick="GameState.switchBait(-1); UIManager.updateBaitInfo();"><span class="material-icons">chevron_left</span></button>
-            <span class="bait-label-container" onclick="UIManager.showBaitPurchaseDialog('${currentBaitId}')" style="cursor: pointer;">
-                <span class="bait-name-text">${bait.name}</span>
-                <span class="bait-count-text">× ${displayCount}</span>
-            </span>
-            <button class="selector-btn next" onclick="GameState.switchBait(1); UIManager.updateBaitInfo();"><span class="material-icons">chevron_right</span></button>
-        `;
+        if (locLevelEl) {
+            const currentActiveLevel = GameState.getActiveLocationLevel(locId);
+            const maxLevel = GameState.getLocationLevel(locId);
+            
+            if (currentActiveLevel === maxLevel && maxLevel > 1) {
+                // 最大レベルの場合は特別なスタイル (例えば文字だけLv MAXにするとか)
+                locLevelEl.textContent = `Lv ${currentActiveLevel}`;
+                locLevelEl.classList.add('max');
+            } else {
+                locLevelEl.textContent = `Lv ${currentActiveLevel} / ${maxLevel}`;
+                locLevelEl.classList.remove('max');
+            }
+        }
     },
 
     // ========================================
-    // 餌購入ダイアログを表示
+    // エリアレベル調整モーダル表示
     // ========================================
-    showBaitPurchaseDialog(baitId) {
-        const bait = GAME_DATA.BAITS.find(b => b.id === baitId);
-        if (!bait) return;
+    showLocationLevelModal() {
+        const modal = document.getElementById('location-level-modal');
+        if (!modal) return;
+        
+        this.updateLocationLevelModalUI();
+        
+        modal.classList.remove('hidden');
+        requestAnimationFrame(() => {
+            modal.classList.add('active');
+        });
+    },
 
-        // Dランク（無限）は購入不可
-        if (bait.rank === 'D') {
-            // 無限なので何もしない
+    hideLocationLevelModal() {
+        const modal = document.getElementById('location-level-modal');
+        if (!modal) return;
+        
+        modal.classList.remove('active');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 300);
+    },
+
+    updateLocationLevelModalUI() {
+        const locId = GameState.currentLocation || 'loc_river';
+        const activeLevel = GameState.getActiveLocationLevel(locId);
+        const maxLevel = GameState.getLocationLevel(locId);
+
+        const activeEl = document.getElementById('modal-active-level');
+        const maxEl = document.getElementById('modal-max-level');
+        const upBtn = document.getElementById('level-up-btn');
+        const downBtn = document.getElementById('level-down-btn');
+
+        if (activeEl) activeEl.textContent = activeLevel;
+        if (maxEl) maxEl.textContent = maxLevel;
+
+        if (upBtn) {
+            upBtn.disabled = !GameState.canIncreaseLocationLevel(locId);
+            upBtn.style.opacity = upBtn.disabled ? '0.5' : '1';
+        }
+        if (downBtn) {
+            downBtn.disabled = !GameState.canDecreaseLocationLevel(locId);
+            downBtn.style.opacity = downBtn.disabled ? '0.5' : '1';
+        }
+    },
+
+    changeLocationLevel(delta) {
+        const locId = GameState.currentLocation || 'loc_river';
+        if (GameState.changeActiveLocationLevel(locId, delta)) {
+            // 変更成功
+            SaveManager.saveGame();
+            
+            // UI更新
+            this.updateLocationLevelModalUI();
+            this.updateLocationDisplay();
+            
+            // 少しエフェクトを入れるなら
+            const activeEl = document.getElementById('modal-active-level');
+            if (activeEl) {
+                activeEl.style.transform = 'scale(1.3)';
+                setTimeout(() => {
+                    activeEl.style.transform = 'scale(1)';
+                }, 150);
+            }
+        }
+    },
+
+    // ========================================
+    // エリアレベルアップ通知 (GameStateから呼ばれる)
+    // ========================================
+    showLocationLevelUp(locId, newLevel) {
+        const locData = GAME_DATA.LOCATIONS[locId] || { name: 'エリア' };
+        
+        // 画面中央に大きく表示
+        const overlay = document.createElement('div');
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.background = 'rgba(0,0,0,0.6)';
+        overlay.style.display = 'flex';
+        overlay.style.justifyContent = 'center';
+        overlay.style.alignItems = 'center';
+        overlay.style.zIndex = '9999';
+        overlay.style.opacity = '0';
+        overlay.style.transition = 'opacity 0.3s';
+
+        const content = document.createElement('div');
+        content.style.textAlign = 'center';
+        content.style.background = 'linear-gradient(135deg, #1e3a5f, #0f172a)';
+        content.style.border = '2px solid #38bdf8';
+        content.style.borderRadius = '15px';
+        content.style.padding = '30px 40px';
+        content.style.boxShadow = '0 0 30px rgba(56, 189, 248, 0.5)';
+        content.style.transform = 'scale(0.8)';
+        content.style.transition = 'transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+        
+        content.innerHTML = `
+            <h2 style="color: #38bdf8; font-size: 24px; margin-bottom: 10px;">エリアレベルアップ！</h2>
+            <div style="font-size: 20px; color: white; margin-bottom: 20px;">
+                <span class="material-icons" style="vertical-align: middle; color: #fbbf24;">stars</span>
+                ${locData.name}が <strong style="color: #fbbf24; font-size: 28px;">Lv ${newLevel}</strong> になりました！
+            </div>
+            <p style="color: #cbd5e1; font-size: 14px;">魚のパワーと売却価格が上昇します。</p>
+        `;
+
+        overlay.appendChild(content);
+        document.body.appendChild(overlay);
+
+        // 表示アニメーション
+        requestAnimationFrame(() => {
+            overlay.style.opacity = '1';
+            content.style.transform = 'scale(1)';
+            
+            // パーティクル演出 (既存のメソッド利用)
+            this.createLevelUpParticles(window.innerWidth / 2, window.innerHeight / 2 - 50);
+        });
+
+        // UI表示更新
+        this.updateLocationDisplay();
+        if (!document.getElementById('location-level-modal').classList.contains('hidden')) {
+            this.updateLocationLevelModalUI();
+        }
+
+        // 数秒後に自動で閉じる
+        setTimeout(() => {
+            overlay.style.opacity = '0';
+            content.style.transform = 'scale(0.8)';
+            setTimeout(() => {
+                overlay.remove();
+            }, 300);
+        }, 3500);
+    },
+
+    // 補助: レベルアップ用パーティクル
+    createLevelUpParticles(x, y) {
+        const colors = ['#38bdf8', '#fbbf24', '#ffffff'];
+        for (let i = 0; i < 30; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            // styles.cssのparticleクラスは背景色が固定なので、インラインでオーバーライド
+            particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            
+            const size = Math.random() * 8 + 4;
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            
+            const endX = x + (Math.random() * 200 - 100);
+            const endY = y + (Math.random() * 200 - 100);
+            const duration = Math.random() * 0.5 + 0.5;
+
+            document.body.appendChild(particle);
+
+            particle.animate([
+                { transform: `translate(${x}px, ${y}px) scale(1)`, opacity: 1 },
+                { transform: `translate(${endX}px, ${endY}px) scale(0)`, opacity: 0 }
+            ], {
+                duration: duration * 1000,
+                easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                fill: 'forwards'
+            });
+
+            setTimeout(() => particle.remove(), duration * 1000);
+        }
+    },
+
+    // ========================================
+    // 釣り場移動トランジション
+    // ========================================
+    startLocationTransition(locId, locName) {
+        if (GameState.currentLocation === locId) {
+            this.showScreen('fishing');
             return;
         }
 
         const overlay = document.createElement('div');
-        overlay.className = 'modal-overlay';
-        overlay.id = 'bait-purchase-modal';
-
-        // 単価 (セット価格 / 個数)
-        const unitPrice = bait.quantity > 0 ? bait.price / bait.quantity : 0;
-
+        overlay.className = 'location-transition-overlay';
         overlay.innerHTML = `
-            <div class="modal-content">
-                <h3>餌を購入</h3>
-                <p>${bait.name} が不足しています。</p>
-                <p>購入しますか？</p>
-                
-                <div class="purchase-options">
-                    <div class="option" data-amount="${bait.quantity}">
-                        <span class="amount">${bait.quantity}個</span>
-                        <span class="price">¥${bait.price}</span>
-                    </div>
-                    <div class="option" data-amount="${bait.quantity * 5}">
-                        <span class="amount">${bait.quantity * 5}個</span>
-                        <span class="price">¥${bait.price * 5}</span>
-                    </div>
-                     <div class="option" data-amount="${bait.quantity * 10}">
-                        <span class="amount">${bait.quantity * 10}個</span>
-                        <span class="price">¥${bait.price * 10}</span>
-                    </div>
-                </div>
-
-                <div class="modal-actions">
-                    <button class="btn-cancel" onclick="document.getElementById('bait-purchase-modal').remove()">キャンセル</button>
-                </div>
+            <div class="transition-content">
+                <span class="material-icons transition-icon moving">directions_boat</span>
+                <h2>${locName} へ移動中...</h2>
             </div>
         `;
-
         document.body.appendChild(overlay);
 
-        // 購入オプションのイベントリスナ
-        overlay.querySelectorAll('.option').forEach(option => {
-            option.addEventListener('click', () => {
-                const amount = parseInt(option.dataset.amount);
-                if (GameState.buyBait(baitId, amount)) {
-                    this.showMessage(`${bait.name}を${amount}個購入しました！`);
-                    this.updateStatus(); // お金と餌の表示更新
-                    overlay.remove();
-                } else {
-                    this.showMessage('お金が足りません！');
-                }
-            });
-        });
+        setTimeout(() => {
+            overlay.classList.add('active');
+        }, 10);
+
+        setTimeout(() => {
+            GameState.currentLocation = locId;
+            SaveManager.save(GameState);
+
+            this.updateLocationDisplay();
+            this.updateSkyVisuals();
+
+            this.showScreen('fishing');
+
+            overlay.classList.remove('active');
+            overlay.classList.add('fade-out');
+
+            setTimeout(() => {
+                overlay.remove();
+            }, 500);
+        }, 1200);
     },
 
     // ========================================
