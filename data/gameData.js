@@ -920,6 +920,7 @@ if (typeof window !== 'undefined') {
         SHIPS,
         FUELS,
         SPECIAL_RECIPES,
-        RANK_SYSTEM
+        RANK_SYSTEM,
+        LOCATIONS  // 釣り場データ（桟橋画面で使用）
     };
 }
