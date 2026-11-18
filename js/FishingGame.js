@@ -727,14 +727,21 @@ const FishingGame = {
         // ゲージアニメーション開始
         this.gaugePosition = 0;
         this.gaugeDirection = 1;
-        this.animateGauge();
+        this.gaugeLastTime = null;
+        this.gaugeAnimationId = requestAnimationFrame((t) => this.animateGauge(t));
     },
 
     // ========================================
     // ゲージアニメーション
     // ========================================
-    animateGauge() {
-        this.gaugePosition += this.gaugeSpeed * this.gaugeDirection;
+    animateGauge(now) {
+        // 画面のリフレッシュレート（60Hz/120Hz等）に依存しないよう、
+        // 経過時間ベースで移動量を計算する（gaugeSpeed は 60fps 1フレームあたりの移動量）
+        if (typeof now !== 'number') now = performance.now();
+        const last = this.gaugeLastTime == null ? now - 16.667 : this.gaugeLastTime;
+        const dtFrames = Math.min(50, Math.max(0, now - last)) / 16.667;
+        this.gaugeLastTime = now;
+        this.gaugePosition += this.gaugeSpeed * this.gaugeDirection * dtFrames;
 
         // 端で反転
         if (this.gaugePosition >= 100) {
@@ -749,7 +756,7 @@ const FishingGame = {
         UIManager.updateGaugePosition(this.gaugePosition);
 
         // 次のフレーム
-        this.gaugeAnimationId = requestAnimationFrame(() => this.animateGauge());
+        this.gaugeAnimationId = requestAnimationFrame((t) => this.animateGauge(t));
     },
 
     // ========================================
