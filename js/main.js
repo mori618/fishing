@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // 初期化
     // ========================================
     UIManager.initStartScreen();
+    // 演出・効果音レイヤー（js/FxManager.js）
+    if (typeof FxManager !== 'undefined') FxManager.init();
     // 港マネージャ初期化 (GameState初期化後に呼ぶ必要があるため、ここではなく startGame 後が良いが、
     // GameState.init は start-btn/continue-btn で呼ばれる。
     // そのため、initStartScreen時点ではまだ早すぎる可能性がある。

@@ -1,0 +1,406 @@
+/* ========================================
+   fx.css - 演出・手触り強化（js/FxManager.js とセット）
+   ======================================== */
+
+/* ---------- 水面キャンバス ---------- */
+.fx-water-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* ---------- 立体的なウキ ---------- */
+.bobber-body {
+    position: relative;
+    overflow: hidden;
+    border-bottom: none !important;
+    box-shadow:
+        inset -4px -5px 8px rgba(0, 0, 0, 0.35),
+        0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+/* 下半分を白く（ウキらしい塗り分け） */
+.bobber-body::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 42%;
+    background: linear-gradient(180deg, #f8fafc, #cbd5e1);
+    border-top: 1.5px solid rgba(0, 0, 0, 0.25);
+}
+
+/* ハイライト */
+.bobber-body::after {
+    content: '';
+    position: absolute;
+    top: 18%;
+    left: 20%;
+    width: 34%;
+    height: 26%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0) 70%);
+}
+
+.bobber-stick {
+    border-radius: 2px 2px 0 0;
+    background: linear-gradient(180deg, #fde047 0 35%, #f97316 35% 100%) !important;
+}
+
+/* 水面に映る影 */
+.water-surface .bobber::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    width: 46px;
+    height: 10px;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(0, 30, 60, 0.35), rgba(0, 30, 60, 0) 70%);
+    z-index: -1;
+}
+
+/* 待機中はほんの少しだけ浮き沈み（予兆の揺れとは明確に区別できる程度） */
+.bobber.waiting {
+    animation: fx-float 3.2s ease-in-out infinite;
+}
+
+@keyframes fx-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(1.5px); }
+}
+
+/* 沈み込みをもっと鋭く */
+.bobber.sinking {
+    animation: fx-sink 0.28s cubic-bezier(0.5, 0, 0.9, 0.4) forwards !important;
+}
+
+@keyframes fx-sink {
+    0% { transform: translateY(0) scale(1); }
+    30% { transform: translateY(-4px) scale(1.05); }
+    100% { transform: translateY(46px) scale(0.9); opacity: 0.35; }
+}
+
+/* ---------- キャスト ---------- */
+.fx-flying-bobber {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 24px;
+    height: 24px;
+    z-index: 60;
+    pointer-events: none;
+    will-change: transform;
+}
+
+.fx-flying-bobber .bobber-body {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+}
+
+.fx-cast-line {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+.fx-cast-line path {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.7);
+    stroke-width: 1;
+}
+
+.fx-cast-line.fade {
+    opacity: 0;
+}
+
+/* ---------- ヒット！ ---------- */
+.fx-hit-flash {
+    position: absolute;
+    inset: 0;
+    z-index: 80;
+    pointer-events: none;
+    background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.25) 45%, rgba(255, 255, 255, 0) 75%);
+    animation: fx-flash 0.35s ease-out forwards;
+}
+
+@keyframes fx-flash {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+.fx-hit-mark {
+    position: absolute;
+    left: 50%;
+    top: calc(50% - 120px);
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none;
+    z-index: 30;
+    animation: fx-hit-pop 0.75s cubic-bezier(0.2, 1.6, 0.4, 1) forwards;
+}
+
+.fx-hit-ex {
+    font-size: 84px;
+    font-weight: 900;
+    line-height: 1;
+    color: #fde047;
+    -webkit-text-stroke: 4px #7c2d12;
+    paint-order: stroke fill;
+    text-shadow: 0 6px 0 #7c2d12, 0 0 24px rgba(253, 224, 71, 0.9);
+}
+
+.fx-hit-text {
+    margin-top: -6px;
+    font-size: 26px;
+    font-weight: 900;
+    letter-spacing: 4px;
+    color: #fff;
+    -webkit-text-stroke: 3px #b91c1c;
+    paint-order: stroke fill;
+}
+
+@keyframes fx-hit-pop {
+    0% { transform: translateX(-50%) scale(0.2); opacity: 0; }
+    25% { transform: translateX(-50%) scale(1.25); opacity: 1; }
+    40% { transform: translateX(-50%) scale(1); }
+    80% { opacity: 1; }
+    100% { transform: translateX(-50%) scale(1.05) translateY(-10px); opacity: 0; }
+}
+
+/* 一瞬ズームして「ガツン」と感じさせる（ヒットストップ風） */
+#fishing-screen.fx-punch .fishing-area {
+    animation: fx-punch 0.22s ease-out;
+}
+
+@keyframes fx-punch {
+    0% { transform: scale(1); }
+    35% { transform: scale(1.06); }
+    100% { transform: scale(1); }
+}
+
+/* 予兆〜バトル中は左のステータスを控えめにして釣り場に集中 */
+#fishing-screen .floating-status-left {
+    transition: opacity 0.35s ease;
+}
+
+#fishing-screen.fx-focus .floating-status-left {
+    opacity: 0.35;
+}
+
+/* ---------- ゲージバトル ---------- */
+.fx-fish-shadow-wrap {
+    width: 100%;
+    height: 90px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+}
+
+.fx-fish-shadow {
+    width: 120px;
+    height: 70px;
+    filter: blur(1.5px);
+    will-change: transform;
+}
+
+.fx-shadow-svg {
+    width: 100%;
+    height: 100%;
+}
+
+.fx-tension {
+    width: 160px;
+    height: 6px;
+    margin-top: 6px;
+    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+.fx-tension-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #22c55e, #facc15, #ef4444);
+    transition: width 0.05s linear;
+}
+
+.gauge-container {
+    position: relative;
+}
+
+.gauge-indicator.fx-stopped {
+    animation: none !important;
+    transform: translateX(-50%) scaleY(1.35);
+}
+
+.gauge-indicator.fx-stopped-red {
+    box-shadow: 0 0 16px 4px rgba(250, 204, 21, 0.95) !important;
+}
+
+.fx-judge-anchor {
+    position: relative;
+    width: 100%;
+    height: 0;
+    z-index: 25;
+}
+
+.fx-judge {
+    position: absolute;
+    left: 50%;
+    top: -44px;
+    transform: translateX(-50%);
+    font-size: 30px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    white-space: nowrap;
+    pointer-events: none;
+    paint-order: stroke fill;
+    animation: fx-judge-pop 0.9s cubic-bezier(0.2, 1.6, 0.4, 1) forwards;
+}
+
+.fx-judge-red { color: #fde047; -webkit-text-stroke: 4px #b91c1c; }
+.fx-judge-green { color: #bbf7d0; -webkit-text-stroke: 4px #166534; }
+.fx-judge-white { color: #e2e8f0; -webkit-text-stroke: 4px #334155; font-size: 24px; }
+
+@keyframes fx-judge-pop {
+    0% { transform: translateX(-50%) scale(0.3); opacity: 0; }
+    30% { transform: translateX(-50%) scale(1.2); opacity: 1; }
+    45% { transform: translateX(-50%) scale(1); }
+    85% { opacity: 1; }
+    100% { transform: translateX(-50%) translateY(-12px); opacity: 0; }
+}
+
+/* ---------- 釣果カード ---------- */
+.result-card.fx-card-in {
+    animation: fx-card-in 0.55s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+@keyframes fx-card-in {
+    0% { transform: translateY(40px) scale(0.85) rotate(-3deg); opacity: 0; }
+    100% { transform: none; opacity: 1; }
+}
+
+.fx-result-fish {
+    position: relative;
+    z-index: 2;
+    width: 104px;
+    height: 64px;
+    animation: fx-fish-flop 1.6s ease-in-out infinite;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
+}
+
+.fx-result-fish.escaped {
+    opacity: 0.55;
+    filter: grayscale(0.6) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
+    animation: none;
+}
+
+.fx-result-fish-svg {
+    width: 100%;
+    height: 100%;
+}
+
+@keyframes fx-fish-flop {
+    0%, 100% { transform: rotate(-4deg); }
+    50% { transform: rotate(4deg) translateY(-3px); }
+}
+
+/* 図鑑のSVG */
+.encyclopedia-item .fish-icon .fish-art {
+    width: 90%;
+    height: 90%;
+}
+
+/* Bランク以上：後光 */
+.fx-rays {
+    position: absolute;
+    inset: -40px;
+    border-radius: 50%;
+    z-index: 0;
+    pointer-events: none;
+    background: repeating-conic-gradient(rgba(255, 255, 255, 0.22) 0deg 10deg, rgba(255, 255, 255, 0) 10deg 24deg);
+    -webkit-mask: radial-gradient(circle, #000 30%, transparent 70%);
+    mask: radial-gradient(circle, #000 30%, transparent 70%);
+    animation: fx-spin 8s linear infinite;
+}
+
+.result-card.fx-r3 .fx-rays { background: repeating-conic-gradient(rgba(216, 180, 254, 0.35) 0deg 10deg, rgba(255, 255, 255, 0) 10deg 24deg); }
+.result-card.fx-r4 .fx-rays,
+.result-card.fx-r5 .fx-rays,
+.result-card.fx-r6 .fx-rays { background: repeating-conic-gradient(rgba(253, 224, 71, 0.45) 0deg 10deg, rgba(255, 255, 255, 0) 10deg 24deg); animation-duration: 5s; }
+
+@keyframes fx-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Aランク以上：紙吹雪 */
+.fx-confetti {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 5;
+    border-radius: inherit;
+}
+
+.fx-confetti i {
+    position: absolute;
+    top: -12px;
+    width: 7px;
+    height: 11px;
+    border-radius: 2px;
+    opacity: 0;
+    animation-name: fx-confetti-fall;
+    animation-timing-function: ease-in;
+    animation-fill-mode: forwards;
+}
+
+@keyframes fx-confetti-fall {
+    0% { transform: translate(0, 0) rotate(0); opacity: 1; }
+    100% { transform: translate(var(--dx), 520px) rotate(var(--rot)); opacity: 0; }
+}
+
+/* Sランク以上：金色フラッシュ */
+.fx-gold-flash {
+    position: absolute;
+    inset: 0;
+    z-index: 99;
+    pointer-events: none;
+    background: radial-gradient(circle, rgba(253, 224, 71, 0.7), rgba(253, 224, 71, 0) 70%);
+    animation: fx-flash 0.9s ease-out forwards;
+}
+
+/* ヌシ（称号付き）は金枠で光る */
+.result-card.fx-titled {
+    box-shadow: 0 0 0 3px #fbbf24, 0 0 30px rgba(251, 191, 36, 0.7) !important;
+}
+
+/* ---------- 音ボタン ---------- */
+.fx-sound-btn {
+    margin-top: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fx-rays,
+    .fx-result-fish,
+    .bobber.waiting {
+        animation: none !important;
+    }
+}
