@@ -49,21 +49,10 @@ const FxManager = {
 
     // ウキの画面座標（canvas座標系）
     bobberPoint() {
-        const b = document.querySelector('#fishing-area .bobber-body');
-        const scr = this.screen();
-        if (!b || !scr) return null;
-        const r = b.getBoundingClientRect();
-        const s = scr.getBoundingClientRect();
-        return { x: r.left + r.width / 2 - s.left, y: r.bottom - s.top - 2 };
-    },
-
-    rodTip() {
-        const shaft = document.querySelector('#fishing-rod-view .rod-shaft');
-        const scr = this.screen();
-        if (!shaft || !scr) return { x: this.W * 0.8, y: this.H * 0.6 };
-        const r = shaft.getBoundingClientRect();
-        const s = scr.getBoundingClientRect();
-        return { x: r.left + r.width / 2 - s.left, y: Math.max(0, r.top - s.top) };
+        if (typeof RodAnimator !== 'undefined' && RodAnimator.bobber && RodAnimator.layout) {
+            return { x: RodAnimator.bobber.x, y: RodAnimator.bobber.y };
+        }
+        return null;
     },
 
     setFocus(on) {
@@ -205,53 +194,6 @@ const FxManager = {
     },
 
     // ----------------------------------------
-    // キャスト：ウキが弧を描いて飛ぶ
-    // ----------------------------------------
-    castFlight() {
-        const scr = this.screen();
-        const area = document.getElementById('fishing-area');
-        if (!scr || !area) return;
-        const from = this.rodTip();
-        const ar = area.getBoundingClientRect();
-        const sr = scr.getBoundingClientRect();
-        // showWaiting で表示されるウキの位置（エリア中央付近）
-        const to = { x: ar.left + ar.width / 2 - sr.left, y: ar.top + ar.height / 2 - sr.top + 14 };
-
-        const el = document.createElement('div');
-        el.className = 'fx-flying-bobber';
-        const skin = (typeof GameState !== 'undefined' && GameState.getCurrentSkin) ? GameState.getCurrentSkin() : null;
-        el.innerHTML = `<div class="bobber-body" style="background-color:${skin ? skin.bobberColor : '#ef4444'}"></div>`;
-        scr.appendChild(el);
-
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        line.setAttribute('class', 'fx-cast-line');
-        line.innerHTML = '<path d="" />';
-        scr.appendChild(line);
-        const path = line.querySelector('path');
-
-        const dur = 480;
-        const start = performance.now();
-        const peak = Math.min(from.y, to.y) - 160;
-        const step = (now) => {
-            const k = Math.min(1, (now - start) / dur);
-            const e = 1 - Math.pow(1 - k, 2);
-            const x = from.x + (to.x - from.x) * e;
-            const y = (1 - e) * (1 - e) * from.y + 2 * (1 - e) * e * peak + e * e * to.y;
-            const sc = 1.3 - 0.5 * e;
-            el.style.transform = `translate(${x - 12}px, ${y - 12}px) scale(${sc}) rotate(${k * 540}deg)`;
-            const cx = (from.x + x) / 2, cy = Math.min(from.y, y) - 40 * (1 - k);
-            path.setAttribute('d', `M ${from.x} ${from.y} Q ${cx} ${cy} ${x} ${y}`);
-            if (k < 1) requestAnimationFrame(step);
-            else {
-                el.remove();
-                line.classList.add('fade');
-                setTimeout(() => line.remove(), 300);
-            }
-        };
-        requestAnimationFrame(step);
-    },
-
-    // ----------------------------------------
     // ヒット演出：「！」・フラッシュ・ズーム
     // ----------------------------------------
     hitBurst() {
@@ -262,11 +204,23 @@ const FxManager = {
         scr.appendChild(flash);
         setTimeout(() => flash.remove(), 400);
 
-        const area = document.getElementById('fishing-area');
         const mark = document.createElement('div');
         mark.className = 'fx-hit-mark';
         mark.innerHTML = '<span class="fx-hit-ex">！</span><span class="fx-hit-text">HIT!</span>';
-        (area || scr).appendChild(mark);
+        const p = this.bobberPoint();
+        if (p) {
+            mark.style.left = `${p.x}px`;
+            mark.style.top = `${p.y - 135}px`;
+        }
+        scr.appendChild(mark);
+        setTimeout(() => mark.remove(), 800);
+
+        const scene = document.getElementById('rod-scene');
+        if (scene) {
+            scene.classList.remove('rg-jolt');
+            void scene.getBoundingClientRect();
+            scene.classList.add('rg-jolt');
+        }
 
         scr.classList.remove('fx-punch');
         void scr.offsetWidth;
@@ -288,60 +242,6 @@ const FxManager = {
         bar.parentNode.insertBefore(anchor, bar);
         const ind = document.getElementById('gauge-indicator');
         if (ind) ind.classList.add('fx-stopped', 'fx-stopped-' + zone);
-    },
-
-    // ----------------------------------------
-    // ゲージバトル中に暴れる魚影
-    // ----------------------------------------
-    startFishShadow(fish) {
-        this.stopFishShadow();
-        const battle = document.querySelector('#fishing-area .gauge-battle');
-        if (!battle || typeof FishArt === 'undefined') return;
-        const wrap = document.createElement('div');
-        wrap.className = 'fx-fish-shadow-wrap';
-        wrap.innerHTML = `<div class="fx-fish-shadow">${FishArt.svg(fish, { silhouette: 'rgba(5,20,40,0.55)', className: 'fx-shadow-svg' })}</div>
-            <div class="fx-tension"><div class="fx-tension-fill"></div></div>`;
-        battle.insertBefore(wrap, battle.firstChild);
-        const sh = wrap.querySelector('.fx-fish-shadow');
-        const fill = wrap.querySelector('.fx-tension-fill');
-
-        const order = ['D', 'C', 'B', 'A', 'S', 'SS', 'GOD'];
-        const wild = 0.6 + Math.max(0, order.indexOf(fish.rarity)) * 0.25;
-        let x = 0, y = 0, tx = 0, ty = 0, last = performance.now(), nextTurn = 0, face = 1;
-        const step = (now) => {
-            const dt = Math.min(50, now - last) / 16.667;
-            last = now;
-            if (now > nextTurn) {
-                tx = (Math.random() - 0.5) * 220;
-                ty = (Math.random() - 0.5) * 30;
-                nextTurn = now + (350 + Math.random() * 600) / wild;
-            }
-            const vx = (tx - x) * 0.06 * wild * dt;
-            x += vx;
-            y += (ty - y) * 0.05 * dt;
-            if (Math.abs(vx) > 0.3) face = vx > 0 ? -1 : 1;
-            const wob = Math.sin(now / 90) * 4;
-            sh.style.transform = `translate(${x}px, ${y}px) scaleX(${face}) rotate(${wob}deg)`;
-            // テンション表示（ゲージの赤ゾーンとの距離で上下）
-            if (typeof FishingGame !== 'undefined' && fill) {
-                const pos = FishingGame.gaugePosition || 0;
-                const tension = 1 - Math.min(1, Math.abs(pos - 50) / 50);
-                fill.style.width = `${Math.round(tension * 100)}%`;
-            }
-            // 魚が暴れたときに水しぶき
-            if (Math.abs(vx) > 3 && Math.random() < 0.08) {
-                const r = sh.getBoundingClientRect();
-                const s = this.screen().getBoundingClientRect();
-                this.addSplash(r.left + r.width / 2 - s.left, r.top + r.height * 0.4 - s.top, 4, 0.6);
-            }
-            this.shadowRaf = requestAnimationFrame(step);
-        };
-        this.shadowRaf = requestAnimationFrame(step);
-    },
-
-    stopFishShadow() {
-        if (this.shadowRaf) cancelAnimationFrame(this.shadowRaf);
-        this.shadowRaf = null;
     },
 
     // ----------------------------------------
@@ -399,14 +299,14 @@ const FxManager = {
     },
 
     // ----------------------------------------
-    // 音のON/OFFボタン（右上のヘルプの下）
+    // 音のON/OFFボタン（上部チップ列の右端）
     // ----------------------------------------
     setupMuteButton() {
-        const right = document.querySelector('#fishing-screen .floating-status-right');
+        const right = document.querySelector('#fishing-screen .rg-chips') || document.querySelector('#fishing-screen .floating-status-right');
         if (!right || typeof SoundManager === 'undefined') return;
         const btn = document.createElement('button');
         btn.id = 'sound-toggle-btn';
-        btn.className = 'floating-btn btn-help fx-sound-btn';
+        btn.className = 'rg-chip rg-chip-btn rg-chip-sound';
         const render = () => {
             btn.innerHTML = `<span class="material-icons">${SoundManager.muted ? 'volume_off' : 'volume_up'}</span>`;
             btn.setAttribute('aria-label', SoundManager.muted ? '効果音をオンにする' : '効果音をオフにする');
@@ -445,30 +345,58 @@ const FxManager = {
         };
     },
 
+    // 魚と自分のパワー差から、バトル中の竿のしなり方を決める
+    matchup(fish) {
+        try {
+            const ratio = fish.power / Math.max(1, GameState.getTotalPower());
+            if (ratio < 0.7) return 'easy';
+            if (ratio < 1.0) return 'even';
+            if (ratio < 1.5) return 'hard';
+            return 'reckless';
+        } catch (e) { return 'even'; }
+    },
+
+    rod(state, options) {
+        if (typeof RodAnimator !== 'undefined' && RodAnimator.els) RodAnimator.setState(state, options || {});
+    },
+
+    // 竿の演出は釣り画面にいる間だけ動かす
+    syncRodLoop() {
+        if (typeof RodAnimator === 'undefined') return;
+        const scr = this.screen();
+        if (scr && scr.classList.contains('active')) {
+            RodAnimator.start();
+            requestAnimationFrame(() => RodAnimator.resize());
+        } else {
+            RodAnimator.stop();
+        }
+    },
+
     wrapUI() {
         if (typeof UIManager === 'undefined') return;
         const U = UIManager;
 
+        if (typeof RodAnimator !== 'undefined') RodAnimator.init();
+        this.after(U, 'showScreen', function () { this.syncRodLoop(); });
+        this.syncRodLoop();
+
+        // 竿・糸・ウキの描画は RodAnimator に任せる（旧CSSの竿のクラスも残しておく）
+        this.after(U, 'updateRodView', function (state) {
+            const fish = typeof FishingGame !== 'undefined' ? FishingGame.currentFish : null;
+            const rarity = fish ? fish.rarity : 'D';
+            if (state === 'battle') {
+                this.rod('battle', { rarity, matchup: fish ? this.matchup(fish) : 'even' });
+            } else if (state === 'hit' || state === 'strike') {
+                this.rod(state, { rarity });
+            } else if (state) {
+                this.rod(state);
+            }
+            if (state === 'strike') this.sound('strike');
+        });
+
         this.after(U, 'showIdle', function () {
             this.setFocus(false);
-            this.stopFishShadow();
             if (typeof SoundManager !== 'undefined') SoundManager.stopReel();
-        });
-
-        this.after(U, 'showCasting', function () {
-            this.sound('cast');
-            this.castFlight();
-        });
-
-        this.after(U, 'showWaiting', function () {
-            this.sound('splash');
-            this.vibrate(12);
-            const p = this.bobberPoint();
-            if (p) {
-                this.addSplash(p.x, p.y, 16, 1);
-                this.addRipple(p.x, p.y, 1.2, 1);
-                setTimeout(() => this.addRipple(p.x, p.y, 0.9, 0.7), 180);
-            }
         });
 
         this.after(U, 'showNibble', function (scale = 1) {
@@ -479,34 +407,30 @@ const FxManager = {
         this.after(U, 'triggerBobberShake', function () {
             this.sound('nibble', { scale: this.nibbleScale });
             this.vibrate(8);
-            const p = this.bobberPoint();
-            if (p) this.addRipple(p.x, p.y, 0.6 * this.nibbleScale, 0.8);
+            if (typeof RodAnimator !== 'undefined') RodAnimator.nibble(this.nibbleScale || 1);
         });
 
         this.after(U, 'showHit', function () {
             this.sound('hit');
             this.vibrate([40, 30, 90]);
             this.hitBurst();
-            const p = this.bobberPoint();
-            if (p) {
-                this.addSplash(p.x, p.y + 10, 26, 1.4);
-                this.addRipple(p.x, p.y + 10, 1.8, 1);
-                setTimeout(() => this.addRipple(p.x, p.y + 10, 1.4, 0.8), 120);
-            }
         });
 
-        this.after(U, 'showGaugeBattle', function (fish) {
+        this.after(U, 'showGaugeBattle', function () {
             this.setFocus(true);
             if (typeof SoundManager !== 'undefined') SoundManager.startReel();
-            this.startFishShadow(fish);
+        });
+
+        this.after(U, 'updateGaugePosition', function (position) {
+            if (typeof RodAnimator !== 'undefined') RodAnimator.setGauge(position);
         });
 
         this.after(U, 'showCatchSuccess', function (fish) {
             this.setFocus(false);
-            this.stopFishShadow();
             if (typeof SoundManager !== 'undefined') SoundManager.stopReel();
             this.sound('success', { rarity: fish && fish.rarity });
             this.vibrate([20, 40, 20]);
+            this.rod('success', { rarity: fish ? fish.rarity : 'D', treasure: false });
             if (fish) this.enhanceCatchCard(fish);
         });
 
@@ -514,6 +438,7 @@ const FxManager = {
             this.setFocus(false);
             this.sound('success', { rarity: 'A' });
             this.vibrate([20, 40, 20]);
+            this.rod('success', { rarity: 'A', treasure: true });
             const card = document.querySelector('#result-overlay .result-card');
             if (card) { card.classList.add('fx-card-in'); this.confetti(card, 24); }
         });
@@ -524,9 +449,9 @@ const FxManager = {
 
         this.after(U, 'showCatchFailed', function (fish) {
             this.setFocus(false);
-            this.stopFishShadow();
             if (typeof SoundManager !== 'undefined') SoundManager.stopReel();
             this.sound('fail');
+            this.rod('fail');
             const icon = document.querySelector('#result-overlay .result-icon');
             if (icon && fish && typeof FishArt !== 'undefined' && FishArt.isFish(fish)) {
                 const holder = document.createElement('div');
@@ -540,11 +465,63 @@ const FxManager = {
             this.setFocus(false);
             if (typeof SoundManager !== 'undefined') SoundManager.stopReel();
             this.sound(String(message).indexOf('早') >= 0 ? 'early' : 'fail');
+            this.rod('fail');
         });
 
-        this.after(U, 'updateRodView', function (state) {
-            if (state === 'strike') this.sound('strike');
+        // 上部バー：ランクの進み具合
+        this.after(U, 'updateRankInfo', function () { this.renderRankBar(); });
+        // 下部HUD：餌スロットと竿の表示
+        this.after(U, 'updateBaitInfo', function () { this.renderBaitSlot(); });
+        this.after(U, 'updateRodInfo', function () {
+            this.renderRodBadge();
+            if (typeof RodAnimator !== 'undefined' && RodAnimator.els) RodAnimator.refreshSkin();
         });
+        this.renderRankBar();
+        this.renderBaitSlot();
+        this.renderRodBadge();
+    },
+
+    renderRankBar() {
+        const label = document.getElementById('fu-rank-label');
+        if (!label || typeof GameState === 'undefined') return;
+        const next = GameState.getNextRankExp ? GameState.getNextRankExp() : 0;
+        const pct = next ? Math.max(0, Math.min(100, Math.floor((GameState.exp / next) * 100))) : 0;
+        label.textContent = `RANK ${GameState.rank}`;
+        const bar = document.getElementById('fu-rank-bar');
+        if (bar) bar.style.width = `${pct}%`;
+        const txt = document.getElementById('fu-rank-pct');
+        if (txt) txt.textContent = `${pct}%`;
+    },
+
+    // 餌の表示を、ランクの文字と残り数の丸いスロットにする（タップで購入、左右で切り替え）
+    renderBaitSlot() {
+        const info = document.getElementById('bait-info');
+        if (!info || typeof GameState === 'undefined') return;
+        const bait = GAME_DATA.BAITS.find(b => b.id === GameState.baitType);
+        if (!bait) return;
+        const count = GameState.getCurrentBaitCount();
+        const label = info.querySelector('.bait-label-container');
+        if (label) {
+            const btn = document.createElement('button');
+            btn.className = 'rg-bait-slot selected';
+            btn.setAttribute('aria-label', `${bait.name}（タップで購入）`);
+            btn.innerHTML = `<span class="rg-bait-rank rank-${bait.rank}">${bait.rank}</span><span class="rg-bait-count">×${count === -1 ? '∞' : count}</span>`;
+            btn.addEventListener('click', () => UIManager.showBaitPurchaseDialog(bait.id));
+            label.replaceWith(btn);
+        }
+        const name = document.getElementById('fu-bait-name');
+        if (name) name.textContent = bait.name;
+    },
+
+    renderRodBadge() {
+        const info = document.getElementById('rod-info');
+        if (!info || typeof GameState === 'undefined' || info.querySelector('.rg-rod-preview')) return;
+        const stars = GameState.rodStars || 0;
+        const rod = GameState.getCurrentRod();
+        const preview = typeof RodAnimator !== 'undefined' ? RodAnimator.previewSvg('all', GameState.rodRankIndex) : '';
+        info.innerHTML = `${preview}
+            <span class="rod-name">${rod ? rod.name : ''}</span>
+            <span class="rg-rod-stars">${'★'.repeat(stars)}<span class="off">${'★'.repeat(Math.max(0, 5 - stars))}</span></span>`;
     },
 
     wrapGame() {
@@ -553,14 +530,12 @@ const FxManager = {
             if (FishingGame.isProcessing) return;
             const zone = UIManager.getGaugeZone(FishingGame.gaugePosition);
             if (typeof SoundManager !== 'undefined') SoundManager.stopReel();
-            this.stopFishShadow();
             this.sound('stop', { zone });
             this.vibrate(zone === 'red' ? [15, 30, 15] : 20);
             this.judgePopup(zone);
         });
         this.before(FishingGame, 'abort', function () {
             this.setFocus(false);
-            this.stopFishShadow();
             if (typeof SoundManager !== 'undefined') SoundManager.stopReel();
         });
     }
