@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="chinchiro.css">
     <link rel="stylesheet" href="fx.css">
+    <link rel="stylesheet" href="rogue-ui.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -59,35 +60,27 @@
             <div class="cloud cloud3"></div>
         </div>
 
-        <!-- フローティングステータス（左側） -->
-        <div class="floating-status floating-status-left">
-            <div class="status-pill">
-                <span class="status-icon"><span class="material-icons">paid</span></span>
-                <span id="money-display" class="status-value">0 G</span>
+        <!-- 上部バー（ランクの進み具合＋チップ列） -->
+        <div class="rg-hud-top">
+            <div class="rg-topbar">
+                <span id="fu-rank-label" class="rg-round">RANK 1</span>
+                <div class="rg-progress"><div id="fu-rank-bar" class="rg-progress-fill"></div></div>
+                <span id="fu-rank-pct" class="rg-progress-text">0%</span>
+                <span id="rank-display" hidden></span>
             </div>
-            <div class="status-pill">
-                <span class="status-icon"><span class="material-icons">phishing</span></span>
-                <span id="power-display" class="status-value">10</span>
+            <div class="rg-chips">
+                <span class="rg-chip rg-chip-money"><span class="material-icons">paid</span><span id="money-display">0 G</span></span>
+                <span class="rg-chip"><span class="material-icons">phishing</span><span id="power-display">10 P</span></span>
+                <span class="rg-chip"><span class="material-icons">set_meal</span><span id="inventory-count">0 匹</span></span>
+                <span class="rg-chip rg-chip-ticket"><span class="material-icons">confirmation_number</span><span id="gacha-ticket-display">0</span></span>
+                <button id="help-btn" class="rg-chip rg-chip-btn" aria-label="ヘルプ"><span class="material-icons">help_outline</span></button>
             </div>
-            <div class="status-pill">
-                <span class="status-icon"><span class="material-icons">set_meal</span></span>
-                <span id="inventory-count" class="status-value">0 匹</span>
-            </div>
-            <div class="status-pill">
-                <span class="status-icon"><span class="material-icons">confirmation_number</span></span>
-                <span id="gacha-ticket-display" class="status-value">0</span>
-            </div>
-
             <!-- 初心者ミッション表示 -->
             <div id="mission-display" class="mission-display">
                 <div class="mission-label">MISSION</div>
                 <div id="mission-text" class="mission-text">ミッション読み込み中...</div>
             </div>
         </div>
-
-
-
-
 
         <!-- メイン釣りエリア -->
         <main id="fishing-area" class="fishing-area">
@@ -102,34 +95,21 @@
             <div class="rod-line"></div>
         </div>
 
-        <!-- 右上ステータス (Help) -->
-        <div class="floating-status floating-status-right">
-            <button id="help-btn" class="floating-btn btn-help">
-                <span class="material-icons">help_outline</span>
-            </button>
-        </div>
+        <!-- 竿・糸・ウキの演出（js/RodAnimator.js が描く） -->
+        <svg id="rod-scene" class="rg-rod-scene" aria-hidden="true"></svg>
 
-
-
-        <!-- 中央下部HUD（餌・竿・町） -->
-        <div class="bottom-hud-center">
-            <!-- 町へボタン -->
-            <button id="shop-btn-top" class="floating-btn btn-town">
+        <!-- 下部HUD: 町へ（左下）・餌（中央）・竿（右下）を海の上に直接置く -->
+        <div class="rg-hud-bottom">
+            <button id="shop-btn-top" class="floating-btn btn-town rg-small-btn">
                 <span class="material-icons">holiday_village</span>
                 <span class="btn-label">町へ</span>
             </button>
-            <!-- 餌情報 -->
-            <div id="bait-status-display" class="bait-status-large">
-                <div id="bait-info" class="bait-value"></div>
+            <div id="bait-status-display" class="rg-hud-center">
+                <div id="bait-info" class="bait-value rg-bait-selector"></div>
+                <div id="fu-bait-name" class="rg-bait-total"></div>
             </div>
-            <!-- 装備中の竿 -->
-            <div id="rod-info" class="rod-badge">
+            <div id="rod-info" class="rod-badge rg-rod-badge">
                 <span class="rod-name">木の釣竿</span>
-                <span class="rod-stars"><span class="material-icons star-empty">star_border</span><span
-                        class="material-icons star-empty">star_border</span><span
-                        class="material-icons star-empty">star_border</span><span
-                        class="material-icons star-empty">star_border</span><span
-                        class="material-icons star-empty">star_border</span></span>
             </div>
         </div>
 
@@ -436,6 +416,7 @@
     <script src="js/DebugManager.js"></script>
     <script src="js/SoundManager.js"></script>
     <script src="js/FishArt.js"></script>
+    <script src="js/RodAnimator.js"></script>
     <script src="js/FxManager.js"></script>
     <script src="js/main.js"></script>
 </body>

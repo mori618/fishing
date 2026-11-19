@@ -1,0 +1,375 @@
+/* ========================================
+   rogue-ui.css - 釣り画面のUI（fish-rogue のレイアウトを移植）
+   上部: ランクの進み具合のバー＋チップ列 / 下部: 海の上に直接置くHUD
+   竿・糸・ウキは js/RodAnimator.js が #rod-scene に描く
+   ======================================== */
+
+#fishing-screen {
+    --fs-sm: 13px;
+    --fs-md: 15px;
+    --fs-lg: 20px;
+    --sp-1: 4px;
+}
+
+/* ---------- 旧UI（CSSの竿・DOMのウキ）は使わない ---------- */
+#fishing-screen .fishing-rod-view,
+#fishing-screen .water-surface {
+    display: none !important;
+}
+
+/* ---------- 上部バー ---------- */
+.rg-hud-top {
+    position: absolute;
+    top: calc(10px + env(safe-area-inset-top));
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(94vw, 440px);
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: opacity 0.35s ease;
+}
+
+.rg-topbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 14px;
+    color: var(--text-light);
+    background: linear-gradient(135deg, #a1887f 0%, #8d6e63 100%);
+    border: 3px solid #4e342e;
+    border-radius: 50px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.3);
+}
+
+.rg-round {
+    font-weight: 900;
+    font-size: var(--fs-md);
+    color: var(--accent-yellow);
+    text-shadow: 1px 1px 0 #4e342e;
+    white-space: nowrap;
+}
+
+.rg-progress {
+    position: relative;
+    flex: 1;
+    height: 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 6px;
+}
+
+.rg-progress-fill {
+    width: 0;
+    height: 100%;
+    background: linear-gradient(90deg, #fbbf24, #f59e0b);
+    border-radius: 6px;
+    transition: width 0.5s ease;
+}
+
+.rg-progress-text {
+    font-family: 'Roboto Mono', monospace;
+    font-size: var(--fs-md);
+    font-weight: 700;
+    white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* チップ（所持金・パワー・釣った数・チケット・ヘルプ・音） */
+.rg-chips {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 5px;
+}
+
+.rg-chip {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: var(--sp-1);
+    min-height: 30px;
+    padding: 2px 10px;
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 16px;
+    white-space: nowrap;
+}
+
+.rg-chip .material-icons {
+    font-size: var(--fs-md);
+}
+
+.rg-chip-money {
+    position: relative;
+    color: var(--accent-yellow);
+}
+
+.rg-chip-ticket .material-icons { color: #c4b5fd; }
+
+.rg-chip-btn {
+    min-width: 40px;
+    min-height: 36px;
+    padding: 2px 8px;
+    justify-content: center;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+/* ヘルプと音のボタンは右端に寄せる */
+#help-btn.rg-chip-btn {
+    margin-left: auto;
+}
+
+.rg-chip-btn:active {
+    transform: scale(0.94);
+}
+
+/* ミッション：チップの下に小さく */
+#fishing-screen .mission-display {
+    align-self: flex-start;
+    max-width: 260px;
+    margin-top: 0;
+    padding: 6px 10px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 215, 0, 0.55);
+    border-radius: 10px;
+    animation: none;
+}
+
+#fishing-screen .mission-label {
+    font-size: 9px;
+    margin-bottom: 2px;
+}
+
+#fishing-screen .mission-item-row {
+    font-size: 11.5px;
+    margin-bottom: 2px;
+}
+
+#fishing-screen .mission-icon-small {
+    font-size: 14px;
+    margin-right: 5px;
+}
+
+#fishing-screen .dynamic-mission-item {
+    font-size: 11px;
+    padding: 2px 0;
+}
+
+/* ---------- ロッドシーン ---------- */
+.rg-rod-scene {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+    pointer-events: none;
+    overflow: visible;
+}
+
+/* 案内文やゲージは竿より手前に出す */
+#fishing-screen .fishing-area {
+    z-index: 6;
+}
+
+/* ヒットの「！HIT!」はウキの真上に出す */
+#fishing-screen > .fx-hit-mark {
+    position: absolute;
+    z-index: 30;
+}
+
+/* ---------- 下部HUD（板をやめ、海の上に直接浮かべる） ---------- */
+.rg-hud-bottom {
+    position: absolute;
+    left: 50%;
+    bottom: calc(14px + env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    z-index: 100;
+    display: grid;
+    grid-template-columns: 64px 1fr 76px;
+    align-items: end;
+    width: min(96vw, 460px);
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+}
+
+.rg-hud-bottom > * {
+    pointer-events: auto;
+}
+
+.rg-small-btn {
+    width: 60px !important;
+    height: 56px !important;
+    min-width: 0 !important;
+}
+
+.rg-hud-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sp-1);
+}
+
+/* 餌：左右の切り替えボタン＋丸いスロット */
+.rg-bait-selector {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 10px !important;
+    font-size: inherit !important;
+    text-shadow: none !important;
+}
+
+.rg-bait-selector::before {
+    display: none !important;
+}
+
+.rg-bait-selector .selector-btn {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 50%;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+}
+
+.rg-bait-selector .selector-btn:active {
+    transform: scale(0.9);
+}
+
+.rg-bait-slot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 62px;
+    height: 62px;
+    padding: 0;
+    font-family: inherit;
+    background: rgba(28, 20, 16, 0.6);
+    border: 2px solid rgba(255, 255, 255, 0.45);
+    border-radius: 50%;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+    cursor: pointer;
+    transition: transform 0.15s ease;
+}
+
+.rg-bait-slot.selected {
+    background: rgba(78, 52, 46, 0.85);
+    border: 3px solid var(--accent-yellow);
+    box-shadow: 0 0 14px rgba(255, 215, 0, 0.6);
+}
+
+.rg-bait-slot:active {
+    transform: scale(0.92);
+}
+
+.rg-bait-rank {
+    font-size: var(--fs-lg);
+    font-weight: 900;
+    line-height: 1;
+    color: #fff;
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.6);
+}
+
+.rg-bait-rank.rank-C { color: #86efac; }
+.rg-bait-rank.rank-B { color: #93c5fd; }
+.rg-bait-rank.rank-A { color: #d8b4fe; }
+.rg-bait-rank.rank-S { color: #fde047; }
+
+.rg-bait-count {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.1;
+    color: #fff;
+}
+
+.rg-bait-total {
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+/* 竿：小さな絵＋名前＋星 */
+.rg-rod-badge {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    gap: 0 !important;
+    min-width: 0 !important;
+    padding: 4px 4px 3px !important;
+    background: rgba(0, 0, 0, 0.5) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 12px !important;
+}
+
+.rg-rod-badge .rg-rod-preview {
+    width: 60px;
+    height: 36px;
+}
+
+.rg-rod-badge .rod-name {
+    font-size: 10px !important;
+    color: #fff !important;
+    text-shadow: none !important;
+    letter-spacing: 0 !important;
+    white-space: nowrap;
+    max-width: 70px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rg-rod-stars {
+    font-size: 9px;
+    line-height: 1.2;
+    letter-spacing: 1px;
+    color: var(--accent-yellow);
+}
+
+.rg-rod-stars .off {
+    color: rgba(255, 255, 255, 0.25);
+}
+
+/* ---------- 集中モード：UIを控えめに ---------- */
+#fishing-screen.fx-focus .rg-hud-top { opacity: 0.45; }
+#fishing-screen.fx-focus .rg-hud-bottom { opacity: 0.6; }
+
+/* ---------- ヒット時の竿の揺れ ---------- */
+#rod-scene.rg-jolt {
+    animation: rg-jolt 0.35s ease-out;
+}
+
+@keyframes rg-jolt {
+    0% { transform: translate(0, 0); }
+    20% { transform: translate(-5px, 6px); }
+    40% { transform: translate(4px, -3px); }
+    60% { transform: translate(-3px, 3px); }
+    80% { transform: translate(2px, -1px); }
+    100% { transform: translate(0, 0); }
+}
+
+/* RodAnimator の「！」は FxManager の「！HIT!」と重なるので使わない */
+#rod-scene #rs-bang {
+    display: none;
+}
+
+/* 待機中の案内はウキと重ならないよう下寄せ。キャスト中は文字を出さず竿の動きを見せる */
+#fishing-screen .idle-state {
+    transform: translateY(24vh);
+}
+
+#fishing-screen .casting-state .instruction {
+    visibility: hidden;
+}
