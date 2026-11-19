@@ -464,8 +464,15 @@ const FxManager = {
         this.after(U, 'showMissed', function (message) {
             this.setFocus(false);
             if (typeof SoundManager !== 'undefined') SoundManager.stopReel();
-            this.sound(String(message).indexOf('早') >= 0 ? 'early' : 'fail');
-            this.rod('fail');
+            const early = String(message).indexOf('早') >= 0;
+            this.sound(early ? 'early' : 'fail');
+            if (early) {
+                // 早合わせ: ウキを竿先まで巻き取る
+                this.sound('strike');
+                this.rod('early');
+            } else {
+                this.rod('fail');
+            }
         });
 
         // 上部バー：ランクの進み具合

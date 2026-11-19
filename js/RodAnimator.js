@@ -27,7 +27,8 @@ const RodAnimator = {
             strike:  { angle: 0.10, bend: 0.50, slack: 0.0, dip: 42 },
             battle:  { angle: 0.26, bend: 0.45, slack: 0.0, dip: 42 },
             success: { angle: -0.10, bend: 0.20, slack: 0.0, dip: 0 },
-            fail:    { angle: 0.18, bend: 0.02, slack: 1.3, dip: 0 }
+            fail:    { angle: 0.18, bend: 0.02, slack: 1.3, dip: 0 },
+            early:   { angle: -0.05, bend: 0.12, slack: 0.0, dip: 0 }   // 早合わせ: 竿をあおってウキを回収する
         },
 
         // バネ（k = 硬さ、c = 減衰）
@@ -374,6 +375,19 @@ const RodAnimator = {
                 this.shadow.target = 0;
                 break;
 
+            case 'early':
+                // 合わせが早すぎた: 竿を手前にあおり、ウキを水面から抜いて竿先まで巻き取る
+                this._applyPose('early');
+                v.angle.v -= 3;
+                v.bend.v += 2;
+                this.shadow.target = 0;
+                this._ensureFloating();
+                this._splash(this.bobber.x, water.y, 6, 0.8);
+                this._ripple(this.bobber.x, water.y, 26);
+                this.bobber.mode = 'reel';
+                this.bobber.flight = { age: 0, life: 0.38, from: { x: this.bobber.x, y: this.bobber.y }, arc: this.layout.height * 0.06 };
+                break;
+
             case 'fail':
                 this._applyPose('fail');
                 // 負荷が抜けて竿が後ろへ跳ね返り、ウキだけが浮き上がる
@@ -643,6 +657,25 @@ const RodAnimator = {
             bob.x = f.from.x + (water.x - f.from.x) * u;
             bob.y = f.from.y + (water.y - f.from.y) * u - f.arc * 4 * u * (1 - u);
             if (u >= 1) this._land(true);
+        } else if (bob.mode === 'reel') {
+            // 竿先へ向かって巻き取られる（竿先は動いているので毎フレーム目標を取り直す）
+            const f = bob.flight;
+            f.age += dt;
+            const u = Math.min(1, f.age / f.life);
+            const e = 1 - Math.pow(1 - u, 2);
+            const toX = tip.x;
+            const toY = tip.y + cfg.hangLength;
+            bob.x = f.from.x + (toX - f.from.x) * e;
+            bob.y = f.from.y + (toY - f.from.y) * e - f.arc * 4 * u * (1 - u);
+            this.reelAngle += dt * 22;
+            if (u >= 1) {
+                bob.mode = 'hang';
+                bob.flight = null;
+                v.bobX.x = bob.x;
+                v.bobY.x = bob.y;
+                v.bobX.v = 0;
+                v.bobY.v = 0;
+            }
         } else {
             bob.x = water.x + v.sweep.x + Math.sin(this.time * 0.7) * 2 * calm;
             bob.y = water.y + Math.sin(this.time * 2.1) * 2.5 * calm + v.dip.x;
