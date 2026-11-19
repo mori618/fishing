@@ -25,6 +25,7 @@ const FxManager = {
         this.reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (typeof SoundManager !== 'undefined') SoundManager.init();
         this.setupWaterCanvas();
+        if (typeof RodRenderer !== 'undefined') RodRenderer.init();
         this.setupMuteButton();
         this.wrapUI();
         this.wrapGame();
@@ -43,6 +44,10 @@ const FxManager = {
         } catch (e) { /* ignore */ }
     },
 
+    rod(kind, power) {
+        if (typeof RodRenderer !== 'undefined') RodRenderer.impulse(kind, power);
+    },
+
     screen() {
         return document.getElementById('fishing-screen');
     },
@@ -58,6 +63,7 @@ const FxManager = {
     },
 
     rodTip() {
+        if (typeof RodRenderer !== 'undefined' && RodRenderer.tip && RodRenderer.tip.x) return { x: RodRenderer.tip.x, y: RodRenderer.tip.y };
         const shaft = document.querySelector('#fishing-rod-view .rod-shaft');
         const scr = this.screen();
         if (!shaft || !scr) return { x: this.W * 0.8, y: this.H * 0.6 };
@@ -223,12 +229,6 @@ const FxManager = {
         el.innerHTML = `<div class="bobber-body" style="background-color:${skin ? skin.bobberColor : '#ef4444'}"></div>`;
         scr.appendChild(el);
 
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        line.setAttribute('class', 'fx-cast-line');
-        line.innerHTML = '<path d="" />';
-        scr.appendChild(line);
-        const path = line.querySelector('path');
-
         const dur = 480;
         const start = performance.now();
         const peak = Math.min(from.y, to.y) - 160;
@@ -239,13 +239,9 @@ const FxManager = {
             const y = (1 - e) * (1 - e) * from.y + 2 * (1 - e) * e * peak + e * e * to.y;
             const sc = 1.3 - 0.5 * e;
             el.style.transform = `translate(${x - 12}px, ${y - 12}px) scale(${sc}) rotate(${k * 540}deg)`;
-            const cx = (from.x + x) / 2, cy = Math.min(from.y, y) - 40 * (1 - k);
-            path.setAttribute('d', `M ${from.x} ${from.y} Q ${cx} ${cy} ${x} ${y}`);
             if (k < 1) requestAnimationFrame(step);
             else {
                 el.remove();
-                line.classList.add('fade');
-                setTimeout(() => line.remove(), 300);
             }
         };
         requestAnimationFrame(step);
@@ -463,6 +459,7 @@ const FxManager = {
         this.after(U, 'showWaiting', function () {
             this.sound('splash');
             this.vibrate(12);
+            this.rod('land');
             const p = this.bobberPoint();
             if (p) {
                 this.addSplash(p.x, p.y, 16, 1);
@@ -478,6 +475,7 @@ const FxManager = {
 
         this.after(U, 'triggerBobberShake', function () {
             this.sound('nibble', { scale: this.nibbleScale });
+            this.rod('nibble', this.nibbleScale);
             this.vibrate(8);
             const p = this.bobberPoint();
             if (p) this.addRipple(p.x, p.y, 0.6 * this.nibbleScale, 0.8);
@@ -486,6 +484,7 @@ const FxManager = {
         this.after(U, 'showHit', function () {
             this.sound('hit');
             this.vibrate([40, 30, 90]);
+            this.rod('hit');
             this.hitBurst();
             const p = this.bobberPoint();
             if (p) {
@@ -527,6 +526,7 @@ const FxManager = {
             this.stopFishShadow();
             if (typeof SoundManager !== 'undefined') SoundManager.stopReel();
             this.sound('fail');
+            this.rod('snap');
             const icon = document.querySelector('#result-overlay .result-icon');
             if (icon && fish && typeof FishArt !== 'undefined' && FishArt.isFish(fish)) {
                 const holder = document.createElement('div');
@@ -543,7 +543,7 @@ const FxManager = {
         });
 
         this.after(U, 'updateRodView', function (state) {
-            if (state === 'strike') this.sound('strike');
+            if (state === 'strike') { this.sound('strike'); this.rod('strike'); }
         });
     },
 
@@ -555,6 +555,7 @@ const FxManager = {
             if (typeof SoundManager !== 'undefined') SoundManager.stopReel();
             this.stopFishShadow();
             this.sound('stop', { zone });
+            this.rod('stop');
             this.vibrate(zone === 'red' ? [15, 30, 15] : 20);
             this.judgePopup(zone);
         });

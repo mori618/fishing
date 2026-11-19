@@ -1,0 +1,413 @@
+/* ========================================
+   fishing-ui.css - 釣り画面UIの刷新（木札＋真鍮テーマ）
+   styles.css の後に読み込み、釣り画面だけを上書きする
+   ======================================== */
+
+#fishing-screen {
+    --fu-wood-1: #6d4c41;
+    --fu-wood-2: #4e342e;
+    --fu-wood-3: #3e2723;
+    --fu-brass: #d4a85a;
+    --fu-brass-d: #8a6a2f;
+    --fu-cream: #fff8e7;
+    --fu-panel: linear-gradient(180deg, rgba(109, 76, 65, 0.94) 0%, rgba(62, 39, 35, 0.94) 100%);
+    --fu-grain: repeating-linear-gradient(100deg, rgba(255, 255, 255, 0.035) 0 2px, rgba(0, 0, 0, 0) 2px 9px, rgba(0, 0, 0, 0.05) 9px 11px, rgba(0, 0, 0, 0) 11px 19px);
+}
+
+/* ---------- 竿：旧CSS版は非表示にし、canvas描画に置き換え ---------- */
+#fishing-screen .fishing-rod-view {
+    visibility: hidden !important;
+}
+
+.fx-rod-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* ---------- 上部ステータスバー ---------- */
+#fishing-screen .floating-status-left {
+    left: 8px !important;
+    right: 56px !important;
+    top: calc(8px + env(safe-area-inset-top)) !important;
+    transform: none !important;
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px !important;
+}
+
+#fishing-screen .status-pill {
+    height: 34px;
+    min-width: 0 !important;
+    padding: 0 8px 0 4px !important;
+    gap: 4px !important;
+    border-radius: 11px;
+    background: var(--fu-grain), var(--fu-panel);
+    border: 1.5px solid var(--fu-brass);
+    box-shadow: 0 3px 0 rgba(30, 15, 10, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    transform: none !important;
+}
+
+#fishing-screen .status-pill:hover {
+    transform: none !important;
+}
+
+#fishing-screen .status-pill .status-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.28);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
+    filter: none;
+}
+
+#fishing-screen .status-pill .status-icon .material-icons {
+    font-size: 17px;
+}
+
+#fishing-screen .status-pill:nth-child(1) .status-icon { color: #fcd34d; }
+#fishing-screen .status-pill:nth-child(2) .status-icon { color: #fb7185; }
+#fishing-screen .status-pill:nth-child(3) .status-icon { color: #7dd3fc; }
+#fishing-screen .status-pill:nth-child(4) .status-icon { color: #c4b5fd; }
+
+#fishing-screen .status-pill .status-value {
+    font-size: 13px !important;
+    color: var(--fu-cream);
+    letter-spacing: 0;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+    white-space: nowrap;
+}
+
+/* ランク表示（パワーの中に入っている） → 金の小札に */
+#fishing-screen #rank-display {
+    margin-right: 0 !important;
+    padding: 2px 5px;
+    border-radius: 5px;
+    background: linear-gradient(180deg, #fde68a, #d4a85a);
+    color: #3e2723 !important;
+    font-size: 9.5px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    line-height: 1.2;
+    white-space: nowrap;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+}
+
+#fishing-screen #rank-display span {
+    display: none;
+}
+
+/* ミッション：細い札にまとめる */
+#fishing-screen .mission-display {
+    flex-basis: 100%;
+    max-width: 240px !important;
+    margin-top: 2px !important;
+    padding: 6px 10px 6px 12px !important;
+    border: none !important;
+    border-left: 3px solid var(--fu-brass) !important;
+    border-radius: 4px 10px 10px 4px !important;
+    background: rgba(30, 18, 12, 0.55) !important;
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    box-shadow: none !important;
+}
+
+#fishing-screen .mission-label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--fu-brass);
+    margin-bottom: 2px;
+}
+
+#fishing-screen .mission-item-row {
+    font-size: 11.5px !important;
+    margin-bottom: 2px !important;
+    line-height: 1.35;
+    color: var(--fu-cream);
+}
+
+#fishing-screen .mission-icon-small {
+    font-size: 14px !important;
+    margin-right: 5px !important;
+    color: var(--fu-brass) !important;
+}
+
+#fishing-screen .dynamic-mission-item {
+    font-size: 11px;
+    padding: 2px 0;
+}
+
+/* 右上のボタン（ヘルプ・音） */
+#fishing-screen .floating-status-right {
+    top: calc(8px + env(safe-area-inset-top)) !important;
+    right: 8px !important;
+    gap: 6px !important;
+}
+
+#fishing-screen .floating-status-right .btn-help {
+    width: 44px !important;
+    min-width: 44px !important;
+    height: 44px !important;
+    margin-top: 0 !important;
+    padding: 0 !important;
+    border-radius: 12px !important;
+    background: var(--fu-grain), var(--fu-panel) !important;
+    border: 1.5px solid var(--fu-brass) !important;
+    box-shadow: 0 3px 0 rgba(30, 15, 10, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+    color: var(--fu-cream) !important;
+}
+
+#fishing-screen .floating-status-right .btn-help .material-icons {
+    font-size: 22px;
+}
+
+#fishing-screen .floating-status-right .btn-help:active {
+    transform: translateY(2px) !important;
+    box-shadow: 0 1px 0 rgba(30, 15, 10, 0.45) !important;
+}
+
+/* ---------- 下部ドック ---------- */
+#fishing-screen .bottom-hud-center {
+    bottom: calc(10px + env(safe-area-inset-bottom)) !important;
+    width: calc(100% - 16px) !important;
+    max-width: 520px;
+    padding: 8px 10px !important;
+    gap: 8px !important;
+    justify-content: space-between !important;
+    border-radius: 20px !important;
+    background: var(--fu-grain), linear-gradient(180deg, #7b5446 0%, #5d4037 45%, #4e342e 100%) !important;
+    border: 2px solid var(--fu-brass) !important;
+    box-shadow: 0 5px 0 #2b1a14, 0 10px 24px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+}
+
+#fishing-screen .bottom-hud-center::before,
+#fishing-screen .bottom-hud-center::after {
+    display: block !important;
+    top: 6px;
+    width: 5px;
+    height: 5px;
+    background: radial-gradient(circle at 35% 35%, #fff3c4, var(--fu-brass) 60%, var(--fu-brass-d));
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+}
+
+#fishing-screen .bottom-hud-center::before { left: 8px; }
+#fishing-screen .bottom-hud-center::after { right: 8px; }
+
+/* 町へボタン：朱塗りの札 */
+#fishing-screen .btn-town {
+    width: 56px !important;
+    min-width: 56px !important;
+    height: 56px !important;
+    padding: 0 !important;
+    border-radius: 16px !important;
+    background: linear-gradient(180deg, #ff8a65 0%, #e64a19 55%, #bf360c 100%) !important;
+    border: 1.5px solid #ffccbc !important;
+    box-shadow: 0 4px 0 #7f2408, inset 0 1px 0 rgba(255, 255, 255, 0.45) !important;
+    flex-shrink: 0;
+}
+
+#fishing-screen .btn-town .material-icons { font-size: 22px !important; }
+#fishing-screen .btn-town .btn-label { font-size: 10px !important; letter-spacing: 1px; }
+#fishing-screen .btn-town:active { transform: translateY(3px) !important; box-shadow: 0 1px 0 #7f2408 !important; }
+
+/* エサ／サオの共通パネル */
+#fishing-screen .bait-status-large,
+#fishing-screen .rod-badge {
+    position: relative;
+    height: 56px;
+    border: none !important;
+    border-radius: 12px !important;
+    background: rgba(20, 10, 6, 0.35) !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.45), 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+    padding: 14px 6px 4px !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+#fishing-screen .bait-status-large::before,
+#fishing-screen .rod-badge::before {
+    position: absolute;
+    top: 3px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    color: var(--fu-brass);
+    white-space: nowrap;
+}
+
+#fishing-screen .bait-status-large::before { content: 'エサ'; }
+#fishing-screen .rod-badge::before { content: 'サオ'; }
+
+#fishing-screen .bait-status-large {
+    flex: 1 1 auto;
+    min-width: 0 !important;
+}
+
+#fishing-screen .bait-value {
+    width: 100%;
+    justify-content: space-between;
+    gap: 2px !important;
+    font-size: 14px !important;
+    text-shadow: none;
+}
+
+#fishing-screen .bait-value::before { display: none; }
+
+#fishing-screen .bait-label-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 0;
+    flex: 1;
+    line-height: 1.15;
+}
+
+#fishing-screen .bait-name-text {
+    font-size: 12px !important;
+    font-weight: 800;
+    color: #fde68a;
+    max-width: 100% !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#fishing-screen .bait-count-text {
+    font-size: 11px !important;
+    font-family: 'Roboto Mono', monospace;
+    color: var(--fu-cream);
+    opacity: 0.85;
+}
+
+#fishing-screen .selector-btn {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at 35% 30%, #fff3c4, var(--fu-brass) 55%, var(--fu-brass-d)) !important;
+    border: none !important;
+    color: #3e2723 !important;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.45) !important;
+}
+
+#fishing-screen .selector-btn .material-icons { font-size: 20px !important; }
+#fishing-screen .selector-btn:active { transform: translateY(2px); box-shadow: none !important; }
+
+#fishing-screen .rod-badge {
+    flex: 0 0 auto;
+    min-width: 92px !important;
+    max-width: 118px;
+    align-items: center;
+}
+
+#fishing-screen .rod-badge .rod-name {
+    font-size: 11.5px !important;
+    color: var(--fu-cream) !important;
+    text-shadow: none !important;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+#fishing-screen .rod-badge .rod-stars { gap: 0 !important; }
+#fishing-screen .rod-badge .rod-stars .material-icons { font-size: 13px !important; }
+
+/* ---------- 待機中の案内 ---------- */
+#fishing-screen .idle-state .instruction {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 22px 10px 16px !important;
+    border-radius: 99px !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.55) !important;
+    background: rgba(15, 30, 50, 0.38) !important;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    box-shadow: 0 6px 18px rgba(0, 20, 40, 0.25) !important;
+    font-size: 15px !important;
+    letter-spacing: 2px;
+    animation: fu-hint 2.4s ease-in-out infinite !important;
+}
+
+#fishing-screen .idle-state .instruction::before {
+    content: 'touch_app';
+    font-family: 'Material Icons';
+    font-size: 22px;
+    letter-spacing: 0;
+    -webkit-font-feature-settings: 'liga';
+    font-feature-settings: 'liga';
+    animation: fu-tap 1.2s ease-in-out infinite;
+}
+
+#fishing-screen .idle-state .instruction::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 99px;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    animation: fu-ring 2.4s ease-out infinite;
+}
+
+@keyframes fu-hint {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+}
+
+@keyframes fu-tap {
+    0%, 100% { transform: translateY(0) scale(1); }
+    40% { transform: translateY(3px) scale(0.9); }
+}
+
+@keyframes fu-ring {
+    0% { opacity: 0.8; transform: scale(0.95); }
+    100% { opacity: 0; transform: scale(1.25); }
+}
+
+/* その他の案内文（キャスト中など）も同じ系統に */
+#fishing-screen .casting-state .instruction,
+#fishing-screen .waiting-state .instruction,
+#fishing-screen .missed-text {
+    border-radius: 99px !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.45) !important;
+    background: rgba(15, 30, 50, 0.38) !important;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    font-size: 14px !important;
+    letter-spacing: 2px;
+    padding: 8px 20px !important;
+}
+
+/* ---------- 集中モード：UIを控えめに ---------- */
+#fishing-screen .bottom-hud-center,
+#fishing-screen .floating-status-right {
+    transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+#fishing-screen.fx-focus .floating-status-left { opacity: 0.4 !important; }
+#fishing-screen.fx-focus .floating-status-right { opacity: 0.5; }
+#fishing-screen.fx-focus .bottom-hud-center {
+    opacity: 0.55;
+    transform: translateX(-50%) translateY(6px) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #fishing-screen .idle-state .instruction,
+    #fishing-screen .idle-state .instruction::before,
+    #fishing-screen .idle-state .instruction::after {
+        animation: none !important;
+    }
+}
