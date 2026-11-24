@@ -87,6 +87,7 @@ const RodAnimator = {
     bobber: { mode: 'hang', x: 0, y: 0, flight: null, reel: null },
     water: { x: 0, y: 0 },
     reelAngle: 0,
+    fishPoint: null,
     reelClick: 0,
     stars: 0,
     material: null,
@@ -512,6 +513,17 @@ const RodAnimator = {
             this.reelAngle += dt * (4 + 10 * closeness);
         }
 
+        // バトル中、糸は魚影（FxManager の .fx-fish-shadow）に向かう
+        this.fishPoint = null;
+        if (this.state === 'battle') {
+            const sh = document.querySelector('#fishing-area .fx-fish-shadow');
+            if (sh) {
+                const r = sh.getBoundingClientRect();
+                const sr = this.svg.getBoundingClientRect();
+                if (r.width) this.fishPoint = { x: r.left + r.width / 2 - sr.left, y: r.top + r.height / 2 - sr.top };
+            }
+        }
+
         // --- バネ ---
         Object.keys(cfg.springs).forEach(name => {
             const s = v[name];
@@ -672,8 +684,10 @@ const RodAnimator = {
 
         // --- 糸（常に竿先からウキの先端まで。たるみの分だけ下に垂れる） ---
         const top = this.CONFIG.bobR + this.CONFIG.stickH;
-        const endX = bob.x;
-        const endY = inWater ? Math.min(bob.y - top, water.y + this.CONFIG.waterClip) : bob.y - top;
+        const fp = this.fishPoint;
+        els.bobber.setAttribute('opacity', fp ? 0 : 1);
+        const endX = fp ? fp.x : bob.x;
+        const endY = fp ? fp.y : (inWater ? Math.min(bob.y - top, water.y + this.CONFIG.waterClip) : bob.y - top);
         const dist = Math.hypot(endX - tip.x, endY - tip.y);
         const sway = this.reducedMotion ? 0 : Math.sin(this.time * 1.1) * 4 * v.slack.x;
         const slack = bob.mode === 'float' || bob.mode === 'hang' ? v.slack.x : 0;
