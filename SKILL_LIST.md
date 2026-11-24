@@ -240,7 +240,7 @@ HIT受付時間（ウキが沈んでから逃げるまでの時間）を延長�
 | `rank_collector_c` | Cランク愛好家 | 1 | 2,000 | Cランク出現率 大幅UP | `rank_collector`: C x10 |
 | `rank_collector_b` | Bランク愛好家 | 2 | 6,000 | Bランク出現率 大幅UP | `rank_collector`: B x10 |
 | `rank_collector_a` | Aランク愛好家 | 3 | 20,000 | Aランク出現率 大幅UP | `rank_collector`: A x10 |
-| `rank_collector_s` | Sランク愛好家 | 4 | 60,000 | Sランク出現率 大幅UP | `rank_collector`: S x10 |
+| `rank_collector_s` | Sランク愛好家 極 | 4 | 60,000 | Sランク出現率 大幅UP | `rank_collector`: S x10 |
 
 ## ペナルティ系 (High Risk)
 強力な効果の代わりにペナルティがあります。

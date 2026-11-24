@@ -703,6 +703,16 @@ const ShopManager = {
         // サブタブを描画（これがないとタブ切り替えができなくなる）
         this.renderSubTabs(document.getElementById('shop-tabs-container'));
     },
+    // リサイクルに必要な個数（スキル「リサイクル強化」で軽減）
+    getRecycleRequirements() {
+        const red = (GameState.getRecycleCostReduction ? GameState.getRecycleCostReduction() : 0);
+        return {
+            same: Math.max(2, 5 - red),
+            up1: Math.max(3, 10 - red),
+            up2: Math.max(4, 30 - red)
+        };
+    },
+
     renderRecycleUI() {
         const container = document.getElementById('recycle-section');
         if (!container) return;
@@ -726,26 +736,29 @@ const ShopManager = {
 
         // 交換レート判定
         let exchangeResult = null;
-        if (selectedCount >= 30) {
-            exchangeResult = `Tier ${Math.min(3, selectedTier + 2)} 確定！`; // +2 rank
-        } else if (selectedCount >= 10) {
-            exchangeResult = `Tier ${Math.min(3, selectedTier + 1)} 確定！`; // +1 rank
-        } else if (selectedCount >= 5) {
-            exchangeResult = `Tier ${selectedTier} (同ランク) 確定`;
+        const req = this.getRecycleRequirements();
+        const gainBonus = GameState.getRecycleGainBonus ? GameState.getRecycleGainBonus() : 0;
+        const gainText = gainBonus > 0 ? ` (+${gainBonus}個おまけ)` : '';
+        if (selectedCount >= req.up2) {
+            exchangeResult = `Tier ${Math.min(3, selectedTier + 2)} 確定！${gainText}`; // +2 rank
+        } else if (selectedCount >= req.up1) {
+            exchangeResult = `Tier ${Math.min(3, selectedTier + 1)} 確定！${gainText}`; // +1 rank
+        } else if (selectedCount >= req.same) {
+            exchangeResult = `Tier ${selectedTier} (同ランク) 確定${gainText}`;
         }
 
-        const canExecute = !isMixed && (selectedCount === 5 || selectedCount === 10 || selectedCount === 30);
+        const canExecute = !isMixed && (selectedCount === req.same || selectedCount === req.up1 || selectedCount === req.up2);
 
         let warningMsg = '';
         if (isMixed) warningMsg = '<span style="color:red; font-size:0.8em;">異なるTierが混ざっています</span>';
-        else if (selectedCount > 0 && !canExecute) warningMsg = '<span style="color:orange; font-size:0.8em;">5個, 10個, 30個のいずれかを選択してください</span>';
+        else if (selectedCount > 0 && !canExecute) warningMsg = `<span style="color:orange; font-size:0.8em;">${req.same}個, ${req.up1}個, ${req.up2}個のいずれかを選択してください</span>`;
 
         let html = `
             <div class="recycle-header">
                 <h3>♻️ エコ・ボックス (確定的リサイクル)</h3>
                 <p class="recycle-desc">
                     同ランクのスキルを集めて上位スキルと交換！<br>
-                    5個: 同ランク1個 / 10個: 1ランクUP / 30個: 2ランクUP
+                    ${req.same}個: 同ランク1個 / ${req.up1}個: 1ランクUP / ${req.up2}個: 2ランクUP${gainBonus > 0 ? ` (獲得+${gainBonus})` : ''}
                 </p>
             </div>
             
@@ -756,9 +769,9 @@ const ShopManager = {
                     ${warningMsg}
                 </div>
                 <div class="recycle-actions">
-                    <button class="btn btn-mini" onclick="ShopManager.selectBulkRecycle(null, 5)">5個選択</button>
-                    <button class="btn btn-mini" onclick="ShopManager.selectBulkRecycle(null, 10)">10個選択</button>
-                    <button class="btn btn-mini" onclick="ShopManager.selectBulkRecycle(null, 30)">30個選択</button>
+                    <button class="btn btn-mini" onclick="ShopManager.selectBulkRecycle(null, ${req.same})">${req.same}個選択</button>
+                    <button class="btn btn-mini" onclick="ShopManager.selectBulkRecycle(null, ${req.up1})">${req.up1}個選択</button>
+                    <button class="btn btn-mini" onclick="ShopManager.selectBulkRecycle(null, ${req.up2})">${req.up2}個選択</button>
                     <button class="btn btn-mini" onclick="ShopManager.recycleSelectedSkills = []; ShopManager.renderShop();">クリア</button>
                 </div>
             </div>
@@ -926,8 +939,9 @@ const ShopManager = {
     // ========================================
     executeRecycle() {
         const count = this.recycleSelectedSkills.length;
-        if (count !== 5 && count !== 10 && count !== 30) {
-            UIManager.showMessage('スキルを5個、10個、または30個選択してください');
+        const req = this.getRecycleRequirements();
+        if (count !== req.same && count !== req.up1 && count !== req.up2) {
+            UIManager.showMessage(`スキルを${req.same}個、${req.up1}個、または${req.up2}個選択してください`);
             return;
         }
 
@@ -951,8 +965,8 @@ const ShopManager = {
 
         // 出力Tierの決定
         let outputTier = inputTier;
-        if (count === 10) outputTier = Math.min(3, inputTier + 1);
-        else if (count === 30) outputTier = Math.min(3, inputTier + 2);
+        if (count === req.up1) outputTier = Math.min(3, inputTier + 1);
+        else if (count === req.up2) outputTier = Math.min(3, inputTier + 2);
 
         // スキル消費
         this.recycleSelectedSkills.forEach(skillId => {
@@ -962,7 +976,11 @@ const ShopManager = {
         });
 
         // 抽選 (指定Tierの中からランダム)
-        const result = this.pickSkillByTier(outputTier, count === 5 ? null : 'upgrade'); // 同ランク交換の場合は完全ランダム、昇格時は...？
+        const result = this.pickSkillByTier(outputTier, count === req.same ? null : 'upgrade');
+        // リサイクル強化: 追加獲得
+        const results = [result];
+        const gainBonus = GameState.getRecycleGainBonus ? GameState.getRecycleGainBonus() : 0;
+        for (let i = 0; i < gainBonus; i++) results.push(this.pickSkillByTier(outputTier)); // 同ランク交換の場合は完全ランダム、昇格時は...？
         // ※ pickSkillByTierの実装に依存するが、ここでは単純に指定Tierから選ぶメソッドと仮定
         // 既存の pickSkillByTier は 'tier1', 'tier2' 文字列を受け取る実装が多いので確認が必要
         // 既存コードには pickSkillByTier が見当たらない（前回のview_fileで範囲外だったか、lottery内部で管理されているか）
@@ -974,9 +992,9 @@ const ShopManager = {
         UIManager.updateMoney();
 
         // 獲得処理
-        GameState.gainGachaResult(result);
+        results.forEach(r => GameState.gainGachaResult(r));
 
-        UIManager.showGachaResult([result], () => {
+        UIManager.showGachaResult(results, () => {
             ShopManager.renderShop();
         });
     },

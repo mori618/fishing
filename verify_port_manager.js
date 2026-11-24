@@ -4,7 +4,7 @@ global.window = {};
 
 global.GAME_DATA = {
     SHIPS: [
-        { id: 'ship_small', price: 1000, capacity: 5, catchAmountRange: [1, 2], maxRarity: 'C' }
+        { id: 'ship_small', price: 1000, capacity: 50, catchAmountRange: [1, 2], maxRarity: 'C' }
     ],
     FISH: [
         { id: 'fish_common', rarity: 'D', weight: 1.0 },

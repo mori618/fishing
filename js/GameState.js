@@ -1010,8 +1010,9 @@ const GameState = {
         let hasIt = false;
         this.getEffectsByType('auto_hit').forEach(effect => {
             hasIt = true;
-            if (effect.chance > bestChance) {
-                bestChance = effect.chance;
+            const c = (effect.chance !== undefined) ? effect.chance : (effect.value || 0);
+            if (c > bestChance) {
+                bestChance = c;
             }
         });
         return { hasIt, chance: bestChance };
@@ -1103,6 +1104,36 @@ const GameState = {
     // ========================================
     // 未登録魚出現率のスキル補正を取得 (倍率)
     // ========================================
+    // ========================================
+    // リサイクル強化 (recycle_boost)
+    // ========================================
+    // 汎用倍率: effect.value を掛け合わせる（未装備なら 1.0）。
+    getRecycleBoost() {
+        let boost = 1.0;
+        this.getEffectsByType('recycle_boost').forEach(effect => {
+            if (typeof effect.value === 'number') boost *= effect.value;
+        });
+        return boost;
+    },
+
+    // リサイクルに必要なスキル数の軽減量 (最大3)
+    getRecycleCostReduction() {
+        let r = 0;
+        this.getEffectsByType('recycle_boost').forEach(effect => {
+            r += effect.costReduction || 0;
+        });
+        return Math.min(3, r);
+    },
+
+    // リサイクル時の追加獲得スキル数 (最大3)
+    getRecycleGainBonus() {
+        let g = 0;
+        this.getEffectsByType('recycle_boost').forEach(effect => {
+            g += effect.gainBonus || 0;
+        });
+        return Math.min(3, g);
+    },
+
     getNewFishBonus() {
         let bonus = 1.0;
         this.getEffectsByType('new_fish_finder').forEach(effect => {

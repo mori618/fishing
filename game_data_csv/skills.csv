@@ -108,11 +108,11 @@ big_game_hunter_4,大物狙い 極,4,45000,big_game_boost,10,"上位ランクの
 rank_collector_a,Aランク愛好家,3,20000,rank_collector,,"Aランクの魚が釣れやすくなる",探索グループ,radar
 rank_collector_b,Bランク愛好家,2,6000,rank_collector,,"Bランクの魚が釣れやすくなる",探索グループ,radar
 rank_collector_c,Cランク愛好家,1,2000,rank_collector,,"Cランクの魚が釣れやすくなる",探索グループ,radar
-rank_collector_s,Sランク愛好家,4,100000,rank_collector,,"Sランクの魚が釣れやすくなる",探索グループ,radar
+rank_collector_s,Sランク愛好家 極,4,100000,rank_collector,,"Sランクの魚が釣れやすくなる",探索グループ,radar
 rank_license_a,Aランク免許,3,20000,rank_sniper,A,"Aランク以上の魚しか釣れなくなる",探索グループ,radar
 rank_license_b,Bランク免許,2,6000,rank_sniper,B,"Bランク以上の魚しか釣れなくなる",探索グループ,radar
 rank_license_c,Cランク免許,1,2000,rank_sniper,C,"Cランク以上の魚しか釣れなくなる",探索グループ,radar
-rank_license_s,Sランク免許,4,100000,rank_sniper,S,"Sランク以上の魚しか釣れなくなる",探索グループ,radar
+rank_license_s,Sランク免許 極,4,100000,rank_sniper,S,"Sランク以上の魚しか釣れなくなる",探索グループ,radar
 rare_up_1,レア魚UP I,1,600,rare_boost,0.2,"レア魚出現率+20%",探索グループ,radar
 rare_up_2,レア魚UP II,2,2400,rare_boost,0.5,"レア魚出現率+50%",探索グループ,radar
 rare_up_3,レア魚UP III,3,10000,rare_boost,1,"レア魚出現率+100%",探索グループ,radar

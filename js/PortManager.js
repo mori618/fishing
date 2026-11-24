@@ -51,6 +51,9 @@ const PortManager = {
 
         let timeProcessed = 0;
         let fishTimer = 0; // 内部タイマー
+        // ログ用に船情報をループ外でも参照できるようにする
+        const logShipId = GameState.port.ownedShipId;
+        const logShip = logShipId ? GAME_DATA.SHIPS.find(s => s.id === logShipId) : null;
 
         while (remainingDiff >= this.MINUTE_MS) {
             // 条件チェック
@@ -121,7 +124,7 @@ const PortManager = {
 
         // ログ出力
         if (consumedFuel > 0 || simulatedCatchCount > 0) {
-            console.log(`⚓ オフライン補償完了: 燃料消費 ${consumedFuel} (約${Math.ceil(consumedFuel / (ship ? (ship.fuelConsumption || 1) : 1))}分稼働), 漁獲 ${simulatedCatchCount}匹`);
+            console.log(`⚓ オフライン補償完了: 燃料消費 ${consumedFuel} (約${Math.ceil(consumedFuel / (logShip ? (logShip.fuelConsumption || 1) : 1))}分稼働), 漁獲 ${simulatedCatchCount}匹`);
             if (simulatedCatchCount > 0) {
                 UIManager.showMessage(`おかえりなさい！\n漁船が ${simulatedCatchCount} 匹の魚を獲ってきました！`);
             }
