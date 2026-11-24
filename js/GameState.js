@@ -1412,7 +1412,8 @@ const GameState = {
         this.inventory.push(fishData);
 
         // 図鑑データを更新
-        if (!this.encyclopedia[fish.id]) {
+        const isNewSpecies = !this.encyclopedia[fish.id];
+        if (isNewSpecies) {
             this.encyclopedia[fish.id] = { count: 0, hasSpecial: false, specialCount: 0 };
         }
         this.encyclopedia[fish.id].count++;
@@ -1432,6 +1433,11 @@ const GameState = {
         // 最大の魚を更新
         if (!this.biggestFish || fish.power > this.biggestFish.power) {
             this.biggestFish = { name: fish.name, power: fish.power };
+        }
+
+        // ミッション判定: 図鑑に新種登録
+        if (isNewSpecies && typeof MissionManager !== 'undefined') {
+            MissionManager.checkMission('new_fish', { fishId: fish.id });
         }
 
         // オートセーブ
@@ -1503,12 +1509,11 @@ const GameState = {
         this.money += totalEarned;
         this.totalMoneyEarned += totalEarned;
         this.totalCoinsEarned += totalEarned;
-        this.totalCoinsEarned += totalEarned;
         this.inventory = [];
 
         // ミッション判定: 魚を売る
         if (typeof MissionManager !== 'undefined') {
-            MissionManager.checkMission('sell_fish');
+            MissionManager.checkMission('sell_fish', { count: count, amount: totalEarned });
             // お金を稼ぐミッション用
             MissionManager.checkMission('money_earned', { amount: totalEarned });
         }
@@ -1735,6 +1740,11 @@ const GameState = {
 
         this.money -= cost;
         this.rodStars++;
+
+        // ミッション判定: 竿を強化
+        if (typeof MissionManager !== 'undefined') {
+            MissionManager.checkMission('rod_upgrade', { stars: this.rodStars });
+        }
 
         // オートセーブ
         SaveManager.save(this);

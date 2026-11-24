@@ -318,6 +318,7 @@ const SynthesisManager = {
         if (res.success) {
             UIManager.showMessage(`✨ 合成に成功しました！\n「${res.skill.name}」を獲得！`);
             this.resetSlots();
+            if (typeof MissionManager !== 'undefined') MissionManager.checkMission('synthesis', { skillId: res.skill && res.skill.id });
         } else {
             UIManager.showMessage(`❌ 合成に失敗しました: ${res.message}`);
         }

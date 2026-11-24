@@ -535,6 +535,11 @@ const FishingGame = {
     // ========================================
     hit() {
         this.state = 'hit';
+        // ミッション/コンボ用: ヒット開始時刻と直前バトル情報を初期化
+        this.hitStartedAt = Date.now();
+        this.lastReactionMs = null;
+        this.lastZone = null;
+        this.lastBattle = false;
         UIManager.showHit();
 
         if (this.isGachaMode) {
@@ -554,7 +559,9 @@ const FishingGame = {
                 console.log('🤖 Auto Hit 発動！');
                 UIManager.showMessage('🤖 Auto Hit!', 1000);
                 setTimeout(() => {
+                    this._autoHitting = true; // 反応速度ミッションの対象外にする
                     this.onClick(); // クリックした扱いにする
+                    this._autoHitting = false;
                 }, 200); // 少し遅延させて人間味（？）を出す
                 // returnはしない（タイマーセット後にクリックでクリアされる流れを維持）
             }
@@ -570,6 +577,7 @@ const FishingGame = {
 
         this.hitTimer = setTimeout(() => {
             console.log('⏰ ヒット窓口終了: 反応が遅かった');
+            MissionManager.checkMission('hit_missed');
             // 時間切れで逃げられた
             this.state = 'idle';
             UIManager.showMissed('反応が遅かった！魚に逃げられた...');
@@ -630,6 +638,8 @@ const FishingGame = {
 
             case 'hit':
                 // ヒット成功
+                // 反応速度を記録（自動ヒットは除外）
+                this.lastReactionMs = this._autoHitting ? null : (Date.now() - (this.hitStartedAt || Date.now()));
                 if (this.hitTimer) {
                     clearTimeout(this.hitTimer);
                     this.hitTimer = null;
@@ -782,6 +792,8 @@ const FishingGame = {
         }
 
         const config = GAME_DATA.GAUGE_CONFIG.zones[zone];
+        this.lastZone = zone;
+        this.lastBattle = true;
 
         // 捕獲確率を計算
         let catchRate;
@@ -1100,7 +1112,13 @@ const FishingGame = {
         MissionManager.checkMission('catch_success', {
             baitId: GameState.baitType,
             rarity: this.currentFish.rarity,
-            frequency: this.currentFish.frequency
+            frequency: this.currentFish.frequency,
+            fishId: this.currentFish.id,
+            hasTitle: !!this.currentFish.hasTitle,
+            catchCount: catchCount,
+            battle: !!this.lastBattle,
+            zone: this.lastZone || null,
+            reactionMs: this.lastReactionMs
         });
 
         // 餌を消費
@@ -1143,6 +1161,7 @@ const FishingGame = {
     // ========================================
     earlyClickFailed() {
         this.state = 'result';
+        MissionManager.checkMission('early_click');
 
         // 餌を消費
         if (GameState.baitType) {
@@ -1185,6 +1204,7 @@ const FishingGame = {
         this.cleanupTimers();
 
         this.state = 'result';
+        MissionManager.checkMission('catch_failed');
 
         // 餌を消費
         if (GameState.baitType) {

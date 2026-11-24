@@ -976,15 +976,11 @@ const ShopManager = {
         });
 
         // 抽選 (指定Tierの中からランダム)
-        const result = this.pickSkillByTier(outputTier, count === req.same ? null : 'upgrade');
+        const result = this.pickRecycleSkill(outputTier);
         // リサイクル強化: 追加獲得
         const results = [result];
         const gainBonus = GameState.getRecycleGainBonus ? GameState.getRecycleGainBonus() : 0;
-        for (let i = 0; i < gainBonus; i++) results.push(this.pickSkillByTier(outputTier)); // 同ランク交換の場合は完全ランダム、昇格時は...？
-        // ※ pickSkillByTierの実装に依存するが、ここでは単純に指定Tierから選ぶメソッドと仮定
-        // 既存の pickSkillByTier は 'tier1', 'tier2' 文字列を受け取る実装が多いので確認が必要
-        // 既存コードには pickSkillByTier が見当たらない（前回のview_fileで範囲外だったか、lottery内部で管理されているか）
-        // 下記で self implementation する
+        for (let i = 0; i < gainBonus; i++) results.push(this.pickRecycleSkill(outputTier));
 
         // 選択状態リセット
         this.recycleSelectedSkills = [];
@@ -994,13 +990,17 @@ const ShopManager = {
         // 獲得処理
         results.forEach(r => GameState.gainGachaResult(r));
 
+        // ミッション判定: リサイクル実行
+        MissionManager.checkMission('recycle', { count: count });
+
         UIManager.showGachaResult(results, () => {
             ShopManager.renderShop();
         });
     },
 
     // Tier指定でランダムなスキルを1つ選ぶ
-    pickSkillByTier(tierNum) {
+    // (旧名 pickSkillByTier は後段の同名メソッドに上書きされ常にTier1が出るバグだったため改名)
+    pickRecycleSkill(tierNum) {
         const pool = GAME_DATA.SKILLS.filter(s => s.tier === tierNum);
         if (pool.length === 0) return GAME_DATA.SKILLS[0]; // fallback
 
@@ -1082,6 +1082,9 @@ const ShopManager = {
             GameState.money -= moneyCost;
         }
         UIManager.updateStatus(); // お金・チケット表示更新
+
+        // ミッション判定: ガチャを引く
+        MissionManager.checkMission('gacha_draw', { count: count });
 
         // 消費後すぐにセーブ
         SaveManager.save(GameState);
@@ -1448,7 +1451,7 @@ const ShopManager = {
             UIManager.updateMoney();
 
             // 初心者ミッション判定: 餌を買う
-            MissionManager.checkMission('buy_bait');
+            MissionManager.checkMission('buy_bait', { count: totalQuantity });
         } else {
             UIManager.showMessage('お金が足りません！');
         }
@@ -1684,6 +1687,7 @@ const ShopManager = {
         if (earned > 0) {
             // 音を鳴らす？
             UIManager.showMessage(`水揚げ完了！ ${earned.toLocaleString()} G を獲得しました`);
+            MissionManager.checkMission('port_collect', { amount: earned });
             this.renderPort();
             const moneyDisplay = document.getElementById('port-money-display');
             if (moneyDisplay) moneyDisplay.textContent = `${GameState.money.toLocaleString()} G`;

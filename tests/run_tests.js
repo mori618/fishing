@@ -84,5 +84,17 @@ try {
     process.exit(1);
 }
 
+// Load additional test files (新ミッション / 新スキル)
+['test_new_missions.js', 'test_new_skills.js'].forEach(name => {
+    const fp = path.join(__dirname, name);
+    if (!fs.existsSync(fp)) return;
+    try {
+        vm.runInContext(fs.readFileSync(fp, 'utf8'), sandbox, { filename: name });
+    } catch (e) {
+        console.error(`Error running ${name}:`, e);
+        process.exit(1);
+    }
+});
+
 // Run the tests
 framework.runAll();

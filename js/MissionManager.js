@@ -77,13 +77,38 @@ const MissionManager = {
     // ========================================
     DYNAMIC_TEMPLATES: {
         A: [
-            { id: 'fish_count', textFn: (t) => `魚を${t}匹釣る`, minTarget: 5, maxTarget: 10, baseReward: 500 }
+            { id: 'fish_count', textFn: (t) => `魚を${t}匹釣る`, minTarget: 5, maxTarget: 10, baseReward: 500 },
+            // --- 多様化ミッション (A: 手軽な行動系) ---
+            { id: 'sell_count', textFn: (t) => `魚を${t}匹売る`, minTarget: 8, maxTarget: 20, baseReward: 500,
+              onEvent: (type, d) => (type === 'sell_fish' ? (d.count || 0) : 0) },
+            { id: 'new_fish', textFn: (t) => `図鑑に新しい魚を${t}種登録する`, minTarget: 1, maxTarget: 3, baseReward: 900, expMult: 3,
+              onEvent: (type) => (type === 'new_fish' ? 1 : 0) },
+            { id: 'buy_bait_count', textFn: (t) => `餌を${t}個購入する`, minTarget: 10, maxTarget: 30, baseReward: 500,
+              onEvent: (type, d) => (type === 'buy_bait' ? (d.count || 0) : 0) },
+            { id: 'gacha_draw', textFn: (t) => `ガチャを${t}回引く`, minTarget: 1, maxTarget: 3, baseReward: 700, expMult: 3,
+              onEvent: (type, d) => (type === 'gacha_draw' ? (d.count || 0) : 0) },
+            { id: 'equip_skill_dyn', textFn: (t) => `スキルを${t}回装備する`, minTarget: 1, maxTarget: 3, baseReward: 500, expMult: 2,
+              onEvent: (type) => (type === 'equip_skill' ? 1 : 0) }
         ],
         B: [
             { id: 'rank_fish', textFn: (t, p) => `${p}ランクの魚を${t}匹釣る`, minTarget: 5, maxTarget: 10, baseReward: 800, rankList: ['D', 'C', 'B', 'A', 'S'] },
             { id: 'freq_common', textFn: (t) => `たくさん釣れる魚を${t}匹釣る`, minTarget: 5, maxTarget: 10, baseReward: 600, freq: 'たくさん釣れる' },
             { id: 'freq_uncommon', textFn: (t) => `あまり釣れない魚を${t}匹釣る`, minTarget: 2, maxTarget: 5, baseReward: 1000, freq: 'あまり釣れない' },
-            { id: 'freq_rare', textFn: (t) => `なかなか釣れない魚を${t}匹釣る`, minTarget: 1, maxTarget: 3, baseReward: 1500, freq: 'なかなか釣れない' }
+            { id: 'freq_rare', textFn: (t) => `なかなか釣れない魚を${t}匹釣る`, minTarget: 1, maxTarget: 3, baseReward: 1500, freq: 'なかなか釣れない' },
+            // --- 多様化ミッション (B: 魚・釣り方指定系) ---
+            { id: 'title_fish', textFn: (t) => `ヌシ（称号付きの魚）を${t}匹釣る`, minTarget: 1, maxTarget: 1, baseReward: 2000, expMult: 20, ticketMult: 3,
+              onEvent: (type, d) => (type === 'catch_success' && d.hasTitle ? 1 : 0) },
+            { id: 'rank_min', textFn: (t, p) => `${p}ランク以上の魚を${t}匹釣る`, minTarget: 2, maxTarget: 5, baseReward: 1000, rankList: ['C', 'B', 'A'],
+              onEvent: (type, d, m) => (type === 'catch_success' && MissionManager.rankIndex(d.rarity) >= MissionManager.rankIndex(m.param) ? 1 : 0) },
+            { id: 'specific_fish', textFn: (t, p, label) => `「${label}」を${t}匹釣る`, minTarget: 2, maxTarget: 4, baseReward: 900, expMult: 2,
+              makeParam: () => MissionManager.pickSpecificFish(),
+              onEvent: (type, d, m) => (type === 'catch_success' && d.fishId === m.param ? 1 : 0) },
+            { id: 'battle_win', textFn: (t) => `ゲージバトルで${t}匹釣り上げる`, minTarget: 2, maxTarget: 5, baseReward: 900, expMult: 2,
+              onEvent: (type, d) => (type === 'catch_success' && d.battle ? 1 : 0) },
+            { id: 'multi_catch', textFn: (t) => `ダブルキャッチ（2匹以上同時）を${t}回出す`, minTarget: 1, maxTarget: 2, baseReward: 1500, expMult: 8, ticketMult: 2,
+              isAvailable: () => (GameState.getMultiCatch2Chance() + GameState.getMultiCatch3Chance()) > 0 ||
+                  GameState.getEffectsByType('master_angler_special').length > 0,
+              onEvent: (type, d) => (type === 'catch_success' && (d.catchCount || 1) >= 2 ? 1 : 0) }
         ],
         C: [
             { id: 'fever', textFn: () => 'フィーバーに入る', minTarget: 1, maxTarget: 1, baseReward: 1000 },
@@ -91,8 +116,55 @@ const MissionManager = {
             { id: 'earn_money', textFn: (t) => `${t.toLocaleString()}コイン手に入れる`, minTarget: 500, maxTarget: 10000, baseReward: 500, valueOptions: [500, 1000, 2000, 5000, 10000] },
             { id: 'red_gauge', textFn: (t) => `赤ゲージで${t}回止める`, minTarget: 3, maxTarget: 5, baseReward: 700 },
             { id: 'use_bait', textFn: (t, p) => `${p}ランクの餌を${t}個使用する`, minTarget: 5, maxTarget: 10, baseReward: 600, rankList: ['D', 'C', 'B', 'A', 'S'] },
-            { id: 'complete_missions', textFn: (t) => `ミッションを${t}個達成する`, minTarget: 3, maxTarget: 5, baseReward: 1200 }
+            { id: 'complete_missions', textFn: (t) => `ミッションを${t}個達成する`, minTarget: 3, maxTarget: 5, baseReward: 1200 },
+            // --- 多様化ミッション (C: 腕前・経済・施設利用系) ---
+            { id: 'perfect_catch', textFn: (t) => `赤ゲージ(Perfect)で止めて${t}匹釣り上げる`, minTarget: 2, maxTarget: 4, baseReward: 1200, expMult: 4, ticketMult: 2,
+              onEvent: (type, d) => (type === 'catch_success' && d.zone === 'red' ? 1 : 0) },
+            { id: 'streak_catch', textFn: (t) => `失敗せずに${t}匹連続で釣り上げる`, minTarget: 4, maxTarget: 8, baseReward: 1200, expMult: 2, ticketMult: 2,
+              resetOn: ['catch_failed', 'early_click', 'hit_missed'],
+              onEvent: (type) => (type === 'catch_success' ? 1 : 0) },
+            { id: 'no_early', textFn: (t) => `早合わせ（フライング）せずに${t}匹連続で釣る`, minTarget: 6, maxTarget: 12, baseReward: 1000, expMult: 1.5,
+              resetOn: ['early_click'],
+              onEvent: (type) => (type === 'catch_success' ? 1 : 0) },
+            { id: 'quick_catch', textFn: (t) => `ウキが沈んで0.5秒以内に合わせて${t}匹釣り上げる`, minTarget: 2, maxTarget: 5, baseReward: 1100, expMult: 3, ticketMult: 2,
+              onEvent: (type, d) => (type === 'catch_success' && typeof d.reactionMs === 'number' && d.reactionMs <= 500 ? 1 : 0) },
+            { id: 'big_sale', textFn: (t) => `一度の売却で${t.toLocaleString()}G以上売る`, minTarget: 300, maxTarget: 3000, baseReward: 900, valueOptions: [300, 600, 1000, 2000, 3000], expMult: 0.2, mode: 'max',
+              onEvent: (type, d) => (type === 'sell_fish' ? (d.amount || 0) : 0) },
+            { id: 'sell_money', textFn: (t) => `魚を売って合計${t.toLocaleString()}G稼ぐ`, minTarget: 500, maxTarget: 5000, baseReward: 700, valueOptions: [500, 1000, 2000, 3000, 5000], expMult: 0.1,
+              onEvent: (type, d) => (type === 'sell_fish' ? (d.amount || 0) : 0) },
+            { id: 'upgrade_rod', textFn: (t) => `釣り竿を${t}回強化する`, minTarget: 1, maxTarget: 2, baseReward: 1000, expMult: 5, ticketMult: 2,
+              isAvailable: () => GameState.rodStars < 5,
+              onEvent: (type) => (type === 'rod_upgrade' ? 1 : 0) },
+            { id: 'casino_win', textFn: (t) => `カジノ（チンチロ）で${t}回勝つ`, minTarget: 1, maxTarget: 3, baseReward: 900, expMult: 3,
+              onEvent: (type, d) => (type === 'casino_play' && d.won ? 1 : 0) },
+            { id: 'port_collect', textFn: (t) => `港の漁船から水揚げを${t}回受け取る`, minTarget: 1, maxTarget: 2, baseReward: 900, expMult: 4,
+              isAvailable: () => !!(GameState.port && GameState.port.ownedShipId),
+              onEvent: (type) => (type === 'port_collect' ? 1 : 0) },
+            { id: 'synthesize', textFn: (t) => `スキル合成を${t}回成功させる`, minTarget: 1, maxTarget: 1, baseReward: 1000, expMult: 10, ticketMult: 2,
+              onEvent: (type) => (type === 'synthesis' ? 1 : 0) },
+            { id: 'recycle', textFn: (t) => `エコ・ボックスでリサイクルを${t}回行う`, minTarget: 1, maxTarget: 1, baseReward: 800, expMult: 10,
+              onEvent: (type) => (type === 'recycle' ? 1 : 0) }
         ]
+    },
+
+    // ========================================
+    // 多様化ミッション用ヘルパー
+    // ========================================
+    rankIndex(r) {
+        return ['D', 'C', 'B', 'A', 'S', 'SS', 'GOD'].indexOf(r);
+    },
+
+    // 「特定の魚を釣る」ミッションの対象を選ぶ（図鑑登録済み＝出会える魚を優先）
+    pickSpecificFish() {
+        const all = (GAME_DATA && GAME_DATA.FISH) ? GAME_DATA.FISH : [];
+        const seen = all.filter(f => GameState.encyclopedia && GameState.encyclopedia[f.id] && f.rarity !== 'SS');
+        // 簡単に出会えない魚は避ける（A以上は除外。除外後が空なら図鑑登録済み全体、それも空ならDランク）
+        let pool = seen.filter(f => this.rankIndex(f.rarity) <= 2);
+        if (pool.length === 0) pool = seen;
+        if (pool.length === 0) pool = all.filter(f => f.rarity === 'D');
+        if (pool.length === 0) return { param: null, label: '魚' };
+        const f = pool[Math.floor(Math.random() * pool.length)];
+        return { param: f.id, label: f.name };
     },
 
     // ========================================
@@ -236,15 +308,24 @@ const MissionManager = {
     },
 
     generateMission(slot) {
-        const templates = this.DYNAMIC_TEMPLATES[slot];
-        const template = templates[Math.floor(Math.random() * templates.length)];
+        const allTemplates = this.DYNAMIC_TEMPLATES[slot];
+        // 現在のプレイ状況で達成可能なテンプレートのみ抽選対象にする
+        const templates = allTemplates.filter(t => !t.isAvailable || t.isAvailable());
+        const pool = templates.length > 0 ? templates : allTemplates;
+        const template = pool[Math.floor(Math.random() * pool.length)];
 
         let baseTarget;
         let param = null;
+        let paramLabel = null;
 
         // 特定のテンプレート用のパラメータ生成
         if (template.valueOptions) {
             baseTarget = template.valueOptions[Math.floor(Math.random() * template.valueOptions.length)];
+        } else if (template.makeParam) {
+            const made = template.makeParam();
+            param = made.param;
+            paramLabel = made.label;
+            baseTarget = Math.floor(Math.random() * (template.maxTarget - template.minTarget + 1)) + template.minTarget;
         } else if (template.rankList) {
             param = template.rankList[Math.floor(Math.random() * template.rankList.length)];
             baseTarget = Math.floor(Math.random() * (template.maxTarget - template.minTarget + 1)) + template.minTarget;
@@ -268,7 +349,14 @@ const MissionManager = {
             finalTarget = Math.round(baseTarget * powerScale * 1.5 * targetModifier);
         }
 
-        const text = template.textFn(finalTarget, param);
+        // 「一度の売却でNG」型は金額そのものが目標値なのでスケーリングはコイン系と同様に強めに
+        if (template.mode === 'max' || template.id === 'sell_money') {
+            finalTarget = Math.round(baseTarget * powerScale * 1.5 * targetModifier);
+        }
+        // 1回で達成する系は目標1を下回らないように
+        if (template.maxTarget === 1) finalTarget = 1;
+
+        const text = template.textFn(finalTarget, param, paramLabel);
 
         // 報酬計算（ランク依存）
         // 目標数はパワー依存(feasibility)、報酬はランク依存(User Request)
@@ -281,11 +369,11 @@ const MissionManager = {
         const scaledRewardValue = baseRewardValue * rankMultiplier * rewardModifier;
 
         const reward = isTicket
-            ? { type: 'ticket', value: Math.max(1, Math.round(rewardModifier)) } // チケットはmodifierのみ
+            ? { type: 'ticket', value: Math.max(1, Math.round(rewardModifier * (template.ticketMult || 1))) } // チケットはmodifier(+難易度倍率)
             : { type: 'money', value: Math.round(scaledRewardValue) };
 
         // 経験値報酬 (難易度/目標数に依存)
-        const expReward = Math.floor(finalTarget * 10 * powerScale); // 簡易計算
+        const expReward = Math.floor(finalTarget * 10 * powerScale * (template.expMult || 1)); // 簡易計算
 
         return {
             templateId: template.id,
@@ -293,6 +381,7 @@ const MissionManager = {
             target: finalTarget,
             current: 0,
             param: param,
+            paramLabel: paramLabel,
             reward: reward,
             exp: expReward
         };
@@ -308,7 +397,35 @@ const MissionManager = {
 
             let progress = 0;
 
-            switch (mission.templateId) {
+            const tpl = this.findTemplate(mission.templateId);
+
+            // 連続系ミッション: 失敗イベントで進捗リセット
+            if (tpl && tpl.resetOn && tpl.resetOn.includes(type)) {
+                if (mission.current > 0) {
+                    mission.current = 0;
+                    UIManager.updateMissionUI();
+                    SaveManager.save(GameState);
+                }
+                return;
+            }
+
+            if (tpl && tpl.onEvent) {
+                // データ駆動型（多様化ミッション）
+                progress = tpl.onEvent(type, data, mission) || 0;
+                if (tpl.mode === 'max') {
+                    // 「一度に○○」型: 最大値を記録し、目標以上なら即達成
+                    if (progress > mission.current) {
+                        mission.current = Math.min(progress, mission.target);
+                        if (mission.current >= mission.target) {
+                            this.completeDynamicMission(slot);
+                        } else {
+                            UIManager.updateMissionUI();
+                            SaveManager.save(GameState);
+                        }
+                    }
+                    return;
+                }
+            } else switch (mission.templateId) {
                 case 'fish_count':
                     if (type === 'catch_success') progress = 1;
                     break;
@@ -350,6 +467,14 @@ const MissionManager = {
                 }
             }
         });
+    },
+
+    findTemplate(id) {
+        for (const slot of ['A', 'B', 'C']) {
+            const t = this.DYNAMIC_TEMPLATES[slot].find(x => x.id === id);
+            if (t) return t;
+        }
+        return null;
     },
 
     completeDynamicMission(slot) {

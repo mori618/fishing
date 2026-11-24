@@ -485,6 +485,10 @@ const CasinoManager = {
         }
 
         GameState.money += moneyChange;
+        // ミッション判定: カジノで勝負した
+        if (typeof MissionManager !== 'undefined') {
+            MissionManager.checkMission('casino_play', { won: moneyChange > 0, amount: moneyChange });
+        }
         this.updateChinchiroUI();
         UIManager.updateMoney(); // Global UI update
         SaveManager.saveGame(); // Auto-save
