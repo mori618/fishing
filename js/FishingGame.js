@@ -399,6 +399,16 @@ const FishingGame = {
         this.currentFish = this.selectFish();
         console.log('🐟 抽選された魚:', this.currentFish.name);
 
+        // 予兆の目: レア魚の気配を事前に知らせ、ヒット受付時間を延長
+        this.omenHitBonus = 0;
+        if (!this.isGachaMode) {
+            const omen = GameState.getOmenInfo(this.currentFish);
+            if (omen) {
+                this.omenHitBonus = omen.hitWindowBonus;
+                UIManager.showMessage(omen.message, 2000);
+            }
+        }
+
         // 待機時間を計算
         let waitTime;
         if (this.isGachaMode) {
@@ -571,12 +581,13 @@ const FishingGame = {
         const config = GAME_DATA.FISHING_CONFIG;
         const rarityBase = config.hitWindowByRarity[this.currentFish.rarity] || config.hitWindowTime;
         const multiplier = GameState.getHitWindowMultiplier();
-        const finalHitWindow = rarityBase * multiplier;
+        const finalHitWindow = rarityBase * multiplier * (1 + (this.omenHitBonus || 0));
 
         console.log(`⏱ ヒット窓口: レア度ベース ${rarityBase}ms × 倍率 ${multiplier} = ${finalHitWindow}ms`);
 
         this.hitTimer = setTimeout(() => {
             console.log('⏰ ヒット窓口終了: 反応が遅かった');
+            GameState.registerCatchResult(false);
             MissionManager.checkMission('hit_missed');
             // 時間切れで逃げられた
             this.state = 'idle';
@@ -720,7 +731,9 @@ const FishingGame = {
 
         // スキルによる減速
         const slowBonus = GameState.getGaugeSlowBonus();
-        this.gaugeSpeed = config.baseSpeed * speedMultiplier * (1 - slowBonus);
+        // スリル・ゲージ: 速度アップと引き換えに赤ゾーン拡大
+        const thrill = GameState.getThrillGauge();
+        this.gaugeSpeed = config.baseSpeed * speedMultiplier * (1 - slowBonus) * (1 + thrill.speedUp);
 
         // 赤ゾーンの幅：パワー差が小さいほど広い
         let redZoneWidth = config.redZoneWidthMin +
@@ -728,7 +741,7 @@ const FishingGame = {
 
         // テクニシャンスキルの反映
         const redZoneBonus = GameState.getRedZoneBonus();
-        redZoneWidth *= (1 + redZoneBonus);
+        redZoneWidth *= (1 + redZoneBonus + thrill.redUp);
         redZoneWidth = Math.min(redZoneWidth, 40); // 最大幅を制限
 
         // UIにゲージを表示
@@ -986,6 +999,19 @@ const FishingGame = {
             }
         }
 
+        // 連続成功カウンタ更新 (コンボ / ゾーン突入 / リベンジ)
+        GameState.registerCatchResult(true, { battle: !!this.lastBattle, zone: this.lastZone || null });
+        if (GameState.getComboSellBonus() > 0 && GameState.comboCount >= 3) {
+            UIManager.showMessage(`🔥 ${GameState.comboCount}連続！ 売値+${Math.round(GameState.getComboSellBonus() * 100)}%`, 1200);
+        }
+
+        // おまけ釣り: 別種の魚がもう1匹
+        const bonusFish = GameState.rollBonusFish(this.currentFish);
+        if (bonusFish) {
+            GameState.addFish(bonusFish);
+            UIManager.showMessage(`🎁 おまけで${bonusFish.name}も釣れた！`, 2500);
+        }
+
         // ========================================
         // 追加ドロップ抽選 (チケット、コイン、スキル)
         // ========================================
@@ -1161,6 +1187,7 @@ const FishingGame = {
     // ========================================
     earlyClickFailed() {
         this.state = 'result';
+        GameState.registerCatchResult(false);
         MissionManager.checkMission('early_click');
 
         // 餌を消費
@@ -1204,6 +1231,7 @@ const FishingGame = {
         this.cleanupTimers();
 
         this.state = 'result';
+        GameState.registerCatchResult(false);
         MissionManager.checkMission('catch_failed');
 
         // 餌を消費

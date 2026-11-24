@@ -82,6 +82,12 @@ const GameState = {
 
     // 動的ミッションデータ
     dynamicMissions: null,   // { A: {...}, B: {...}, C: {...} }
+    // --- 遊びスキル用の一時カウンタ（セーブしない・起動ごとにリセット） ---
+    comboCount: 0,        // 連続成功数 (連勝コンボ)
+    flowStacks: 0,        // 赤ゾーン連続成功数 (ゾーン突入)
+    revengeStacks: 0,     // 連続失敗数 (リベンジ・フィッシング)
+    lastSellRoulette: null, // 直近の売値ルーレット結果 {mult}
+    _debugHour: null,     // テスト用: 時間帯の強制指定
     dynamicMissionCompletedCount: 0, // 達成ミッション数（C枠の「ミッションをN個達成する」用）
 
     biggestFish: null,
@@ -386,6 +392,8 @@ const GameState = {
 
         // ランクボーナス (Rank Bonus) - 加算倍率
         multiplier += this.getRankPowerBonus();
+        // ゾーン突入 (赤ゾーン連続成功)
+        multiplier += this.getFlowPowerBonus();
         const overdriveEffects = this.getEffectsByType('overdrive');
         overdriveEffects.forEach(effect => {
             multiplier += effect.power;
@@ -672,6 +680,10 @@ const GameState = {
         // 動的補正を加算
         bonus += this.getDynamicSellMultiplier();
 
+        // 遊びスキル: 連勝コンボ / 時の釣り人(昼)
+        bonus += this.getComboSellBonus();
+        bonus += this.getTimeAnglerBonus('day');
+
         // ハードモード補正 (売値8倍)
         if (this.getEffectsByType('hard_mode').length > 0) {
             multiplier *= 8.0;
@@ -694,6 +706,8 @@ const GameState = {
         this.getEffectsByType('master_angler').forEach(effect => {
             bonus += effect.catch;
         });
+        // リベンジ・フィッシング
+        bonus += this.getRevengeCatchBonus();
         return bonus;
     },
 
@@ -731,6 +745,9 @@ const GameState = {
                 bonus += (bait.rareBoost || 0);
             }
         }
+
+        // 時の釣り人 (夕)
+        bonus += this.getTimeAnglerBonus('evening');
 
         return bonus;
     },
@@ -771,6 +788,8 @@ const GameState = {
         this.getEffectsByType('new_fish_finder').forEach(effect => {
             reduction -= effect.waitIncrease;
         });
+        // 時の釣り人 (朝)
+        reduction += this.getTimeAnglerBonus('morning');
         // 最大100%カット（念のためキャップ）
         return Math.min(reduction, 0.95); // 95%まで
     },
@@ -839,6 +858,9 @@ const GameState = {
 
         // 動的補正を加算
         totalMultiplier += this.getDynamicTitleChance();
+
+        // 時の釣り人 (夜): ヌシ出現率アップ
+        totalMultiplier += this.getTimeAnglerBonus('night');
 
         return totalMultiplier;
     },
@@ -1104,6 +1126,142 @@ const GameState = {
     // ========================================
     // 未登録魚出現率のスキル補正を取得 (倍率)
     // ========================================
+    // ========================================
+    // 遊びスキル群 (おまけ釣り / コンボ / 時の釣り人 / スリル / 予兆 / ルーレット / ゾーン / リベンジ)
+    // ========================================
+    _rankIdx(r) {
+        return ['D', 'C', 'B', 'A', 'S', 'SS', 'GOD'].indexOf(r);
+    },
+
+    // 釣りの結果を記録（コンボ・ゾーン・リベンジの内部カウンタ更新）
+    // info: { battle: bool, zone: 'red'|'green'|'white'|null }
+    registerCatchResult(success, info = {}) {
+        if (success) {
+            this.comboCount++;
+            this.revengeStacks = 0;
+            if (info.battle) {
+                if (info.zone === 'red') this.flowStacks++;
+                else this.flowStacks = 0; // 赤以外で止めたら途切れる
+            }
+        } else {
+            this.comboCount = 0;
+            this.flowStacks = 0;
+            this.revengeStacks++;
+        }
+    },
+
+    // 連勝コンボ: 現在の売値ボーナス (例: 0.1 = +10%)
+    getComboSellBonus() {
+        let bonus = 0;
+        this.getEffectsByType('combo_boost').forEach(e => {
+            bonus += e.perStack * Math.min(this.comboCount, e.maxStacks);
+        });
+        return bonus;
+    },
+
+    // ゾーン突入: 現在の釣りパワー倍率ボーナス
+    getFlowPowerBonus() {
+        let bonus = 0;
+        this.getEffectsByType('flow_state').forEach(e => {
+            bonus += e.perStack * Math.min(this.flowStacks, e.maxStacks);
+        });
+        return bonus;
+    },
+
+    // リベンジ・フィッシング: 現在のゲージ捕獲率ボーナス
+    getRevengeCatchBonus() {
+        let bonus = 0;
+        this.getEffectsByType('revenge').forEach(e => {
+            bonus += e.perStack * Math.min(this.revengeStacks, e.maxStacks);
+        });
+        return bonus;
+    },
+
+    // スリル・ゲージ: ゲージ速度アップ率と赤ゾーン拡大率の合計
+    getThrillGauge() {
+        const r = { speedUp: 0, redUp: 0 };
+        this.getEffectsByType('thrill_gauge').forEach(e => {
+            r.speedUp += e.speedUp;
+            r.redUp += e.redUp;
+        });
+        return r;
+    },
+
+    // 時間帯: 'morning'(5-10) / 'day'(10-17) / 'evening'(17-20) / 'night'(20-5)
+    getTimeBand(hour) {
+        if (hour === undefined || hour === null) {
+            hour = (this._debugHour !== null && this._debugHour !== undefined) ? this._debugHour : new Date().getHours();
+        }
+        if (hour >= 5 && hour < 10) return 'morning';
+        if (hour >= 10 && hour < 17) return 'day';
+        if (hour >= 17 && hour < 20) return 'evening';
+        return 'night';
+    },
+
+    // 時の釣り人: 現在の時間帯に応じた効果値 (kind: 'morning'|'day'|'evening'|'night')
+    // 夜(ヌシ出現率)は他より大きく、値の3倍を返す
+    getTimeAnglerBonus(kind) {
+        if (this.getTimeBand() !== kind) return 0;
+        let v = 0;
+        this.getEffectsByType('time_angler').forEach(e => { v += e.value; });
+        return kind === 'night' ? v * 3 : v;
+    },
+
+    // おまけ釣り: 成功時にランダムで別種の魚を返す (なければ null)
+    // rng はテスト用に差し替え可能
+    rollBonusFish(fish, rng = Math.random) {
+        if (!fish || fish.isTreasure) return null;
+        let chance = 0;
+        this.getEffectsByType('bonus_fish').forEach(e => { chance += e.chance; });
+        chance = Math.min(chance, 0.8);
+        if (chance <= 0 || rng() >= chance) return null;
+
+        const maxIdx = this._rankIdx(fish.rarity);
+        const pool = GAME_DATA.FISH.filter(f => f.id !== fish.id && this._rankIdx(f.rarity) >= 0 && this._rankIdx(f.rarity) <= maxIdx);
+        if (pool.length === 0) return null;
+        const total = pool.reduce((sum, f) => sum + (f.weight || 1), 0);
+        let r = rng() * total;
+        for (const f of pool) {
+            r -= (f.weight || 1);
+            if (r < 0) return { ...f };
+        }
+        return { ...pool[pool.length - 1] };
+    },
+
+    // 売値ルーレット: 結果 { mult } を返す (装備していなければ null)
+    spinSellRoulette(rng = Math.random) {
+        const effects = this.getEffectsByType('sell_roulette');
+        if (effects.length === 0) return null;
+        // 複数装備時は期待値の最も高いものを採用
+        const ev = e => e.outcomes.reduce((s, o) => s + o[0] * o[1], 0);
+        const best = effects.reduce((a, b) => (ev(b) > ev(a) ? b : a));
+        let r = rng();
+        let mult = best.outcomes[best.outcomes.length - 1][1];
+        for (const [chance, m] of best.outcomes) {
+            r -= chance;
+            if (r < 0) { mult = m; break; }
+        }
+        return { mult };
+    },
+
+    // 予兆の目: 抽選された魚に応じた予兆情報 { message, hitWindowBonus } (なければ null)
+    getOmenInfo(fish) {
+        if (!fish || fish.isTreasure) return null;
+        const effects = this.getEffectsByType('omen');
+        if (effects.length === 0) return null;
+        const best = effects.reduce((a, b) => (b.hitWindowBonus > a.hitWindowBonus ? b : a));
+
+        const rankOk = this._rankIdx(fish.rarity) >= this._rankIdx(best.minRank);
+        const titleOk = !!(best.showTitle && fish.hasTitle);
+        if (!rankOk && !titleOk) return null;
+
+        let message;
+        if (titleOk) message = '👑 ヌシの気配がする…！！';
+        else if (best.showRank) message = `✨ ${fish.rarity}ランクの気配がする…`;
+        else message = '✨ 何か大物の気配がする…';
+        return { message, hitWindowBonus: best.hitWindowBonus };
+    },
+
     // ========================================
     // リサイクル強化 (recycle_boost)
     // ========================================
@@ -1504,6 +1662,16 @@ const GameState = {
         for (const fish of this.inventory) {
             const finalPrice = Math.floor(fish.price * (1 + priceBonus));
             totalEarned += finalPrice;
+        }
+
+        // 売値ルーレット
+        this.lastSellRoulette = null;
+        if (count > 0) {
+            const spin = this.spinSellRoulette();
+            if (spin) {
+                this.lastSellRoulette = spin;
+                totalEarned = Math.floor(totalEarned * spin.mult);
+            }
         }
 
         this.money += totalEarned;

@@ -1468,7 +1468,9 @@ const ShopManager = {
         }
 
         const earned = GameState.sellAllFish();
-        UIManager.showMessage(`魚${count}匹を売却して¥${earned.toLocaleString()}を獲得！`);
+        const roulette = GameState.lastSellRoulette;
+        const rouletteText = roulette ? `\n🎰 売値ルーレット x${roulette.mult}！` : '';
+        UIManager.showMessage(`魚${count}匹を売却して¥${earned.toLocaleString()}を獲得！${rouletteText}`);
         UIManager.updateMoney();
         UIManager.updateInventory();
         // ショップを再描画して購入ボタンを更新
