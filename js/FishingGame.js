@@ -415,8 +415,10 @@ const FishingGame = {
             waitTime = baseWaitTime * (1 - waitTimeReduction) * (1 - patienceReduction);
         }
 
-        // キャストアニメーション後に待機状態へ
-        setTimeout(() => {
+        // キャストアニメーション後に待機状態へ（abort/cleanupTimersで取り消せるよう保持する）
+        clearTimeout(this.castTimer);
+        this.castTimer = setTimeout(() => {
+            this.castTimer = null;
             this.state = 'waiting';
             UIManager.showWaiting();
 
@@ -1243,6 +1245,8 @@ const FishingGame = {
     // タイマー・アニメーションのクリーンアップ
     // ========================================
     cleanupTimers() {
+        clearTimeout(this.castTimer);
+        this.castTimer = null;
         clearTimeout(this.waitTimer);
         clearTimeout(this.nibbleTimer);
         clearTimeout(this.hitTimer);

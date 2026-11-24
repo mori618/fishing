@@ -1405,9 +1405,7 @@ const ShopManager = {
             const count = GameState.getEquippedSkillCount(skillId);
             UIManager.showMessage(`${skill.name}を装備しました！(計${count}個)`);
             this.renderShop();
-
-            // 初心者ミッション判定: スキルを装備する
-            MissionManager.checkMission('equip_skill');
+            // ミッション判定 'equip_skill' は GameState.equipSkill 内で発火済み（二重カウント防止）
         } else {
             // 失敗理由を簡易表示 (スロット一杯など)
             if (GameState.equippedSkills.length >= GameState.getSkillSlots()) {
