@@ -161,18 +161,17 @@ describe('Multi-Catch Skills', () => {
 
     it('should calculate Dual Catcher chance correctly', () => {
         GameState.equippedSkills = ['dual_catcher_1'];
-        expect(GameState.getMultiCatch2Chance()).toBe(0.10);
+        expect(GameState.getMultiCatch2Chance()).toBe(0.20);
 
         GameState.equippedSkills = ['dual_catcher_2'];
-        expect(GameState.getMultiCatch2Chance()).toBe(0.25);
+        expect(GameState.getMultiCatch2Chance()).toBe(0.35);
 
-        // Multiple skills
+        // Multiple skills (data: dual_catcher_1=0.20, _2=0.35, _3=0.50)
         GameState.equippedSkills = ['dual_catcher_1', 'dual_catcher_2'];
-        expect(GameState.getMultiCatch2Chance()).toBe(0.35); // 0.10 + 0.25
+        expect(GameState.getMultiCatch2Chance()).toBe(0.55); // 0.20 + 0.35
 
-        // Cap at 1.0 (though technically 0.35 is low, just verifying logic)
-        // If we have enough to exceed 1.0
-        GameState.equippedSkills = ['dual_catcher_3', 'dual_catcher_3', 'dual_catcher_1']; // 0.5 + 0.5 + 0.1 = 1.1 -> 1.0
+        // Cap at 1.0 when the sum exceeds 1.0
+        GameState.equippedSkills = ['dual_catcher_3', 'dual_catcher_3', 'dual_catcher_1']; // 0.5 + 0.5 + 0.2 = 1.2 -> 1.0
         expect(GameState.getMultiCatch2Chance()).toBe(1.0);
     });
 
@@ -181,7 +180,7 @@ describe('Multi-Catch Skills', () => {
         expect(GameState.getMultiCatch3Chance()).toBe(0.05);
 
         GameState.equippedSkills = ['triple_catcher_3'];
-        expect(GameState.getMultiCatch3Chance()).toBe(0.30);
+        expect(GameState.getMultiCatch3Chance()).toBe(0.20);
     });
 
 });

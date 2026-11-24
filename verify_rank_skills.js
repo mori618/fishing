@@ -43,8 +43,8 @@ global.SaveManager = {
 };
 
 // Load Game Sources
-const gameDataPath = path.resolve('/Users/mori/Desktop/メモ/fishing/data/gameData.js');
-const gameStatePath = path.resolve('/Users/mori/Desktop/メモ/fishing/js/GameState.js');
+const gameDataPath = path.resolve(__dirname, 'data/gameData.js');
+const gameStatePath = path.resolve(__dirname, 'js/GameState.js');
 
 const gameDataContent = fs.readFileSync(gameDataPath, 'utf8');
 const gameStateContent = fs.readFileSync(gameStatePath, 'utf8');

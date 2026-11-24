@@ -44,50 +44,50 @@ describe('# Gacha System Logic', () => {
 
 
 describe('# Mission System Logic', () => {
-    // Reset GameState and MissionManager before each test if possible,
-    // or manually reset relevant variables.
-    GameState.currentMissionIndex = 0;
-    GameState.missionProgress = 0;
+    // 初心者ミッションは beginnerMissionCompleted（完了ID配列）で状態管理されている。
+    // 各テストの前提として完了済みIDを明示的にセットする。
+    const isDone = (id) => GameState.beginnerMissionCompleted.includes(id);
 
     it('Should start with the first mission (help)', () => {
-        const text = MissionManager.getCurrentMissionText();
-        expect(text.includes('ヘルプ')).toBe(true);
+        GameState.beginnerMissionCompleted = [];
+        const texts = MissionManager.getCurrentMissionTexts();
+        expect(texts[0].includes('ヘルプ')).toBe(true);
     });
 
     it('Should complete "help" mission on help_click', () => {
-        GameState.currentMissionIndex = 0;
+        GameState.beginnerMissionCompleted = [];
         MissionManager.checkMission('help_click');
-        expect(GameState.currentMissionIndex).toBe(1);
-        expect(MissionManager.getCurrentMissionText().includes('1匹釣る')).toBe(true);
+        expect(isDone('help')).toBe(true);
+        expect(MissionManager.getCurrentMissionTexts()[0].includes('1匹釣ろう')).toBe(true);
     });
 
     it('Should complete "catch_1" mission on catch_success', () => {
-        GameState.currentMissionIndex = 1;
+        GameState.beginnerMissionCompleted = ['help'];
         MissionManager.checkMission('catch_success');
-        expect(GameState.currentMissionIndex).toBe(2);
-        expect(MissionManager.getCurrentMissionText().includes('街へ行く')).toBe(true);
+        expect(isDone('catch_1')).toBe(true);
+        expect(MissionManager.getCurrentMissionTexts()[0].includes('街へ行こう')).toBe(true);
     });
 
     it('Should complete "go_town" mission on go_town', () => {
-        GameState.currentMissionIndex = 2;
+        GameState.beginnerMissionCompleted = ['help', 'catch_1'];
         MissionManager.checkMission('go_town');
-        expect(GameState.currentMissionIndex).toBe(3);
+        expect(isDone('go_town')).toBe(true);
     });
 
     it('Should complete "buy_bait" mission on buy_bait', () => {
-        GameState.currentMissionIndex = 3;
+        GameState.beginnerMissionCompleted = ['help', 'catch_1', 'go_town', 'sell_fish'];
         MissionManager.checkMission('buy_bait');
-        expect(GameState.currentMissionIndex).toBe(4); // To catch_with_bait
+        expect(isDone('buy_bait')).toBe(true);
     });
 
     it('Should NOT complete "catch_with_bait" if bait is D-rank', () => {
-        GameState.currentMissionIndex = 4;
+        GameState.beginnerMissionCompleted = ['help', 'catch_1', 'go_town', 'sell_fish', 'buy_bait'];
         MissionManager.checkMission('catch_success', { baitId: 'bait_d' });
-        expect(GameState.currentMissionIndex).toBe(4);
+        expect(isDone('catch_with_bait')).toBe(false);
     });
 
     it('Should complete "catch_with_bait" if bait is NOT D-rank', () => {
-        GameState.currentMissionIndex = 4;
+        GameState.beginnerMissionCompleted = ['help', 'catch_1', 'go_town', 'sell_fish', 'buy_bait'];
 
         // Mock UIManager.showMessage to avoid error
         const originalShowMessage = UIManager.showMessage;
@@ -95,32 +95,34 @@ describe('# Mission System Logic', () => {
 
         MissionManager.checkMission('catch_success', { baitId: 'bait_c' });
 
-        expect(GameState.currentMissionIndex).toBe(5);
+        expect(isDone('catch_with_bait')).toBe(true);
         expect(GameState.getSkillCount('power_up_1') > 0).toBe(true);
 
         UIManager.showMessage = originalShowMessage; // Restore
     });
 
     it('Should track progress for "catch_3" mission', () => {
-        GameState.currentMissionIndex = 6;
-        GameState.missionProgress = 0;
+        // catch_3 以外の初心者ミッションを完了済みにして、catch_3 を唯一のアクティブにする
+        GameState.beginnerMissionCompleted = MissionManager.MISSIONS
+            .map(m => m.id).filter(id => id !== 'catch_3');
+        GameState.beginnerMissionProgress = {};
 
         // Mock UIManager.showMessage to avoid error
         const originalShowMessage = UIManager.showMessage;
         UIManager.showMessage = () => { };
 
         MissionManager.checkMission('catch_success');
-        expect(GameState.missionProgress).toBe(1);
-        expect(GameState.currentMissionIndex).toBe(6);
+        expect(GameState.beginnerMissionProgress['catch_3']).toBe(1);
+        expect(GameState.beginnerMissionCompleted.includes('catch_3')).toBe(false);
 
         MissionManager.checkMission('catch_success');
-        expect(GameState.missionProgress).toBe(2);
+        expect(GameState.beginnerMissionProgress['catch_3']).toBe(2);
 
         // Mock GameState.gachaTickets to check reward
         const initialTickets = GameState.gachaTickets;
 
         MissionManager.checkMission('catch_success');
-        expect(GameState.currentMissionIndex).toBe(7); // Completed
+        expect(GameState.beginnerMissionCompleted.includes('catch_3')).toBe(true); // Completed
         expect(GameState.gachaTickets).toBe(initialTickets + 5);
 
         UIManager.showMessage = originalShowMessage;

@@ -21,6 +21,10 @@ global.GameState = {
         stock: [],
         lastProcessTime: Date.now()
     },
+    getShipFuelEfficiency: () => 0, // エコ航行スキル未装備
+    getShipIntervalMultiplier: () => 1.0, // 間隔短縮スキル未装備
+    getShipAmountBonus: () => ({ min: 0, max: 0 }), // 漁獲量ボーナス未装備
+    hasPerpetualEngine: () => false, // 永久機関未装備
     encyclopedia: {
         'fish_common': { caught: 1 },
         'fish_rare': { caught: 0 } // Not caught yet
