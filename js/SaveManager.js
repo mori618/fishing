@@ -14,9 +14,6 @@ const SaveManager = {
             saveDate: new Date().toISOString(),
             player: {
                 money: 0,
-                baitCount: 0,
-                baitCount: 0,
-                baitType: null,
                 selectedSkin: 'skin_default'
             },
             rod: {
@@ -63,12 +60,9 @@ const SaveManager = {
                 saveDate: new Date().toISOString(),
                 player: {
                     money: gameState.money,
-                    baitCount: gameState.baitCount,
-                    // baitTypeなど他のプロパティも必要に応じて保存
-                    // baitInventoryも保存した方が安全
-                    baitInventory: { ...gameState.baitInventory },
-                    baitInventory: { ...gameState.baitInventory },
-                    baitType: gameState.baitType,
+                    // 餌は1種類: 所持数と1投の使用数（旧 baitInventory/baitType は読み込み時のみ移行に使用）
+                    baitStock: gameState.baitStock,
+                    baitUseCount: gameState.baitUseCount,
                     selectedSkin: gameState.selectedSkin,
                     selectedSky: gameState.selectedSky,
                     skillSets: [...(gameState.skillSets || [])]

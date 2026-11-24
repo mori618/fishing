@@ -76,7 +76,7 @@ const methodsToCheck = [
     'getBirdEventBonus',
     'getCurrentBaitCount',
     'switchBait',
-    'useBait',
+    'commitBait',
     'getCurrentSkin',
     'equipSkin',
     'unlockSkinByRodId',
@@ -111,15 +111,15 @@ try {
     console.log('✅ getBoatEventBonus() OK');
 
     // Test Bait Methods
-    GameState.baitType = 'bait_c';
-    GameState.baitInventory['bait_c'] = 10;
+    GameState.baitUseCount = 1;
+    GameState.baitStock = 10;
     const count = GameState.getCurrentBaitCount();
     assert.strictEqual(count, 10, 'getCurrentBaitCount should return 10');
     console.log('✅ getCurrentBaitCount() OK');
 
-    GameState.useBait(true);
-    assert.strictEqual(GameState.baitInventory['bait_c'], 9, 'useBait should decrease count');
-    console.log('✅ useBait() OK');
+    GameState.commitBait();
+    assert.strictEqual(GameState.baitStock, 9, 'commitBait should decrease stock');
+    console.log('✅ commitBait() OK');
 
     // Test Skin Methods
     const skin = GameState.getCurrentSkin();

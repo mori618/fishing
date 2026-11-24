@@ -15,7 +15,7 @@ global.GAME_DATA = {
     SKILLS: [
         { id: 'price_up_1', effect: { type: 'price_boost', value: 0.1 } }
     ],
-    BAITS: [] // Required for getRareBonus
+    BAIT_CONFIG: { starterStock: 0, maxStock: 99999, unitPrice: 20, packs: [], failRefundRate: 0.5, legacyUnitPrices: {}, tiers: [{ count: 0, effectiveRank: 0, waitTimeReduction: 0, weights: { D: 1 }, feverWeights: { D: 1 } }] } // 餌の設定（GameState初期化に必要）
 };
 
 // Mock SaveManager for init

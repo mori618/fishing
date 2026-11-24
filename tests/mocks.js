@@ -112,6 +112,10 @@ module.exports = {
         globalContext.navigator = { vibrate: () => { } };
         globalContext.location = { reload: () => { } };
         globalContext.alert = (msg) => { console.log('[Alert]', msg); };
+        // requestAnimationFrame: Node には存在しないため no-op を用意する
+        // (コールバックを同期実行すると FishingGame のゲージループが無限再帰するため呼ばない)
+        globalContext.requestAnimationFrame = () => 0;
+        globalContext.cancelAnimationFrame = () => { };
 
         // Mock UI Manager if needed, or let real one load but mock its DOM interactions
         // For now, we rely on the DOM mocks to handle UIManager's calls.

@@ -13,7 +13,7 @@ function loadGameData() {
     // Replace top-level consts with global assignments to make them accessible
     const targets = [
         'RODS', 'FISH', 'TITLE_CONFIG', 'RANK_SYSTEM', 'SKILLS', 'SPECIAL_RECIPES',
-        'BAITS', 'SKINS', 'GAUGE_CONFIG', 'FISHING_CONFIG', 'RARITY_WEIGHTS',
+        'BAIT_CONFIG', 'SKINS', 'GAUGE_CONFIG', 'FISHING_CONFIG', 'RARITY_WEIGHTS',
         'GACHA_CONFIG', 'RECYCLE_RATES', 'TREASURE_CONFIG', 'SKIES', 'SHIPS', 'FUELS'
     ];
 

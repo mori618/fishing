@@ -6013,3 +6013,111 @@ body {
     font-weight: bold;
     color: #fbbf24;
 }
+
+/* ========================================
+   餌の使用数セレクター（下部バー・木目調）
+   中央タップ = 使用数を次の段階へ / 「所持 ＋」タップ = 購入ダイアログ
+   ======================================== */
+.bait-status-large .bait-value {
+    gap: 6px;
+}
+
+.bait-status-large .selector-btn {
+    flex: 0 0 auto;
+    width: 40px;
+    height: 44px;
+    touch-action: manipulation;
+}
+
+.bait-status-large .bait-label-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    min-width: 84px;
+    line-height: 1.15;
+}
+
+.bait-status-large .bait-name-text {
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--accent-yellow);
+    text-shadow: 2px 2px 0px #4e342e;
+    cursor: pointer;
+    padding: 4px 8px;
+    min-height: 28px;
+    box-sizing: border-box;
+    touch-action: manipulation;
+    user-select: none;
+}
+
+.bait-status-large .bait-count-text {
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    color: #efebe9;
+    background: rgba(0, 0, 0, 0.28);
+    border: 1px solid rgba(62, 39, 35, 0.6);
+    border-radius: 10px;
+    padding: 3px 10px;
+    min-height: 22px;
+    box-sizing: border-box;
+    cursor: pointer;
+    text-shadow: none;
+    touch-action: manipulation;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.bait-status-large .bait-count-text.short {
+    color: #ffccbc;
+    background: rgba(191, 54, 12, 0.55);
+}
+
+@media (max-width: 768px) {
+    .bait-status-large {
+        padding: 0 4px;
+    }
+
+    .bait-status-large .selector-btn {
+        width: 34px;
+        height: 44px;
+    }
+
+    .bait-status-large .bait-label-container {
+        min-width: 70px;
+    }
+
+    .bait-status-large .bait-name-text {
+        font-size: 14px !important;
+        max-width: none;
+        padding: 4px 4px;
+    }
+
+    .bait-status-large .bait-count-text {
+        font-size: 10px !important;
+        padding: 3px 6px;
+    }
+}
+
+/* 餌購入ダイアログ・ショップ */
+.option.disabled {
+    opacity: 0.5;
+}
+
+.bait-rate-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    text-align: center;
+    margin-top: 6px;
+}
+
+.bait-rate-table th,
+.bait-rate-table td {
+    padding: 4px 2px;
+    border-bottom: 1px solid rgba(62, 39, 35, 0.25);
+}

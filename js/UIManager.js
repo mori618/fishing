@@ -132,6 +132,10 @@ const UIManager = {
         }
 
         // 画面固有の初期化
+        if (typeof RodAnimator !== 'undefined') {
+            if (screenId === 'fishing') RodAnimator.start();
+            else RodAnimator.stop();
+        }
         if (screenId === 'fishing') {
             this.showIdle();
             this.updateStatus();
@@ -328,21 +332,36 @@ const UIManager = {
     // 釣り竿の状態更新
     // ========================================
     updateRodView(state) {
-        const rodView = document.getElementById('fishing-rod-view');
-        if (!rodView) return;
+        this.rodState = state;
 
-        rodView.className = 'fishing-rod-view';
-        if (state) {
-            rodView.classList.add(state);
+        // 竿・糸・ウキは RodAnimator（SVG）が描く
+        if (typeof RodAnimator !== 'undefined') {
+            const options = {};
+            if (state === 'battle') options.matchup = this.getBattleMatchup();
+            RodAnimator.setState(state, options);
         }
 
-        // スキル色を適用
-        const skin = GameState.getCurrentSkin();
-        const rodShaft = rodView.querySelector('.rod-shaft');
-        if (rodShaft) {
-            rodShaft.style.backgroundColor = skin.rodColor;
-            // 枠線の色も少し暗くして調整（簡易的）
-            rodShaft.style.borderColor = skin.rodColor;
+        // 旧DOM版の竿（互換用。通常は非表示）
+        const rodView = document.getElementById('fishing-rod-view');
+        if (rodView) {
+            rodView.className = 'fishing-rod-view';
+            if (state) rodView.classList.add(state);
+        }
+    },
+
+    // バトル中の竿のしなり方を決める力関係（見た目だけ。ゲームロジックには使わない）
+    getBattleMatchup() {
+        try {
+            const fishPower = FishingGame.currentFish ? FishingGame.currentFish.power : 0;
+            const playerPower = GameState.getTotalPower();
+            if (!fishPower || !playerPower) return 'even';
+            const ratio = fishPower / playerPower;
+            if (ratio < 0.8) return 'easy';
+            if (ratio < 1.1) return 'even';
+            if (ratio < 1.5) return 'hard';
+            return 'reckless';
+        } catch (e) {
+            return 'even';
         }
     },
 
@@ -394,6 +413,7 @@ const UIManager = {
         if (!fishingArea) return;
 
         const skin = GameState.getCurrentSkin();
+        this.nibbleScale = scale;
 
         fishingArea.innerHTML = `
             <div class="nibble-state">
@@ -414,6 +434,9 @@ const UIManager = {
     // ウキの揺れを1回分実行
     // ========================================
     triggerBobberShake(durationMs) {
+        // 画面に見えるウキ（SVG）を沈ませる
+        if (typeof RodAnimator !== 'undefined') RodAnimator.nibble(this.nibbleScale || 1);
+
         const bobber = document.querySelector('.bobber');
         if (!bobber) return;
 
@@ -514,6 +537,7 @@ const UIManager = {
         if (indicator) {
             indicator.style.left = `${position}%`;
         }
+        if (typeof RodAnimator !== 'undefined') RodAnimator.setGauge(position);
     },
 
     // ========================================
@@ -548,6 +572,8 @@ const UIManager = {
     showCatchSuccess(fish, onClose, count = 1, extraRewards = []) {
         const fishingArea = document.getElementById('fishing-area');
         if (!fishingArea) return;
+
+        this.updateRodView('success');
 
         const fishIcon = fish.icon || 'set_meal';
 
@@ -636,6 +662,8 @@ const UIManager = {
     showCatchFailed(fish, onClose) {
         const fishingArea = document.getElementById('fishing-area');
         if (!fishingArea) return;
+
+        this.updateRodView('fail');
 
         const fishIcon = fish.icon || 'set_meal';
         fishingArea.innerHTML = `
@@ -816,6 +844,8 @@ const UIManager = {
         const fishingArea = document.getElementById('fishing-area');
         if (!fishingArea) return;
 
+        this.updateRodView('success');
+
         // 結果リストのHTML生成
         const itemsHtml = results.map(item => {
             let icon = 'help';
@@ -883,6 +913,9 @@ const UIManager = {
     showMissed(message) {
         const fishingArea = document.getElementById('fishing-area');
         if (!fishingArea) return;
+
+        // 早合わせは 'early'（巻き取り）が既に始まっている。それ以外（反応が遅れた等）は糸がたるむ
+        if (this.rodState !== 'early') this.updateRodView('fail');
 
         fishingArea.innerHTML = `
             <div class="result-state missed">
@@ -1063,72 +1096,70 @@ const UIManager = {
     },
 
     // ========================================
-    // 餌情報更新（セレクター表示）
+    // 餌情報更新（使用数セレクター表示）
+    //   [<]  餌 3個  [>]   中央タップ=使用数を次へ / 「所持 25 ＋」タップ=購入
     // ========================================
     updateBaitInfo() {
         const baitInfo = document.getElementById('bait-info');
         if (!baitInfo) return;
 
-        const currentBaitId = GameState.baitType;
-        const bait = GAME_DATA.BAITS.find(b => b.id === currentBaitId);
-        const count = GameState.getCurrentBaitCount();
-        const displayCount = count === -1 ? '∞' : count;
+        const want = GameState.baitUseCount;
+        const planned = GameState.getPlannedBaitCount();
+        const infinite = GameState.isInfiniteBait();
+        const stock = GameState.baitStock;
+        const short = planned < want;
+        const useLabel = want === 0 ? '餌なし' : `餌 ${want}個`;
+        const stockLabel = infinite ? '所持 ∞' : `所持 ${stock.toLocaleString()}`;
 
-        // user's new UI expects: BAIT (pseudo) < content >
-        // We inject the buttons and the text.
         baitInfo.innerHTML = `
-            <button class="selector-btn prev" onclick="GameState.switchBait(-1); UIManager.updateBaitInfo();"><span class="material-icons">chevron_left</span></button>
-            <span class="bait-label-container" onclick="UIManager.showBaitPurchaseDialog('${currentBaitId}')" style="cursor: pointer;">
-                <span class="bait-name-text">${bait.name}</span>
-                <span class="bait-count-text">× ${displayCount}</span>
+            <button class="selector-btn prev" aria-label="使う餌の数を減らす" onclick="UIManager.changeBaitUse(-1)"><span class="material-icons">chevron_left</span></button>
+            <span class="bait-label-container">
+                <button type="button" class="bait-name-text" aria-label="使う餌の数を切り替える" onclick="UIManager.changeBaitUse(1)">${useLabel}</button>
+                <button type="button" class="bait-count-text ${short ? 'short' : ''}" aria-label="餌を購入する" onclick="UIManager.showBaitPurchaseDialog()">${stockLabel} ＋</button>
             </span>
-            <button class="selector-btn next" onclick="GameState.switchBait(1); UIManager.updateBaitInfo();"><span class="material-icons">chevron_right</span></button>
+            <button class="selector-btn next" aria-label="使う餌の数を増やす" onclick="UIManager.changeBaitUse(1)"><span class="material-icons">chevron_right</span></button>
         `;
+    },
+
+    // 使う餌の数を切り替える
+    changeBaitUse(direction) {
+        GameState.switchBait(direction);
+        this.updateBaitInfo();
     },
 
     // ========================================
     // 餌購入ダイアログを表示
     // ========================================
-    showBaitPurchaseDialog(baitId) {
-        const bait = GAME_DATA.BAITS.find(b => b.id === baitId);
-        if (!bait) return;
-
-        // Dランク（無限）は購入不可
-        if (bait.rank === 'D') {
-            // 無限なので何もしない
-            return;
-        }
+    showBaitPurchaseDialog() {
+        const cfg = GAME_DATA.BAIT_CONFIG;
+        const old = document.getElementById('bait-purchase-modal');
+        if (old) old.remove();
 
         const overlay = document.createElement('div');
         overlay.className = 'modal-overlay';
         overlay.id = 'bait-purchase-modal';
 
-        // 単価 (セット価格 / 個数)
-        const unitPrice = bait.quantity > 0 ? bait.price / bait.quantity : 0;
+        const optionsHtml = cfg.packs.map(pack => {
+            const price = GameState.getBaitCost(pack.count);
+            const canBuy = GameState.money >= price;
+            return `
+                    <div class="option ${canBuy ? '' : 'disabled'}" data-amount="${pack.count}">
+                        <span class="amount">${pack.count}個</span>
+                        <span class="price">¥${price.toLocaleString()}</span>
+                    </div>`;
+        }).join('');
 
         overlay.innerHTML = `
             <div class="modal-content">
                 <h3>餌を購入</h3>
-                <p>${bait.name} が不足しています。</p>
-                <p>購入しますか？</p>
-                
-                <div class="purchase-options">
-                    <div class="option" data-amount="${bait.quantity}">
-                        <span class="amount">${bait.quantity}個</span>
-                        <span class="price">¥${bait.price}</span>
-                    </div>
-                    <div class="option" data-amount="${bait.quantity * 5}">
-                        <span class="amount">${bait.quantity * 5}個</span>
-                        <span class="price">¥${bait.price * 5}</span>
-                    </div>
-                     <div class="option" data-amount="${bait.quantity * 10}">
-                        <span class="amount">${bait.quantity * 10}個</span>
-                        <span class="price">¥${bait.price * 10}</span>
-                    </div>
+                <p>餌を多く使うほど、高ランクの魚が釣れやすくなります。</p>
+                <p>所持: ${GameState.baitStock.toLocaleString()}個 ／ 所持金: ¥${GameState.money.toLocaleString()}</p>
+
+                <div class="purchase-options">${optionsHtml}
                 </div>
 
                 <div class="modal-actions">
-                    <button class="btn-cancel" onclick="document.getElementById('bait-purchase-modal').remove()">キャンセル</button>
+                    <button class="btn-cancel" onclick="document.getElementById('bait-purchase-modal').remove()">閉じる</button>
                 </div>
             </div>
         `;
@@ -1139,9 +1170,10 @@ const UIManager = {
         overlay.querySelectorAll('.option').forEach(option => {
             option.addEventListener('click', () => {
                 const amount = parseInt(option.dataset.amount);
-                if (GameState.buyBait(baitId, amount)) {
-                    this.showMessage(`${bait.name}を${amount}個購入しました！`);
+                if (GameState.buyBait(amount)) {
+                    this.showMessage(`餌を${amount}個購入しました！`);
                     this.updateStatus(); // お金と餌の表示更新
+                    MissionManager.checkMission('buy_bait', { count: amount });
                     overlay.remove();
                 } else {
                     this.showMessage('お金が足りません！');

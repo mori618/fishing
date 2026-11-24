@@ -136,7 +136,7 @@ const ShopManager = {
                 <div class="building-icon"><span class="material-icons">grass</span></div>
                 <div class="building-info">
                     <div class="building-name">万屋 タックル</div>
-                    <div class="building-desc">各種ランクの餌を取り扱っています</div>
+                    <div class="building-desc">餌を多く使うほど高ランクの魚が釣れやすくなります</div>
                 </div>
             </div>
              <div class="shop-building styles" onclick="ShopManager.setCategory('skins')" style="border-color: var(--accent-color);">
@@ -703,6 +703,16 @@ const ShopManager = {
         // サブタブを描画（これがないとタブ切り替えができなくなる）
         this.renderSubTabs(document.getElementById('shop-tabs-container'));
     },
+    // リサイクルに必要な個数（スキル「リサイクル強化」で軽減）
+    getRecycleRequirements() {
+        const red = (GameState.getRecycleCostReduction ? GameState.getRecycleCostReduction() : 0);
+        return {
+            same: Math.max(2, 5 - red),
+            up1: Math.max(3, 10 - red),
+            up2: Math.max(4, 30 - red)
+        };
+    },
+
     renderRecycleUI() {
         const container = document.getElementById('recycle-section');
         if (!container) return;
@@ -726,26 +736,29 @@ const ShopManager = {
 
         // 交換レート判定
         let exchangeResult = null;
-        if (selectedCount >= 30) {
-            exchangeResult = `Tier ${Math.min(3, selectedTier + 2)} 確定！`; // +2 rank
-        } else if (selectedCount >= 10) {
-            exchangeResult = `Tier ${Math.min(3, selectedTier + 1)} 確定！`; // +1 rank
-        } else if (selectedCount >= 5) {
-            exchangeResult = `Tier ${selectedTier} (同ランク) 確定`;
+        const req = this.getRecycleRequirements();
+        const gainBonus = GameState.getRecycleGainBonus ? GameState.getRecycleGainBonus() : 0;
+        const gainText = gainBonus > 0 ? ` (+${gainBonus}個おまけ)` : '';
+        if (selectedCount >= req.up2) {
+            exchangeResult = `Tier ${Math.min(3, selectedTier + 2)} 確定！${gainText}`; // +2 rank
+        } else if (selectedCount >= req.up1) {
+            exchangeResult = `Tier ${Math.min(3, selectedTier + 1)} 確定！${gainText}`; // +1 rank
+        } else if (selectedCount >= req.same) {
+            exchangeResult = `Tier ${selectedTier} (同ランク) 確定${gainText}`;
         }
 
-        const canExecute = !isMixed && (selectedCount === 5 || selectedCount === 10 || selectedCount === 30);
+        const canExecute = !isMixed && (selectedCount === req.same || selectedCount === req.up1 || selectedCount === req.up2);
 
         let warningMsg = '';
         if (isMixed) warningMsg = '<span style="color:red; font-size:0.8em;">異なるTierが混ざっています</span>';
-        else if (selectedCount > 0 && !canExecute) warningMsg = '<span style="color:orange; font-size:0.8em;">5個, 10個, 30個のいずれかを選択してください</span>';
+        else if (selectedCount > 0 && !canExecute) warningMsg = `<span style="color:orange; font-size:0.8em;">${req.same}個, ${req.up1}個, ${req.up2}個のいずれかを選択してください</span>`;
 
         let html = `
             <div class="recycle-header">
                 <h3>♻️ エコ・ボックス (確定的リサイクル)</h3>
                 <p class="recycle-desc">
                     同ランクのスキルを集めて上位スキルと交換！<br>
-                    5個: 同ランク1個 / 10個: 1ランクUP / 30個: 2ランクUP
+                    ${req.same}個: 同ランク1個 / ${req.up1}個: 1ランクUP / ${req.up2}個: 2ランクUP${gainBonus > 0 ? ` (獲得+${gainBonus})` : ''}
                 </p>
             </div>
             
@@ -756,9 +769,9 @@ const ShopManager = {
                     ${warningMsg}
                 </div>
                 <div class="recycle-actions">
-                    <button class="btn btn-mini" onclick="ShopManager.selectBulkRecycle(null, 5)">5個選択</button>
-                    <button class="btn btn-mini" onclick="ShopManager.selectBulkRecycle(null, 10)">10個選択</button>
-                    <button class="btn btn-mini" onclick="ShopManager.selectBulkRecycle(null, 30)">30個選択</button>
+                    <button class="btn btn-mini" onclick="ShopManager.selectBulkRecycle(null, ${req.same})">${req.same}個選択</button>
+                    <button class="btn btn-mini" onclick="ShopManager.selectBulkRecycle(null, ${req.up1})">${req.up1}個選択</button>
+                    <button class="btn btn-mini" onclick="ShopManager.selectBulkRecycle(null, ${req.up2})">${req.up2}個選択</button>
                     <button class="btn btn-mini" onclick="ShopManager.recycleSelectedSkills = []; ShopManager.renderShop();">クリア</button>
                 </div>
             </div>
@@ -926,8 +939,9 @@ const ShopManager = {
     // ========================================
     executeRecycle() {
         const count = this.recycleSelectedSkills.length;
-        if (count !== 5 && count !== 10 && count !== 30) {
-            UIManager.showMessage('スキルを5個、10個、または30個選択してください');
+        const req = this.getRecycleRequirements();
+        if (count !== req.same && count !== req.up1 && count !== req.up2) {
+            UIManager.showMessage(`スキルを${req.same}個、${req.up1}個、または${req.up2}個選択してください`);
             return;
         }
 
@@ -951,8 +965,8 @@ const ShopManager = {
 
         // 出力Tierの決定
         let outputTier = inputTier;
-        if (count === 10) outputTier = Math.min(3, inputTier + 1);
-        else if (count === 30) outputTier = Math.min(3, inputTier + 2);
+        if (count === req.up1) outputTier = Math.min(3, inputTier + 1);
+        else if (count === req.up2) outputTier = Math.min(3, inputTier + 2);
 
         // スキル消費
         this.recycleSelectedSkills.forEach(skillId => {
@@ -962,11 +976,11 @@ const ShopManager = {
         });
 
         // 抽選 (指定Tierの中からランダム)
-        const result = this.pickSkillByTier(outputTier, count === 5 ? null : 'upgrade'); // 同ランク交換の場合は完全ランダム、昇格時は...？
-        // ※ pickSkillByTierの実装に依存するが、ここでは単純に指定Tierから選ぶメソッドと仮定
-        // 既存の pickSkillByTier は 'tier1', 'tier2' 文字列を受け取る実装が多いので確認が必要
-        // 既存コードには pickSkillByTier が見当たらない（前回のview_fileで範囲外だったか、lottery内部で管理されているか）
-        // 下記で self implementation する
+        const result = this.pickRecycleSkill(outputTier);
+        // リサイクル強化: 追加獲得
+        const results = [result];
+        const gainBonus = GameState.getRecycleGainBonus ? GameState.getRecycleGainBonus() : 0;
+        for (let i = 0; i < gainBonus; i++) results.push(this.pickRecycleSkill(outputTier));
 
         // 選択状態リセット
         this.recycleSelectedSkills = [];
@@ -974,15 +988,19 @@ const ShopManager = {
         UIManager.updateMoney();
 
         // 獲得処理
-        GameState.gainGachaResult(result);
+        results.forEach(r => GameState.gainGachaResult(r));
 
-        UIManager.showGachaResult([result], () => {
+        // ミッション判定: リサイクル実行
+        MissionManager.checkMission('recycle', { count: count });
+
+        UIManager.showGachaResult(results, () => {
             ShopManager.renderShop();
         });
     },
 
     // Tier指定でランダムなスキルを1つ選ぶ
-    pickSkillByTier(tierNum) {
+    // (旧名 pickSkillByTier は後段の同名メソッドに上書きされ常にTier1が出るバグだったため改名)
+    pickRecycleSkill(tierNum) {
         const pool = GAME_DATA.SKILLS.filter(s => s.tier === tierNum);
         if (pool.length === 0) return GAME_DATA.SKILLS[0]; // fallback
 
@@ -1064,6 +1082,9 @@ const ShopManager = {
             GameState.money -= moneyCost;
         }
         UIManager.updateStatus(); // お金・チケット表示更新
+
+        // ミッション判定: ガチャを引く
+        MissionManager.checkMission('gacha_draw', { count: count });
 
         // 消費後すぐにセーブ
         SaveManager.save(GameState);
@@ -1260,77 +1281,70 @@ const ShopManager = {
     },
 
     // ========================================
-    // 餌ショップ
+    // 餌ショップ（餌は1種類。まとめ買い）
     // ========================================
     renderBaitShop() {
         const container = document.getElementById('shop-items');
         container.innerHTML = '';
 
-        GAME_DATA.BAITS.filter(b => b.id !== 'bait_d').forEach(bait => {
-            const canBuy = GameState.money >= bait.price;
+        const cfg = GAME_DATA.BAIT_CONFIG;
+        const buttonsHtml = cfg.packs.map(pack => {
+            const finalPrice = GameState.getBaitCost(pack.count);
+            const canBuy = GameState.money >= finalPrice;
+            const unit = (finalPrice / pack.count).toFixed(1).replace(/\.0$/, '');
+            return `
+                <button class="btn btn-buy ${canBuy ? '' : 'disabled'}"
+                        style="width: 100%; border-radius: 50px; font-weight: bold; box-shadow: 0 4px 0 #e08e0b;"
+                        onclick="ShopManager.buyBait(${pack.count})" ${canBuy ? '' : 'disabled'}>
+                    <div style="font-size: 0.9em;">${pack.count}個 <small>(1個 ¥${unit})</small></div>
+                    <div style="font-size: 1.0em;">¥${finalPrice.toLocaleString()}</div>
+                </button>`;
+        }).join('');
 
-            const item = document.createElement('div');
-            item.className = `shop-item ${!canBuy ? 'locked' : ''}`;
+        const item = document.createElement('div');
+        item.className = 'shop-item';
+        item.innerHTML = `
+            <div class="item-info">
+                <div class="item-name">${cfg.name}</div>
+                <div class="item-desc">${cfg.description}<br>釣り画面の下のバーで、1回に使う数（${cfg.tiers.map(t => t.count).join(' / ')}個）を選べます。失敗しても使った餌の半分が戻ります。</div>
+                <div class="item-stats">所持: ${GameState.baitStock.toLocaleString()}個</div>
+            </div>
+            <div class="item-action bait-purchase-grid" style="display: flex; gap: 8px; flex-direction: column; min-width: 140px;">
+                ${buttonsHtml}
+            </div>
+        `;
+        container.appendChild(item);
 
-            item.innerHTML = `
-                <div class="item-info">
-                    <div class="item-name">${bait.name}</div>
-                    <div class="item-desc">${bait.description}</div>
-                    <div class="item-stats">
-                        ${bait.quantity}個入り
-                    </div>
-                </div>
-                <div class="item-action bait-purchase-grid" style="display: flex; gap: 8px; flex-direction: column; min-width: 140px;">
-                    ${(() => {
-                    // 割引計算
-                    const discount = GameState.getShopDiscount();
-                    const buttonsHtml = [1, 10].map(multiplier => {
-                        const finalPrice = Math.floor(bait.price * multiplier * (1.0 - discount));
-                        const canBuy = GameState.money >= finalPrice;
-                        const isDiscounted = discount > 0;
-                        const label = multiplier === 1 ? '1セット' : `${multiplier}セット`;
-
-                        return `
-                                <button class="btn btn-buy ${canBuy ? '' : 'disabled'}" 
-                                        style="width: 100%; border-radius: 50px; font-weight: bold; box-shadow: 0 4px 0 #e08e0b;"
-                                        onclick="ShopManager.buyBait('${bait.id}', ${multiplier})" ${canBuy ? '' : 'disabled'}>
-                                    <div style="font-size: 0.9em;">${label}</div>
-                                    <div style="font-size: 1.0em;">¥${finalPrice.toLocaleString()}</div>
-                                </button>
-                            `;
-                    }).join('');
-
-                    return buttonsHtml;
-                })()}
-
-            `;
-
-            container.appendChild(item);
-        });
-
-        // 現在の餌情報
+        // 使用数ごとの出現率
         this.renderBaitInfo();
     },
 
-    // ========================================
-    // 現在の餌情報
-    // ========================================
+    // 使用数ごとのランク出現率の一覧
     renderBaitInfo() {
         const container = document.getElementById('upgrade-section');
         if (!container) return;
 
-        const baitCount = GameState.getCurrentBaitCount();
-        const baitType = GameState.baitType;
-        const bait = baitType ? GAME_DATA.BAITS.find(b => b.id === baitType) : null;
+        const ranks = ['D', 'C', 'B', 'A', 'S', 'SS'];
+        const rows = GameState.getBaitTiers().map(t => {
+            const total = Object.values(t.weights).reduce((a, b) => a + b, 0);
+            const cells = ranks.map(r => {
+                const pct = total > 0 ? (t.weights[r] || 0) / total * 100 : 0;
+                return `<td>${pct >= 0.5 ? Math.round(pct) + '%' : (pct > 0 ? '<1%' : '-')}</td>`;
+            }).join('');
+            const sel = t.count === GameState.baitUseCount ? ' style="font-weight:bold;background:rgba(255,255,255,0.35);"' : '';
+            return `<tr${sel}><th>${t.count === 0 ? '餌なし' : t.count + '個'}</th>${cells}</tr>`;
+        }).join('');
 
         container.innerHTML = `
             <h3>所持中の餌</h3>
             <div class="bait-info">
-                ${bait
-                ? `<strong>${bait.name}</strong> × ${baitCount}`
-                : '<span class="none">なし</span>'
-            }
+                <strong>餌</strong> × ${GameState.baitStock.toLocaleString()}
             </div>
+            <h3>使用数ごとの出現率</h3>
+            <table class="bait-rate-table">
+                <thead><tr><th>使用数</th>${ranks.map(r => `<th>${r}</th>`).join('')}</tr></thead>
+                <tbody>${rows}</tbody>
+            </table>
         `;
     },
 
@@ -1391,9 +1405,7 @@ const ShopManager = {
             const count = GameState.getEquippedSkillCount(skillId);
             UIManager.showMessage(`${skill.name}を装備しました！(計${count}個)`);
             this.renderShop();
-
-            // 初心者ミッション判定: スキルを装備する
-            MissionManager.checkMission('equip_skill');
+            // ミッション判定 'equip_skill' は GameState.equipSkill 内で発火済み（二重カウント防止）
         } else {
             // 失敗理由を簡易表示 (スロット一杯など)
             if (GameState.equippedSkills.length >= GameState.getSkillSlots()) {
@@ -1418,19 +1430,15 @@ const ShopManager = {
     // ========================================
     // 餌購入
     // ========================================
-    buyBait(baitId, multiplier = 1) {
-        const bait = GAME_DATA.BAITS.find(b => b.id === baitId);
-        if (!bait) return;
-
-        const totalQuantity = bait.quantity * multiplier;
-
-        if (GameState.buyBait(baitId, totalQuantity)) {
-            UIManager.showMessage(`${bait.name}を${totalQuantity}個(${multiplier}セット)購入しました！`);
+    buyBait(count) {
+        if (GameState.buyBait(count)) {
+            UIManager.showMessage(`餌を${count}個購入しました！`);
             this.renderShop();
             UIManager.updateMoney();
+            UIManager.updateBaitInfo();
 
             // 初心者ミッション判定: 餌を買う
-            MissionManager.checkMission('buy_bait');
+            MissionManager.checkMission('buy_bait', { count: count });
         } else {
             UIManager.showMessage('お金が足りません！');
         }
@@ -1447,7 +1455,9 @@ const ShopManager = {
         }
 
         const earned = GameState.sellAllFish();
-        UIManager.showMessage(`魚${count}匹を売却して¥${earned.toLocaleString()}を獲得！`);
+        const roulette = GameState.lastSellRoulette;
+        const rouletteText = roulette ? `\n🎰 売値ルーレット x${roulette.mult}！` : '';
+        UIManager.showMessage(`魚${count}匹を売却して¥${earned.toLocaleString()}を獲得！${rouletteText}`);
         UIManager.updateMoney();
         UIManager.updateInventory();
         // ショップを再描画して購入ボタンを更新
@@ -1666,6 +1676,7 @@ const ShopManager = {
         if (earned > 0) {
             // 音を鳴らす？
             UIManager.showMessage(`水揚げ完了！ ${earned.toLocaleString()} G を獲得しました`);
+            MissionManager.checkMission('port_collect', { amount: earned });
             this.renderPort();
             const moneyDisplay = document.getElementById('port-money-display');
             if (moneyDisplay) moneyDisplay.textContent = `${GameState.money.toLocaleString()} G`;

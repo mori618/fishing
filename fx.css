@@ -404,3 +404,32 @@
         animation: none !important;
     }
 }
+
+/* ========================================
+   竿・糸・ウキ（RodAnimator のSVG）
+   ======================================== */
+.rod-scene {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;   /* 釣りエリア（ゲージ・ボタン・結果カード）より奥 */
+    pointer-events: none;
+    overflow: visible;
+}
+
+/* 旧DOM版の竿は使わない */
+#fishing-screen .fishing-rod-view {
+    display: none !important;
+}
+
+/* 画面に見えるウキはSVG側。DOMのウキは着水位置の基準と当たり判定用に残し、見えなくする */
+#fishing-area .water-surface .bobber {
+    visibility: hidden;
+}
+
+/* 竿SVGより手前に釣りエリアを置く（ゲージやボタンが竿に隠れない） */
+#fishing-screen #fishing-area {
+    position: relative;
+    z-index: 2;
+}

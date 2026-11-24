@@ -320,11 +320,11 @@ const SKILLS = [
     { id: 'rank_license_c', name: 'Cランク免許', description: 'Cランク以上の魚しか釣れなくなる', effect: { type: 'rank_sniper', minRarity: 'C' }, price: 2000, tier: 1, group: '探索グループ', icon: 'radar' },
     { id: 'rank_license_b', name: 'Bランク免許', description: 'Bランク以上の魚しか釣れなくなる', effect: { type: 'rank_sniper', minRarity: 'B' }, price: 6000, tier: 2, group: '探索グループ', icon: 'radar' },
     { id: 'rank_license_a', name: 'Aランク免許', description: 'Aランク以上の魚しか釣れなくなる', effect: { type: 'rank_sniper', minRarity: 'A' }, price: 20000, tier: 3, group: '探索グループ', icon: 'radar' },
-    { id: 'rank_license_s', name: 'Sランク免許', description: 'Sランク以上の魚しか釣れなくなる', effect: { type: 'rank_sniper', minRarity: 'S' }, price: 100000, tier: 4, group: '探索グループ', icon: 'radar' },
+    { id: 'rank_license_s', name: 'Sランク免許 極', description: 'Sランク以上の魚しか釣れなくなる', effect: { type: 'rank_sniper', minRarity: 'S' }, price: 100000, tier: 4, group: '探索グループ', icon: 'radar' },
     { id: 'rank_collector_c', name: 'Cランク愛好家', description: 'Cランクの魚が釣れやすくなる', effect: { type: 'rank_collector', targetRarity: 'C' }, price: 2000, tier: 1, group: '探索グループ', icon: 'radar' },
     { id: 'rank_collector_b', name: 'Bランク愛好家', description: 'Bランクの魚が釣れやすくなる', effect: { type: 'rank_collector', targetRarity: 'B' }, price: 6000, tier: 2, group: '探索グループ', icon: 'radar' },
     { id: 'rank_collector_a', name: 'Aランク愛好家', description: 'Aランクの魚が釣れやすくなる', effect: { type: 'rank_collector', targetRarity: 'A' }, price: 20000, tier: 3, group: '探索グループ', icon: 'radar' },
-    { id: 'rank_collector_s', name: 'Sランク愛好家', description: 'Sランクの魚が釣れやすくなる', effect: { type: 'rank_collector', targetRarity: 'S' }, price: 100000, tier: 4, group: '探索グループ', icon: 'radar' },
+    { id: 'rank_collector_s', name: 'Sランク愛好家 極', description: 'Sランクの魚が釣れやすくなる', effect: { type: 'rank_collector', targetRarity: 'S' }, price: 100000, tier: 4, group: '探索グループ', icon: 'radar' },
     { id: 'moon_rare_up_1', name: '月光の導き I', description: '月の加護装備時のみレア魚率+20%', effect: { type: 'moon_rare_up', value: 0.2 }, price: 3000, tier: 1, group: '特殊効果グループ', icon: 'auto_awesome' },
     { id: 'moon_rare_up_2', name: '月光の導き II', description: '月の加護装備時のみレア魚率+40%', effect: { type: 'moon_rare_up', value: 0.4 }, price: 10000, tier: 2, group: '特殊効果グループ', icon: 'auto_awesome' },
     { id: 'moon_rare_up_3', name: '月光の導き III', description: '月の加護装備時のみレア魚率+70%', effect: { type: 'moon_rare_up', value: 0.7 }, price: 40000, tier: 3, group: '特殊効果グループ', icon: 'auto_awesome' },
@@ -349,10 +349,10 @@ const SKILLS = [
     { id: 'quick_hit_penalty_2', name: '早打ち II', description: 'ヒット待ち-30% & 売却価格-20%', effect: { type: 'quick_hit_penalty', waitReduc: 0.3, priceReduc: 0.2 }, price: 3000, tier: 2, group: '強化グループ', icon: 'bolt' },
     { id: 'quick_hit_penalty_3', name: '早打ち III', description: 'ヒット待ち-50% & 売却価格-40%', effect: { type: 'quick_hit_penalty', waitReduc: 0.5, priceReduc: 0.4 }, price: 8000, tier: 3, group: '強化グループ', icon: 'bolt' },
     { id: 'quick_hit_penalty_4', name: '早打ち 極', description: 'ヒット待ち-75% & 売却価格-60%', effect: { type: 'quick_hit_penalty', waitReduc: 0.75, priceReduc: 0.6 }, price: 25000, tier: 4, group: '強化グループ', icon: 'bolt' },
-    { id: 'bait_master_1', name: '餌の達人 I', description: '釣り成功時、15%で餌を消費しない', effect: { type: 'bait_save', value: 0.15 }, price: 500, tier: 1, group: '便利グループ', icon: 'build' },
-    { id: 'bait_master_2', name: '餌の達人 II', description: '釣り成功時、30%で餌を消費しない', effect: { type: 'bait_save', value: 0.3 }, price: 2000, tier: 2, group: '便利グループ', icon: 'build' },
-    { id: 'bait_master_3', name: '餌の達人 III', description: '釣り成功時、50%で餌を消費しない', effect: { type: 'bait_save', value: 0.5 }, price: 6000, tier: 3, group: '便利グループ', icon: 'build' },
-    { id: 'bait_master_4', name: '餌の達人 極', description: '釣り成功時、75%で餌を消費しない', effect: { type: 'bait_save', value: 0.75 }, price: 25000, tier: 4, group: '便利グループ', icon: 'build' },
+    { id: 'bait_master_1', name: '餌の達人 I', description: '釣り成功時、使った餌が1個ごとに15%で戻る', effect: { type: 'bait_save', value: 0.15 }, price: 500, tier: 1, group: '便利グループ', icon: 'build' },
+    { id: 'bait_master_2', name: '餌の達人 II', description: '釣り成功時、使った餌が1個ごとに30%で戻る', effect: { type: 'bait_save', value: 0.3 }, price: 2000, tier: 2, group: '便利グループ', icon: 'build' },
+    { id: 'bait_master_3', name: '餌の達人 III', description: '釣り成功時、使った餌が1個ごとに50%で戻る', effect: { type: 'bait_save', value: 0.5 }, price: 6000, tier: 3, group: '便利グループ', icon: 'build' },
+    { id: 'bait_master_4', name: '餌の達人 極', description: '釣り成功時、使った餌が1個ごとに75%で戻る', effect: { type: 'bait_save', value: 0.75 }, price: 25000, tier: 4, group: '便利グループ', icon: 'build' },
     { id: 'technician_1', name: 'テクニシャン I', description: '赤ゾーンの幅が20%拡大', effect: { type: 'red_zone_boost', value: 0.2 }, price: 600, tier: 1, group: '技術グループ', icon: 'precision_manufacturing' },
     { id: 'technician_2', name: 'テクニシャン II', description: '赤ゾーンの幅が40%拡大', effect: { type: 'red_zone_boost', value: 0.4 }, price: 2500, tier: 2, group: '技術グループ', icon: 'precision_manufacturing' },
     { id: 'technician_3', name: 'テクニシャン III', description: '赤ゾーンの幅が60%拡大', effect: { type: 'red_zone_boost', value: 0.6 }, price: 7000, tier: 3, group: '技術グループ', icon: 'precision_manufacturing' },
@@ -522,6 +522,39 @@ const SKILLS = [
     { id: 'rank_reward_boost_2', name: '栄光の報酬 II', description: 'ランクアップ報酬 10倍', effect: { type: 'rank_reward_boost', value: 10 }, price: 80000, tier: 2, group: '成長グループ', icon: 'trending_up' },
     { id: 'rank_reward_boost_3', name: '栄光の報酬 III', description: 'ランクアップ報酬 20倍', effect: { type: 'rank_reward_boost', value: 20 }, price: 250000, tier: 3, group: '成長グループ', icon: 'trending_up' },
     { id: 'rank_reward_boost_4', name: '栄光の報酬 極', description: 'ランクアップ報酬 50倍', effect: { type: 'rank_reward_boost', value: 50 }, price: 1000000, tier: 4, group: '成長グループ', icon: 'trending_up' },
+    // ===== 新系統: プレイ感が変わる遊びスキル =====
+    { id: 'bonus_fish_1', name: 'おまけ釣り I', description: '釣り上げ成功時に10%で、別の魚がおまけで1匹釣れる', effect: { type: 'bonus_fish', chance: 0.1 }, price: 3000, tier: 1, group: '収集ボーナス', icon: 'redeem' },
+    { id: 'bonus_fish_2', name: 'おまけ釣り II', description: '釣り上げ成功時に18%で、別の魚がおまけで1匹釣れる', effect: { type: 'bonus_fish', chance: 0.18 }, price: 10000, tier: 2, group: '収集ボーナス', icon: 'redeem' },
+    { id: 'bonus_fish_3', name: 'おまけ釣り III', description: '釣り上げ成功時に28%で、別の魚がおまけで1匹釣れる', effect: { type: 'bonus_fish', chance: 0.28 }, price: 30000, tier: 3, group: '収集ボーナス', icon: 'redeem' },
+    { id: 'bonus_fish_4', name: 'おまけ釣り 極', description: '釣り上げ成功時に40%で、別の魚がおまけで1匹釣れる', effect: { type: 'bonus_fish', chance: 0.4 }, price: 90000, tier: 4, group: '収集ボーナス', icon: 'redeem' },
+    { id: 'combo_boost_1', name: '連勝コンボ I', description: '失敗せず連続で釣るたび売値+1%（最大10連続=+10%）。失敗でリセット', effect: { type: 'combo_boost', perStack: 0.01, maxStacks: 10 }, price: 3000, tier: 1, group: '商売グループ', icon: 'local_fire_department' },
+    { id: 'combo_boost_2', name: '連勝コンボ II', description: '失敗せず連続で釣るたび売値+1.5%（最大10連続=+15%）。失敗でリセット', effect: { type: 'combo_boost', perStack: 0.015, maxStacks: 10 }, price: 10000, tier: 2, group: '商売グループ', icon: 'local_fire_department' },
+    { id: 'combo_boost_3', name: '連勝コンボ III', description: '失敗せず連続で釣るたび売値+2%（最大15連続=+30%）。失敗でリセット', effect: { type: 'combo_boost', perStack: 0.02, maxStacks: 15 }, price: 30000, tier: 3, group: '商売グループ', icon: 'local_fire_department' },
+    { id: 'combo_boost_4', name: '連勝コンボ 極', description: '失敗せず連続で釣るたび売値+3%（最大20連続=+60%）。失敗でリセット', effect: { type: 'combo_boost', perStack: 0.03, maxStacks: 20 }, price: 90000, tier: 4, group: '商売グループ', icon: 'local_fire_department' },
+    { id: 'time_angler_1', name: '時の釣り人 I', description: '時間帯で効果が変化: 朝(5〜10時)待ち時間-10% / 昼(10〜17時)売値+10% / 夕(17〜20時)レア魚出現+10% / 夜(20〜5時)ヌシ出現率+30%', effect: { type: 'time_angler', value: 0.1 }, price: 3000, tier: 1, group: '探索グループ', icon: 'schedule' },
+    { id: 'time_angler_2', name: '時の釣り人 II', description: '時間帯で効果が変化: 朝(5〜10時)待ち時間-20% / 昼(10〜17時)売値+20% / 夕(17〜20時)レア魚出現+20% / 夜(20〜5時)ヌシ出現率+60%', effect: { type: 'time_angler', value: 0.2 }, price: 10000, tier: 2, group: '探索グループ', icon: 'schedule' },
+    { id: 'time_angler_3', name: '時の釣り人 III', description: '時間帯で効果が変化: 朝(5〜10時)待ち時間-35% / 昼(10〜17時)売値+35% / 夕(17〜20時)レア魚出現+35% / 夜(20〜5時)ヌシ出現率+105%', effect: { type: 'time_angler', value: 0.35 }, price: 30000, tier: 3, group: '探索グループ', icon: 'schedule' },
+    { id: 'time_angler_4', name: '時の釣り人 極', description: '時間帯で効果が変化: 朝(5〜10時)待ち時間-60% / 昼(10〜17時)売値+60% / 夕(17〜20時)レア魚出現+60% / 夜(20〜5時)ヌシ出現率+180%', effect: { type: 'time_angler', value: 0.6 }, price: 90000, tier: 4, group: '探索グループ', icon: 'schedule' },
+    { id: 'thrill_gauge_1', name: 'スリル・ゲージ I', description: 'ゲージ速度+20%と引き換えに、赤ゾーン幅+30%', effect: { type: 'thrill_gauge', speedUp: 0.2, redUp: 0.3 }, price: 3000, tier: 1, group: '技術グループ', icon: 'speed' },
+    { id: 'thrill_gauge_2', name: 'スリル・ゲージ II', description: 'ゲージ速度+30%と引き換えに、赤ゾーン幅+50%', effect: { type: 'thrill_gauge', speedUp: 0.3, redUp: 0.5 }, price: 10000, tier: 2, group: '技術グループ', icon: 'speed' },
+    { id: 'thrill_gauge_3', name: 'スリル・ゲージ III', description: 'ゲージ速度+40%と引き換えに、赤ゾーン幅+80%', effect: { type: 'thrill_gauge', speedUp: 0.4, redUp: 0.8 }, price: 30000, tier: 3, group: '技術グループ', icon: 'speed' },
+    { id: 'thrill_gauge_4', name: 'スリル・ゲージ 極', description: 'ゲージ速度+50%と引き換えに、赤ゾーン幅+120%', effect: { type: 'thrill_gauge', speedUp: 0.5, redUp: 1.2 }, price: 90000, tier: 4, group: '技術グループ', icon: 'speed' },
+    { id: 'omen_1', name: '予兆の目 I', description: 'Bランク以上の魚が掛かりそうな時に気配を察知し、ヒット受付時間+10%', effect: { type: 'omen', minRank: 'B', showRank: false, showTitle: false, hitWindowBonus: 0.1 }, price: 3000, tier: 1, group: '探索グループ', icon: 'visibility' },
+    { id: 'omen_2', name: '予兆の目 II', description: 'Bランク以上の魚の気配とランクを察知し、ヒット受付時間+20%', effect: { type: 'omen', minRank: 'B', showRank: true, showTitle: false, hitWindowBonus: 0.2 }, price: 10000, tier: 2, group: '探索グループ', icon: 'visibility' },
+    { id: 'omen_3', name: '予兆の目 III', description: 'Cランク以上の魚の気配とランクを察知し、ヒット受付時間+30%', effect: { type: 'omen', minRank: 'C', showRank: true, showTitle: false, hitWindowBonus: 0.3 }, price: 30000, tier: 3, group: '探索グループ', icon: 'visibility' },
+    { id: 'omen_4', name: '予兆の目 極', description: 'Cランク以上の魚の気配とランク、ヌシの出現まで察知し、ヒット受付時間+50%', effect: { type: 'omen', minRank: 'C', showRank: true, showTitle: true, hitWindowBonus: 0.5 }, price: 90000, tier: 4, group: '探索グループ', icon: 'visibility' },
+    { id: 'sell_roulette_1', name: '売値ルーレット I', description: '売却のたびルーレット！ 70%:x1 / 25%:x1.5 / 5%:x3', effect: { type: 'sell_roulette', outcomes: [[0.7, 1], [0.25, 1.5], [0.05, 3]] }, price: 3000, tier: 1, group: '商売グループ', icon: 'casino' },
+    { id: 'sell_roulette_2', name: '売値ルーレット II', description: '売却のたびルーレット！ 60%:x1 / 28%:x1.5 / 10%:x3 / 2%:x8', effect: { type: 'sell_roulette', outcomes: [[0.6, 1], [0.28, 1.5], [0.1, 3], [0.02, 8]] }, price: 10000, tier: 2, group: '商売グループ', icon: 'casino' },
+    { id: 'sell_roulette_3', name: '売値ルーレット III', description: '売却のたびルーレット！ 50%:x1 / 30%:x1.5 / 15%:x3 / 5%:x8', effect: { type: 'sell_roulette', outcomes: [[0.5, 1], [0.3, 1.5], [0.15, 3], [0.05, 8]] }, price: 30000, tier: 3, group: '商売グループ', icon: 'casino' },
+    { id: 'sell_roulette_4', name: '売値ルーレット 極', description: '売却のたびルーレット！ 40%:x1 / 30%:x1.5 / 20%:x3 / 9%:x6 / 1%:x20', effect: { type: 'sell_roulette', outcomes: [[0.4, 1], [0.3, 1.5], [0.2, 3], [0.09, 6], [0.01, 20]] }, price: 90000, tier: 4, group: '商売グループ', icon: 'casino' },
+    { id: 'flow_state_1', name: 'ゾーン突入 I', description: 'ゲージバトルを赤ゾーンで釣り上げるたび釣りパワー+2%（最大5連続=+10%）。赤以外で止めるか失敗でリセット', effect: { type: 'flow_state', perStack: 0.02, maxStacks: 5 }, price: 3000, tier: 1, group: '技術グループ', icon: 'self_improvement' },
+    { id: 'flow_state_2', name: 'ゾーン突入 II', description: 'ゲージバトルを赤ゾーンで釣り上げるたび釣りパワー+3%（最大8連続=+24%）。赤以外で止めるか失敗でリセット', effect: { type: 'flow_state', perStack: 0.03, maxStacks: 8 }, price: 10000, tier: 2, group: '技術グループ', icon: 'self_improvement' },
+    { id: 'flow_state_3', name: 'ゾーン突入 III', description: 'ゲージバトルを赤ゾーンで釣り上げるたび釣りパワー+4%（最大10連続=+40%）。赤以外で止めるか失敗でリセット', effect: { type: 'flow_state', perStack: 0.04, maxStacks: 10 }, price: 30000, tier: 3, group: '技術グループ', icon: 'self_improvement' },
+    { id: 'flow_state_4', name: 'ゾーン突入 極', description: 'ゲージバトルを赤ゾーンで釣り上げるたび釣りパワー+5%（最大12連続=+60%）。赤以外で止めるか失敗でリセット', effect: { type: 'flow_state', perStack: 0.05, maxStacks: 12 }, price: 90000, tier: 4, group: '技術グループ', icon: 'self_improvement' },
+    { id: 'revenge_1', name: 'リベンジ・フィッシング I', description: '失敗するたびゲージ捕獲率+3%を蓄積（最大5回=+15%）。成功でリセット', effect: { type: 'revenge', perStack: 0.03, maxStacks: 5 }, price: 3000, tier: 1, group: '捕獲グループ', icon: 'replay' },
+    { id: 'revenge_2', name: 'リベンジ・フィッシング II', description: '失敗するたびゲージ捕獲率+4%を蓄積（最大5回=+20%）。成功でリセット', effect: { type: 'revenge', perStack: 0.04, maxStacks: 5 }, price: 10000, tier: 2, group: '捕獲グループ', icon: 'replay' },
+    { id: 'revenge_3', name: 'リベンジ・フィッシング III', description: '失敗するたびゲージ捕獲率+5%を蓄積（最大6回=+30%）。成功でリセット', effect: { type: 'revenge', perStack: 0.05, maxStacks: 6 }, price: 30000, tier: 3, group: '捕獲グループ', icon: 'replay' },
+    { id: 'revenge_4', name: 'リベンジ・フィッシング 極', description: '失敗するたびゲージ捕獲率+6%を蓄積（最大8回=+48%）。成功でリセット', effect: { type: 'revenge', perStack: 0.06, maxStacks: 8 }, price: 90000, tier: 4, group: '捕獲グループ', icon: 'replay' },
 ];
 
 /**
@@ -547,50 +580,53 @@ const SPECIAL_RECIPES = {
 };
 
 // ========================================
-// 餌データ
+// 餌データ（餌は1種類。1投あたりの使用数で出現ランクが変わる）
 // ========================================
-const BAITS = [
-    {
-        id: 'bait_d',
-        name: 'Dランクの餌',
-        rank: 'D',
-        description: '基本の餌。Dランクが釣れやすい。釣れても消費されない。',
-        price: 0,
-        quantity: 1
-    },
-    {
-        id: 'bait_c',
-        name: 'Cランクの餌',
-        rank: 'C',
-        description: 'Cランクが釣れやすい。失敗しても消費されない。',
-        price: 50,
-        quantity: 5
-    },
-    {
-        id: 'bait_b',
-        name: 'Bランクの餌',
-        rank: 'B',
-        description: 'Bランクが釣れやすい。失敗しても消費されない。',
-        price: 200,
-        quantity: 5
-    },
-    {
-        id: 'bait_a',
-        name: 'Aランクの餌',
-        rank: 'A',
-        description: 'Aランクが釣れやすい。釣れなくても消費される。',
-        price: 800,
-        quantity: 5
-    },
-    {
-        id: 'bait_s',
-        name: 'Sランクの餌',
-        rank: 'S',
-        description: 'Sランクが釣れやすい。釣れなくても消費される。',
-        price: 3000,
-        quantity: 5
-    }
-];
+// - tiers[].count     : 1投で使う餌の数（段階制。0 = 餌なし）
+// - tiers[].weights   : ランク抽選の相対重み（合計100でなくてよい）
+// - tiers[].feverWeights : 月フィーバー中のランク重み
+// - tiers[].effectiveRank: 「相当の餌ランク」(0=D … 4=S)。ランク差による成功率・波紋・鳥イベント・称号ボーナスの基準
+// - tiers[].waitTimeReduction: ウキが沈むまでの待ち時間の短縮率
+// 重みは旧ランク別餌テーブルを継承（0=旧D / 1=旧C / 3=旧B / 5=旧A / 10=旧S相当）。20個はそれ以上。
+// 旧Dの「S 1%」は期待値を歪めるため0.3%に調整。
+const BAIT_CONFIG = {
+    name: '餌',
+    description: '一度に使う数が多いほど、高ランクの魚が釣れやすくなる。',
+    unitPrice: 20,                 // 基準単価（G）
+    // まとめ買い（個数→価格）。大口ほど割安
+    packs: [
+        { count: 5, price: 100 },
+        { count: 10, price: 200 },
+        { count: 50, price: 950 },
+        { count: 100, price: 1800 }
+    ],
+    starterStock: 5,               // 新規ゲーム開始時の所持数
+    maxStock: 99999,
+    failRefundRate: 0.5,           // 失敗時（ヒットを逃す/早合わせ/ゲージ失敗）に戻る割合（切り捨て）
+    tiers: [
+        { count: 0, effectiveRank: 0, waitTimeReduction: 0,
+          weights: { D: 0.9, C: 0.1, S: 0.003 },
+          feverWeights: { D: 10, C: 85, B: 1, A: 2, S: 2 } },
+        { count: 1, effectiveRank: 1, waitTimeReduction: 0.02,
+          weights: { C: 0.8, D: 0.2, B: 0.1, S: 0.003 },
+          feverWeights: { C: 24, B: 76 } },
+        { count: 3, effectiveRank: 2, waitTimeReduction: 0.05,
+          weights: { B: 0.8, C: 0.2, D: 0.1, A: 0.06, S: 0.005 },
+          feverWeights: { B: 30, A: 70 } },
+        { count: 5, effectiveRank: 3, waitTimeReduction: 0.08,
+          weights: { A: 0.6, B: 0.4, C: 0.2, S: 0.05 },
+          feverWeights: { A: 70, S: 30 } },
+        { count: 10, effectiveRank: 4, waitTimeReduction: 0.12,
+          weights: { A: 0.6, S: 0.2, B: 0.2, SS: 0.033 },
+          feverWeights: { A: 40, S: 50, SS: 10 } },
+        { count: 20, effectiveRank: 4, waitTimeReduction: 0.15,
+          weights: { A: 0.45, S: 0.4, B: 0.1, SS: 0.08 },
+          feverWeights: { A: 25, S: 60, SS: 15 } }
+    ],
+    // 旧セーブ移行用: 旧餌1個あたりの価格（セット価格 / 個数）。この価値を新しい餌の単価で割って換算する
+    legacyUnitPrices: { bait_c: 10, bait_b: 40, bait_a: 160, bait_s: 600 }
+};
+
 
 
 
@@ -784,20 +820,14 @@ const TREASURE_CONFIG = {
     lootTables: {
         WOOD: {
             money: { min: 100, max: 500 },
-            baits: [
-                { id: 'bait_c', min: 1, max: 3, weight: 0.8 },
-                { id: 'bait_b', min: 1, max: 1, weight: 0.2 }
-            ],
+            baits: { min: 2, max: 5 },
             skills: [
                 { tier: 1, chance: 0.15 } // 15%でTier1スキル
             ]
         },
         SILVER: {
             money: { min: 1000, max: 3000 },
-            baits: [
-                { id: 'bait_b', min: 2, max: 5, weight: 0.6 },
-                { id: 'bait_a', min: 1, max: 2, weight: 0.4 }
-            ],
+            baits: { min: 8, max: 15 },
             skills: [
                 { tier: 1, chance: 0.2 }, // 20%でTier1スキル
                 { tier: 2, chance: 0.15 } // 15%でTier2スキル
@@ -805,9 +835,7 @@ const TREASURE_CONFIG = {
         },
         GOLD: {
             money: { min: 5000, max: 15000 },
-            baits: [
-                { id: 'bait_s', min: 1, max: 3, weight: 1.0 }
-            ],
+            baits: { min: 25, max: 50 },
             skills: [
                 { tier: 2, chance: 0.4 }, // 40%でTier2スキル
                 { tier: 3, chance: 0.2 }  // 20%でTier3スキル
@@ -952,7 +980,7 @@ if (typeof window !== 'undefined') {
         RODS,
         FISH,
         SKILLS,
-        BAITS,
+        BAIT_CONFIG,
         GAUGE_CONFIG,
         FISHING_CONFIG,
         RARITY_WEIGHTS,

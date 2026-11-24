@@ -6,8 +6,9 @@ const GameState = {
     // 基本ステータス
     // ========================================
     money: 0,
-    baitInventory: {},
-    baitType: 'bait_d',
+    baitStock: 0,        // 所持している餌の数（餌は1種類）
+    baitUseCount: 0,     // 1投で使う餌の数（段階: GAME_DATA.BAIT_CONFIG.tiers[].count）
+    activeBaitCount: null, // 投げた時点で確定した使用数（結果確定まで保持。null=未投擲）
 
     // ========================================
     // ランク (Rank)
@@ -82,6 +83,12 @@ const GameState = {
 
     // 動的ミッションデータ
     dynamicMissions: null,   // { A: {...}, B: {...}, C: {...} }
+    // --- 遊びスキル用の一時カウンタ（セーブしない・起動ごとにリセット） ---
+    comboCount: 0,        // 連続成功数 (連勝コンボ)
+    flowStacks: 0,        // 赤ゾーン連続成功数 (ゾーン突入)
+    revengeStacks: 0,     // 連続失敗数 (リベンジ・フィッシング)
+    lastSellRoulette: null, // 直近の売値ルーレット結果 {mult}
+    _debugHour: null,     // テスト用: 時間帯の強制指定
     dynamicMissionCompletedCount: 0, // 達成ミッション数（C枠の「ミッションをN個達成する」用）
 
     biggestFish: null,
@@ -115,25 +122,15 @@ const GameState = {
             // セーブデータから復元
             this.money = saveData.player.money;
             this.highTierGuaranteed = false; // ロード時はリセット
-            // 互換性チェック: 古いデータの場合は移行
-            if (saveData.player.baitInventory) {
-                this.baitInventory = { ...saveData.player.baitInventory };
-                // 強制的にDランクは無限(-1)にする（バグ修正・保護）
-                this.baitInventory['bait_d'] = -1;
+            // 餌: 新形式(baitStock)はそのまま、旧形式(ランク別baitInventory)は価値換算して引き継ぐ
+            this.activeBaitCount = null;
+            if (saveData.player.baitStock !== undefined) {
+                this.baitStock = this.clampBaitStock(saveData.player.baitStock);
+                this.baitUseCount = this.normalizeBaitUseCount(saveData.player.baitUseCount);
             } else {
-                // 旧データからの移行: 持っていた餌を現在の餌タイプに追加
-                this.baitInventory = {
-                    'bait_d': -1, // -1は無限
-                    'bait_c': 0,
-                    'bait_b': 0,
-                    'bait_a': 0,
-                    'bait_s': 0
-                };
-                if (saveData.player.baitType && saveData.player.baitCount > 0) {
-                    this.baitInventory[saveData.player.baitType] = saveData.player.baitCount;
-                }
+                this.baitStock = this.migrateLegacyBait(saveData.player);
+                this.baitUseCount = 0; // 旧セーブは「餌なし」(=旧Dランク餌相当)から開始
             }
-            this.baitType = saveData.player.baitType || 'bait_d';
 
             this.rodRankIndex = saveData.rod.rankIndex;
 
@@ -250,6 +247,17 @@ const GameState = {
             this.missionProgress = saveData.statistics.missionProgress ?? 0; // 旧互換用
 
             this.dynamicMissions = saveData.statistics.dynamicMissions ?? null;
+            // 旧「Xランクの餌を使用する」ミッションは「餌を合計○個使う」に置き換え（進捗は維持）
+            if (this.dynamicMissions) {
+                ['A', 'B', 'C'].forEach(slot => {
+                    const m = this.dynamicMissions[slot];
+                    if (m && m.templateId === 'use_bait' && m.param) {
+                        m.param = null;
+                        m.paramLabel = null;
+                        m.text = `餌を合計${m.target}個使う`;
+                    }
+                });
+            }
             this.dynamicMissionCompletedCount = saveData.statistics.dynamicMissionCompletedCount ?? 0;
             this.biggestFish = saveData.statistics.biggestFish;
 
@@ -285,14 +293,9 @@ const GameState = {
             this.init(defaultData);
 
             // 初期在庫の設定
-            this.baitInventory = {
-                'bait_d': -1, // 無限
-                'bait_c': 0,
-                'bait_b': 0,
-                'bait_a': 0,
-                'bait_s': 0
-            };
-            this.baitType = 'bait_d';
+            this.baitStock = GAME_DATA.BAIT_CONFIG.starterStock;
+            this.baitUseCount = 0;
+            this.activeBaitCount = null;
 
             this.rank = 1;
             this.exp = 0;
@@ -386,6 +389,8 @@ const GameState = {
 
         // ランクボーナス (Rank Bonus) - 加算倍率
         multiplier += this.getRankPowerBonus();
+        // ゾーン突入 (赤ゾーン連続成功)
+        multiplier += this.getFlowPowerBonus();
         const overdriveEffects = this.getEffectsByType('overdrive');
         overdriveEffects.forEach(effect => {
             multiplier += effect.power;
@@ -672,6 +677,10 @@ const GameState = {
         // 動的補正を加算
         bonus += this.getDynamicSellMultiplier();
 
+        // 遊びスキル: 連勝コンボ / 時の釣り人(昼)
+        bonus += this.getComboSellBonus();
+        bonus += this.getTimeAnglerBonus('day');
+
         // ハードモード補正 (売値8倍)
         if (this.getEffectsByType('hard_mode').length > 0) {
             multiplier *= 8.0;
@@ -694,6 +703,8 @@ const GameState = {
         this.getEffectsByType('master_angler').forEach(effect => {
             bonus += effect.catch;
         });
+        // リベンジ・フィッシング
+        bonus += this.getRevengeCatchBonus();
         return bonus;
     },
 
@@ -724,13 +735,8 @@ const GameState = {
             }
         });
 
-        // 餌の補正も加算
-        if (this.baitType) {
-            const bait = GAME_DATA.BAITS.find(b => b.id === this.baitType);
-            if (bait) {
-                bonus += (bait.rareBoost || 0);
-            }
-        }
+        // 時の釣り人 (夕)
+        bonus += this.getTimeAnglerBonus('evening');
 
         return bonus;
     },
@@ -771,6 +777,8 @@ const GameState = {
         this.getEffectsByType('new_fish_finder').forEach(effect => {
             reduction -= effect.waitIncrease;
         });
+        // 時の釣り人 (朝)
+        reduction += this.getTimeAnglerBonus('morning');
         // 最大100%カット（念のためキャップ）
         return Math.min(reduction, 0.95); // 95%まで
     },
@@ -839,6 +847,9 @@ const GameState = {
 
         // 動的補正を加算
         totalMultiplier += this.getDynamicTitleChance();
+
+        // 時の釣り人 (夜): ヌシ出現率アップ
+        totalMultiplier += this.getTimeAnglerBonus('night');
 
         return totalMultiplier;
     },
@@ -1010,8 +1021,9 @@ const GameState = {
         let hasIt = false;
         this.getEffectsByType('auto_hit').forEach(effect => {
             hasIt = true;
-            if (effect.chance > bestChance) {
-                bestChance = effect.chance;
+            const c = (effect.chance !== undefined) ? effect.chance : (effect.value || 0);
+            if (c > bestChance) {
+                bestChance = c;
             }
         });
         return { hasIt, chance: bestChance };
@@ -1103,6 +1115,172 @@ const GameState = {
     // ========================================
     // 未登録魚出現率のスキル補正を取得 (倍率)
     // ========================================
+    // ========================================
+    // 遊びスキル群 (おまけ釣り / コンボ / 時の釣り人 / スリル / 予兆 / ルーレット / ゾーン / リベンジ)
+    // ========================================
+    _rankIdx(r) {
+        return ['D', 'C', 'B', 'A', 'S', 'SS', 'GOD'].indexOf(r);
+    },
+
+    // 釣りの結果を記録（コンボ・ゾーン・リベンジの内部カウンタ更新）
+    // info: { battle: bool, zone: 'red'|'green'|'white'|null }
+    registerCatchResult(success, info = {}) {
+        if (success) {
+            this.comboCount++;
+            this.revengeStacks = 0;
+            if (info.battle) {
+                if (info.zone === 'red') this.flowStacks++;
+                else this.flowStacks = 0; // 赤以外で止めたら途切れる
+            }
+        } else {
+            this.comboCount = 0;
+            this.flowStacks = 0;
+            this.revengeStacks++;
+        }
+    },
+
+    // 連勝コンボ: 現在の売値ボーナス (例: 0.1 = +10%)
+    getComboSellBonus() {
+        let bonus = 0;
+        this.getEffectsByType('combo_boost').forEach(e => {
+            bonus += e.perStack * Math.min(this.comboCount, e.maxStacks);
+        });
+        return bonus;
+    },
+
+    // ゾーン突入: 現在の釣りパワー倍率ボーナス
+    getFlowPowerBonus() {
+        let bonus = 0;
+        this.getEffectsByType('flow_state').forEach(e => {
+            bonus += e.perStack * Math.min(this.flowStacks, e.maxStacks);
+        });
+        return bonus;
+    },
+
+    // リベンジ・フィッシング: 現在のゲージ捕獲率ボーナス
+    getRevengeCatchBonus() {
+        let bonus = 0;
+        this.getEffectsByType('revenge').forEach(e => {
+            bonus += e.perStack * Math.min(this.revengeStacks, e.maxStacks);
+        });
+        return bonus;
+    },
+
+    // スリル・ゲージ: ゲージ速度アップ率と赤ゾーン拡大率の合計
+    getThrillGauge() {
+        const r = { speedUp: 0, redUp: 0 };
+        this.getEffectsByType('thrill_gauge').forEach(e => {
+            r.speedUp += e.speedUp;
+            r.redUp += e.redUp;
+        });
+        return r;
+    },
+
+    // 時間帯: 'morning'(5-10) / 'day'(10-17) / 'evening'(17-20) / 'night'(20-5)
+    getTimeBand(hour) {
+        if (hour === undefined || hour === null) {
+            hour = (this._debugHour !== null && this._debugHour !== undefined) ? this._debugHour : new Date().getHours();
+        }
+        if (hour >= 5 && hour < 10) return 'morning';
+        if (hour >= 10 && hour < 17) return 'day';
+        if (hour >= 17 && hour < 20) return 'evening';
+        return 'night';
+    },
+
+    // 時の釣り人: 現在の時間帯に応じた効果値 (kind: 'morning'|'day'|'evening'|'night')
+    // 夜(ヌシ出現率)は他より大きく、値の3倍を返す
+    getTimeAnglerBonus(kind) {
+        if (this.getTimeBand() !== kind) return 0;
+        let v = 0;
+        this.getEffectsByType('time_angler').forEach(e => { v += e.value; });
+        return kind === 'night' ? v * 3 : v;
+    },
+
+    // おまけ釣り: 成功時にランダムで別種の魚を返す (なければ null)
+    // rng はテスト用に差し替え可能
+    rollBonusFish(fish, rng = Math.random) {
+        if (!fish || fish.isTreasure) return null;
+        let chance = 0;
+        this.getEffectsByType('bonus_fish').forEach(e => { chance += e.chance; });
+        chance = Math.min(chance, 0.8);
+        if (chance <= 0 || rng() >= chance) return null;
+
+        const maxIdx = this._rankIdx(fish.rarity);
+        const pool = GAME_DATA.FISH.filter(f => f.id !== fish.id && this._rankIdx(f.rarity) >= 0 && this._rankIdx(f.rarity) <= maxIdx);
+        if (pool.length === 0) return null;
+        const total = pool.reduce((sum, f) => sum + (f.weight || 1), 0);
+        let r = rng() * total;
+        for (const f of pool) {
+            r -= (f.weight || 1);
+            if (r < 0) return { ...f };
+        }
+        return { ...pool[pool.length - 1] };
+    },
+
+    // 売値ルーレット: 結果 { mult } を返す (装備していなければ null)
+    spinSellRoulette(rng = Math.random) {
+        const effects = this.getEffectsByType('sell_roulette');
+        if (effects.length === 0) return null;
+        // 複数装備時は期待値の最も高いものを採用
+        const ev = e => e.outcomes.reduce((s, o) => s + o[0] * o[1], 0);
+        const best = effects.reduce((a, b) => (ev(b) > ev(a) ? b : a));
+        let r = rng();
+        let mult = best.outcomes[best.outcomes.length - 1][1];
+        for (const [chance, m] of best.outcomes) {
+            r -= chance;
+            if (r < 0) { mult = m; break; }
+        }
+        return { mult };
+    },
+
+    // 予兆の目: 抽選された魚に応じた予兆情報 { message, hitWindowBonus } (なければ null)
+    getOmenInfo(fish) {
+        if (!fish || fish.isTreasure) return null;
+        const effects = this.getEffectsByType('omen');
+        if (effects.length === 0) return null;
+        const best = effects.reduce((a, b) => (b.hitWindowBonus > a.hitWindowBonus ? b : a));
+
+        const rankOk = this._rankIdx(fish.rarity) >= this._rankIdx(best.minRank);
+        const titleOk = !!(best.showTitle && fish.hasTitle);
+        if (!rankOk && !titleOk) return null;
+
+        let message;
+        if (titleOk) message = '👑 ヌシの気配がする…！！';
+        else if (best.showRank) message = `✨ ${fish.rarity}ランクの気配がする…`;
+        else message = '✨ 何か大物の気配がする…';
+        return { message, hitWindowBonus: best.hitWindowBonus };
+    },
+
+    // ========================================
+    // リサイクル強化 (recycle_boost)
+    // ========================================
+    // 汎用倍率: effect.value を掛け合わせる（未装備なら 1.0）。
+    getRecycleBoost() {
+        let boost = 1.0;
+        this.getEffectsByType('recycle_boost').forEach(effect => {
+            if (typeof effect.value === 'number') boost *= effect.value;
+        });
+        return boost;
+    },
+
+    // リサイクルに必要なスキル数の軽減量 (最大3)
+    getRecycleCostReduction() {
+        let r = 0;
+        this.getEffectsByType('recycle_boost').forEach(effect => {
+            r += effect.costReduction || 0;
+        });
+        return Math.min(3, r);
+    },
+
+    // リサイクル時の追加獲得スキル数 (最大3)
+    getRecycleGainBonus() {
+        let g = 0;
+        this.getEffectsByType('recycle_boost').forEach(effect => {
+            g += effect.gainBonus || 0;
+        });
+        return Math.min(3, g);
+    },
+
     getNewFishBonus() {
         let bonus = 1.0;
         this.getEffectsByType('new_fish_finder').forEach(effect => {
@@ -1381,7 +1559,8 @@ const GameState = {
         this.inventory.push(fishData);
 
         // 図鑑データを更新
-        if (!this.encyclopedia[fish.id]) {
+        const isNewSpecies = !this.encyclopedia[fish.id];
+        if (isNewSpecies) {
             this.encyclopedia[fish.id] = { count: 0, hasSpecial: false, specialCount: 0 };
         }
         this.encyclopedia[fish.id].count++;
@@ -1401,6 +1580,11 @@ const GameState = {
         // 最大の魚を更新
         if (!this.biggestFish || fish.power > this.biggestFish.power) {
             this.biggestFish = { name: fish.name, power: fish.power };
+        }
+
+        // ミッション判定: 図鑑に新種登録
+        if (isNewSpecies && typeof MissionManager !== 'undefined') {
+            MissionManager.checkMission('new_fish', { fishId: fish.id });
         }
 
         // オートセーブ
@@ -1469,15 +1653,24 @@ const GameState = {
             totalEarned += finalPrice;
         }
 
+        // 売値ルーレット
+        this.lastSellRoulette = null;
+        if (count > 0) {
+            const spin = this.spinSellRoulette();
+            if (spin) {
+                this.lastSellRoulette = spin;
+                totalEarned = Math.floor(totalEarned * spin.mult);
+            }
+        }
+
         this.money += totalEarned;
         this.totalMoneyEarned += totalEarned;
-        this.totalCoinsEarned += totalEarned;
         this.totalCoinsEarned += totalEarned;
         this.inventory = [];
 
         // ミッション判定: 魚を売る
         if (typeof MissionManager !== 'undefined') {
-            MissionManager.checkMission('sell_fish');
+            MissionManager.checkMission('sell_fish', { count: count, amount: totalEarned });
             // お金を稼ぐミッション用
             MissionManager.checkMission('money_earned', { amount: totalEarned });
         }
@@ -1705,6 +1898,11 @@ const GameState = {
         this.money -= cost;
         this.rodStars++;
 
+        // ミッション判定: 竿を強化
+        if (typeof MissionManager !== 'undefined') {
+            MissionManager.checkMission('rod_upgrade', { stars: this.rodStars });
+        }
+
         // オートセーブ
         SaveManager.save(this);
 
@@ -1929,49 +2127,63 @@ const GameState = {
 
 
     // ========================================
-    // 餌の購入
+    // 餌の購入・追加
     // ========================================
-    buyBait(baitId, quantity = null) {
-        const bait = GAME_DATA.BAITS.find(b => b.id === baitId);
-        if (!bait) return false;
-
-        // 指定数量、またはデフォルト数量
-        const amount = quantity || bait.quantity;
-        // 価格計算（数量指定の場合は比例計算、デフォルトの場合は設定価格）
-        // 注: 現在のGAME_DATAでは単価が定義されていないため、セット価格から算出する必要があるかもですが
-        // 一旦、購入時は基本セット単位とします。
-        // 要望により「個数を選べる」とあるので、単価計算ロジックが必要。
-        // ここでは単純に bait.price は bait.quantity 個分の価格と仮定して、単価を算出します。
-        const unitPrice = bait.quantity > 0 ? bait.price / bait.quantity : 0;
-        const baseTotalCost = Math.ceil(unitPrice * amount);
-
-        // 割引適用
+    // まとめ買いの価格（ショップ割引込み）。packCount が定義済みパックならパック価格、それ以外は単価×個数
+    getBaitCost(count) {
+        const cfg = GAME_DATA.BAIT_CONFIG;
+        const pack = cfg.packs.find(p => p.count === count);
+        const base = pack ? pack.price : Math.ceil(cfg.unitPrice * count);
         const discount = this.getShopDiscount();
-        const finalCost = Math.floor(baseTotalCost * (1.0 - discount));
+        return Math.floor(base * (1.0 - discount));
+    },
 
-        if (this.money < finalCost) {
-            return false;
-        }
+    buyBait(count) {
+        if (!count || count <= 0) return false;
+        const cost = this.getBaitCost(count);
+        if (this.money < cost) return false;
 
-        this.money -= finalCost;
-
-        // 餌を追加
-        if (this.baitInventory[baitId] === -1) {
-            // 無限の場合は増えない
-        } else {
-            this.baitInventory[baitId] = (this.baitInventory[baitId] || 0) + amount;
-        }
-
-        // 現在選択中の餌がこれなら切り替え不要、でなければ...自動で切り替えるかはUI次第だが
-        // 購入した餌をすぐに使いたいケースが多いので切り替えても良い
-        this.baitType = baitId;
-
-        // オートセーブ
+        this.money -= cost;
+        this.baitStock = this.clampBaitStock(this.baitStock + count);
         SaveManager.save(this);
-
         return true;
     },
 
+    // 餌の追加（宝箱などから）
+    addBait(amount) {
+        if (!amount || amount <= 0) return;
+        this.baitStock = this.clampBaitStock(this.baitStock + amount);
+        SaveManager.save(this);
+    },
+
+    clampBaitStock(n) {
+        const v = Math.floor(Number(n));
+        if (!isFinite(v) || v < 0) return 0;
+        return Math.min(v, GAME_DATA.BAIT_CONFIG.maxStock);
+    },
+
+    // 旧セーブ（ランク別 baitInventory / 更に古い baitType+baitCount）を新しい餌の個数に換算
+    // 旧餌1個あたりの価格（legacyUnitPrices）の合計価値 ÷ 新しい餌の単価。旧Dの無限(-1)は換算しない。
+    // 所持があったのに端数で0になる場合は最低1個。
+    migrateLegacyBait(player) {
+        const cfg = GAME_DATA.BAIT_CONFIG;
+        let inv = player && player.baitInventory;
+        if (!inv) {
+            inv = {};
+            if (player && player.baitType && player.baitCount > 0) inv[player.baitType] = player.baitCount;
+        }
+        let value = 0;
+        let hasAny = false;
+        for (const id in cfg.legacyUnitPrices) {
+            const n = inv[id];
+            if (n > 0) {
+                value += cfg.legacyUnitPrices[id] * n;
+                hasAny = true;
+            }
+        }
+        if (!hasAny) return 0;
+        return this.clampBaitStock(Math.max(1, Math.floor(value / cfg.unitPrice)));
+    },
     // ========================================
     // フィーバー報酬倍率（永遠の熱狂）
     // ========================================
@@ -1983,23 +2195,6 @@ const GameState = {
             });
         }
         return mult;
-    },
-
-    // ========================================
-    // 餌の追加（宝箱などから）
-    // ========================================
-    addBait(baitId, amount) {
-        if (!amount || amount <= 0) return;
-
-        // 餌を追加
-        if (this.baitInventory[baitId] === -1) {
-            // 無限の場合は増えない
-        } else {
-            this.baitInventory[baitId] = (this.baitInventory[baitId] || 0) + amount;
-        }
-
-        // オートセーブ
-        SaveManager.save(this);
     },
 
     // ========================================
@@ -2032,64 +2227,118 @@ const GameState = {
     },
 
     // ========================================
-    // 現在の餌の所持数を取得
+    // 餌の使用数（段階制）
     // ========================================
+    getBaitTiers() {
+        return GAME_DATA.BAIT_CONFIG.tiers;
+    },
+
+    // 許可された段階値のうち、指定値以下で最大のもの（無効値は0）
+    normalizeBaitUseCount(n) {
+        const tiers = this.getBaitTiers();
+        let best = tiers[0].count;
+        for (const t of tiers) {
+            if (t.count <= n) best = t.count;
+        }
+        return Number.isFinite(Number(n)) ? best : 0;
+    },
+
+    // 使用数に対応する段階データ
+    getBaitTier(count) {
+        const tiers = this.getBaitTiers();
+        const c = this.normalizeBaitUseCount(count);
+        return tiers.find(t => t.count === c) || tiers[0];
+    },
+
+    // 所持数（互換用エイリアス）
     getCurrentBaitCount() {
-        if (!this.baitType) return 0;
-        return this.baitInventory[this.baitType] ?? 0;
+        return this.baitStock;
     },
 
-    // ========================================
-    // 餌の切り替え
-    // ========================================
+    isInfiniteBait() {
+        return this.getEffectsByType('infinite_bait').length > 0;
+    },
+
+    // 使用数の切り替え（direction: +1 / -1。端で反対側へループ）
     switchBait(direction) {
-        const baits = GAME_DATA.BAITS;
-        const currentIndex = baits.findIndex(b => b.id === this.baitType);
-        if (currentIndex === -1) {
-            this.baitType = baits[0].id;
-            return;
-        }
+        const tiers = this.getBaitTiers();
+        let idx = tiers.findIndex(t => t.count === this.baitUseCount);
+        if (idx === -1) idx = 0;
+        idx = (idx + (direction >= 0 ? 1 : -1) + tiers.length) % tiers.length;
+        this.baitUseCount = tiers[idx].count;
+        SaveManager.save(this);
+        return this.baitUseCount;
+    },
 
-        let nextIndex = currentIndex + direction;
-        if (nextIndex >= baits.length) {
-            nextIndex = 0;
-        } else if (nextIndex < 0) {
-            nextIndex = baits.length - 1;
-        }
-
-        this.baitType = baits[nextIndex].id;
+    setBaitUseCount(count) {
+        this.baitUseCount = this.normalizeBaitUseCount(count);
         SaveManager.save(this);
     },
 
-    // ========================================
-    // 餌を1つ消費
-    // ========================================
-    useBait(isSuccess = true) {
-        if (!this.baitType) return false;
+    // 今投げたら実際に使われる数。所持数が足りなければ「所持数以下で最大の段階」に下がる。
+    // 無限餌スキルなら所持数に関わらず選択どおり（消費しない）。
+    getPlannedBaitCount() {
+        const want = this.normalizeBaitUseCount(this.baitUseCount);
+        if (this.isInfiniteBait()) return want;
+        return this.normalizeBaitUseCount(Math.min(want, this.baitStock));
+    },
 
-        const bait = GAME_DATA.BAITS.find(b => b.id === this.baitType);
-        if (!bait) return false;
+    // 抽選・成功率などが参照する使用数（投擲中は確定値、未投擲なら予定値）
+    getActiveBaitCount() {
+        return this.activeBaitCount !== null ? this.activeBaitCount : this.getPlannedBaitCount();
+    },
 
-        const currentCount = this.baitInventory[this.baitType];
-        if (currentCount === -1) return true;
+    getActiveBaitTier() {
+        return this.getBaitTier(this.getActiveBaitCount());
+    },
 
-        if ((bait.rank === 'C' || bait.rank === 'B') && !isSuccess) {
-            return true;
+    // 投げた時点で餌を消費して使用数を確定する。戻り値: { used: 使用数, spent: 実際に減った数, short: 不足で下げたか }
+    commitBait() {
+        const want = this.normalizeBaitUseCount(this.baitUseCount);
+        const used = this.getPlannedBaitCount();
+        const spent = this.isInfiniteBait() ? 0 : used;
+        this.activeBaitCount = used;
+        if (spent > 0) {
+            this.baitStock -= spent;
+            SaveManager.save(this);
         }
+        return { used, spent, short: used < want };
+    },
 
-        if (currentCount <= 0) return false;
+    // 結果確定時の精算。成功: 餌の達人で使用した餌が1個ごと確率で戻る / 失敗: 使用数の一部が戻る
+    // 戻り値: 戻った餌の数
+    settleBait(isSuccess) {
+        if (this.activeBaitCount === null) return 0;
+        const used = this.activeBaitCount;
+        this.activeBaitCount = null;
+        if (used <= 0 || this.isInfiniteBait()) return 0;
 
+        let refund = 0;
         if (isSuccess) {
-            const saveChance = this.getBaitSaveChance();
-            if (Math.random() < saveChance) {
-                console.log('✨ 餌の達人発動！');
-                return true;
+            const chance = this.getBaitSaveChance();
+            for (let i = 0; i < used; i++) {
+                if (Math.random() < chance) refund++;
             }
+            if (refund > 0) console.log(`✨ 餌の達人発動！ 餌${refund}個が戻った`);
+        } else {
+            refund = Math.floor(used * GAME_DATA.BAIT_CONFIG.failRefundRate);
         }
-
-        this.baitInventory[this.baitType]--;
+        if (refund > 0) {
+            this.baitStock = this.clampBaitStock(this.baitStock + refund);
+        }
         SaveManager.save(this);
-        return true;
+        return refund;
+    },
+
+    // 釣りを中断した場合: 確定済みの餌を全額戻す
+    cancelBait() {
+        if (this.activeBaitCount === null) return;
+        const used = this.activeBaitCount;
+        this.activeBaitCount = null;
+        if (used > 0 && !this.isInfiniteBait()) {
+            this.baitStock = this.clampBaitStock(this.baitStock + used);
+            SaveManager.save(this);
+        }
     },
 
     // ========================================

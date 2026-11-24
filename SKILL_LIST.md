@@ -71,13 +71,13 @@ HIT受付時間（ウキが沈んでから逃げるまでの時間）を延長�
 | `patience_3` | 忍耐力 III | 3 | 4,000 | 待ち時間を40%短縮 | `wait_time_reduction`: -40% |
 
 ## 餌の達人 (Bait Master)
-釣り成功時に餌を消費しない確率（エコ率）を上げます。
+釣り成功時に、使った餌が1個ごとに確率で戻ってくる確率（エコ率）を上げます。
 
 | ID | 名前 | Tier | 価格 | 説明 | 効果詳細 |
 |---|---|---|---|---|---|
-| `bait_master_1` | 餌の達人 I | 1 | 500 | 15%の確率で餌を消費しない | `bait_save`: 15% |
-| `bait_master_2` | 餌の達人 II | 2 | 2,000 | 30%の確率で餌を消費しない | `bait_save`: 30% |
-| `bait_master_3` | 餌の達人 III | 3 | 6,000 | 50%の確率で餌を消費しない | `bait_save`: 50% |
+| `bait_master_1` | 餌の達人 I | 1 | 500 | 使った餌が1個ごとに15%で戻る | `bait_save`: 15% |
+| `bait_master_2` | 餌の達人 II | 2 | 2,000 | 使った餌が1個ごとに30%で戻る | `bait_save`: 30% |
+| `bait_master_3` | 餌の達人 III | 3 | 6,000 | 使った餌が1個ごとに50%で戻る | `bait_save`: 50% |
 
 ## 起死回生 (Second Chance)
 失敗（白ゾーン停止）時に、確率で成功扱いに逆転します。
@@ -240,7 +240,7 @@ HIT受付時間（ウキが沈んでから逃げるまでの時間）を延長�
 | `rank_collector_c` | Cランク愛好家 | 1 | 2,000 | Cランク出現率 大幅UP | `rank_collector`: C x10 |
 | `rank_collector_b` | Bランク愛好家 | 2 | 6,000 | Bランク出現率 大幅UP | `rank_collector`: B x10 |
 | `rank_collector_a` | Aランク愛好家 | 3 | 20,000 | Aランク出現率 大幅UP | `rank_collector`: A x10 |
-| `rank_collector_s` | Sランク愛好家 | 4 | 60,000 | Sランク出現率 大幅UP | `rank_collector`: S x10 |
+| `rank_collector_s` | Sランク愛好家 極 | 4 | 60,000 | Sランク出現率 大幅UP | `rank_collector`: S x10 |
 
 ## ペナルティ系 (High Risk)
 強力な効果の代わりにペナルティがあります。
@@ -350,3 +350,41 @@ HIT受付時間（ウキが沈んでから逃げるまでの時間）を延長�
 | `hard_mode_X` | ハードモード | 1-4 | パワーx5 / 売値x8 | `hard_mode` |
 | `perpetual_engine_X` | 永久機関 | 1-4 | 漁船の燃料を一切消費しなくなる | `perpetual_engine` |
 | `magnet_X` | マグネット | 1-4 | 宝箱から「木の宝箱」が出なくなる | `magnet` |
+
+## 遊びスキル系 (Fun Skills)
+プレイ感が変わる・驚きがある新系統。連続成功のコンボ、時間帯、ゲージのリスク/リターン、ルーレットなど。同系統の組み合わせ（コンボ×リベンジ等）でビルドが変わります。
+
+| ID | 名前 | Tier | 価格 | 説明 | 効果詳細 |
+|---|---|---|---|---|---|
+| `bonus_fish_1` | おまけ釣り I | 1 | 3,000 | 釣り上げ成功時に10%で、別の魚がおまけで1匹釣れる | `bonus_fish`: chance: 0.1 |
+| `bonus_fish_2` | おまけ釣り II | 2 | 10,000 | 釣り上げ成功時に18%で、別の魚がおまけで1匹釣れる | `bonus_fish`: chance: 0.18 |
+| `bonus_fish_3` | おまけ釣り III | 3 | 30,000 | 釣り上げ成功時に28%で、別の魚がおまけで1匹釣れる | `bonus_fish`: chance: 0.28 |
+| `bonus_fish_4` | おまけ釣り 極 | 4 | 90,000 | 釣り上げ成功時に40%で、別の魚がおまけで1匹釣れる | `bonus_fish`: chance: 0.4 |
+| `combo_boost_1` | 連勝コンボ I | 1 | 3,000 | 失敗せず連続で釣るたび売値+1%（最大10連続=+10%）。失敗でリセット | `combo_boost`: perStack: 0.01, maxStacks: 10 |
+| `combo_boost_2` | 連勝コンボ II | 2 | 10,000 | 失敗せず連続で釣るたび売値+1.5%（最大10連続=+15%）。失敗でリセット | `combo_boost`: perStack: 0.015, maxStacks: 10 |
+| `combo_boost_3` | 連勝コンボ III | 3 | 30,000 | 失敗せず連続で釣るたび売値+2%（最大15連続=+30%）。失敗でリセット | `combo_boost`: perStack: 0.02, maxStacks: 15 |
+| `combo_boost_4` | 連勝コンボ 極 | 4 | 90,000 | 失敗せず連続で釣るたび売値+3%（最大20連続=+60%）。失敗でリセット | `combo_boost`: perStack: 0.03, maxStacks: 20 |
+| `time_angler_1` | 時の釣り人 I | 1 | 3,000 | 時間帯で効果が変化: 朝(5〜10時)待ち時間-10% / 昼(10〜17時)売値+10% / 夕(17〜20時)レア魚出現+10% / 夜(20〜5時)ヌシ出現率+30% | `time_angler`: value: 0.1 |
+| `time_angler_2` | 時の釣り人 II | 2 | 10,000 | 時間帯で効果が変化: 朝(5〜10時)待ち時間-20% / 昼(10〜17時)売値+20% / 夕(17〜20時)レア魚出現+20% / 夜(20〜5時)ヌシ出現率+60% | `time_angler`: value: 0.2 |
+| `time_angler_3` | 時の釣り人 III | 3 | 30,000 | 時間帯で効果が変化: 朝(5〜10時)待ち時間-35% / 昼(10〜17時)売値+35% / 夕(17〜20時)レア魚出現+35% / 夜(20〜5時)ヌシ出現率+105% | `time_angler`: value: 0.35 |
+| `time_angler_4` | 時の釣り人 極 | 4 | 90,000 | 時間帯で効果が変化: 朝(5〜10時)待ち時間-60% / 昼(10〜17時)売値+60% / 夕(17〜20時)レア魚出現+60% / 夜(20〜5時)ヌシ出現率+180% | `time_angler`: value: 0.6 |
+| `thrill_gauge_1` | スリル・ゲージ I | 1 | 3,000 | ゲージ速度+20%と引き換えに、赤ゾーン幅+30% | `thrill_gauge`: speedUp: 0.2, redUp: 0.3 |
+| `thrill_gauge_2` | スリル・ゲージ II | 2 | 10,000 | ゲージ速度+30%と引き換えに、赤ゾーン幅+50% | `thrill_gauge`: speedUp: 0.3, redUp: 0.5 |
+| `thrill_gauge_3` | スリル・ゲージ III | 3 | 30,000 | ゲージ速度+40%と引き換えに、赤ゾーン幅+80% | `thrill_gauge`: speedUp: 0.4, redUp: 0.8 |
+| `thrill_gauge_4` | スリル・ゲージ 極 | 4 | 90,000 | ゲージ速度+50%と引き換えに、赤ゾーン幅+120% | `thrill_gauge`: speedUp: 0.5, redUp: 1.2 |
+| `omen_1` | 予兆の目 I | 1 | 3,000 | Bランク以上の魚が掛かりそうな時に気配を察知し、ヒット受付時間+10% | `omen`: minRank: 'B', showRank: false, showTitle: false, hitWindowBonus: 0.1 |
+| `omen_2` | 予兆の目 II | 2 | 10,000 | Bランク以上の魚の気配とランクを察知し、ヒット受付時間+20% | `omen`: minRank: 'B', showRank: true, showTitle: false, hitWindowBonus: 0.2 |
+| `omen_3` | 予兆の目 III | 3 | 30,000 | Cランク以上の魚の気配とランクを察知し、ヒット受付時間+30% | `omen`: minRank: 'C', showRank: true, showTitle: false, hitWindowBonus: 0.3 |
+| `omen_4` | 予兆の目 極 | 4 | 90,000 | Cランク以上の魚の気配とランク、ヌシの出現まで察知し、ヒット受付時間+50% | `omen`: minRank: 'C', showRank: true, showTitle: true, hitWindowBonus: 0.5 |
+| `sell_roulette_1` | 売値ルーレット I | 1 | 3,000 | 売却のたびルーレット！ 70%:x1 / 25%:x1.5 / 5%:x3 | `sell_roulette`: outcomes: [[0.7, 1], [0.25, 1.5], [0.05, 3]] |
+| `sell_roulette_2` | 売値ルーレット II | 2 | 10,000 | 売却のたびルーレット！ 60%:x1 / 28%:x1.5 / 10%:x3 / 2%:x8 | `sell_roulette`: outcomes: [[0.6, 1], [0.28, 1.5], [0.1, 3], [0.02, 8]] |
+| `sell_roulette_3` | 売値ルーレット III | 3 | 30,000 | 売却のたびルーレット！ 50%:x1 / 30%:x1.5 / 15%:x3 / 5%:x8 | `sell_roulette`: outcomes: [[0.5, 1], [0.3, 1.5], [0.15, 3], [0.05, 8]] |
+| `sell_roulette_4` | 売値ルーレット 極 | 4 | 90,000 | 売却のたびルーレット！ 40%:x1 / 30%:x1.5 / 20%:x3 / 9%:x6 / 1%:x20 | `sell_roulette`: outcomes: [[0.4, 1], [0.3, 1.5], [0.2, 3], [0.09, 6], [0.01, 20]] |
+| `flow_state_1` | ゾーン突入 I | 1 | 3,000 | ゲージバトルを赤ゾーンで釣り上げるたび釣りパワー+2%（最大5連続=+10%）。赤以外で止めるか失敗でリセット | `flow_state`: perStack: 0.02, maxStacks: 5 |
+| `flow_state_2` | ゾーン突入 II | 2 | 10,000 | ゲージバトルを赤ゾーンで釣り上げるたび釣りパワー+3%（最大8連続=+24%）。赤以外で止めるか失敗でリセット | `flow_state`: perStack: 0.03, maxStacks: 8 |
+| `flow_state_3` | ゾーン突入 III | 3 | 30,000 | ゲージバトルを赤ゾーンで釣り上げるたび釣りパワー+4%（最大10連続=+40%）。赤以外で止めるか失敗でリセット | `flow_state`: perStack: 0.04, maxStacks: 10 |
+| `flow_state_4` | ゾーン突入 極 | 4 | 90,000 | ゲージバトルを赤ゾーンで釣り上げるたび釣りパワー+5%（最大12連続=+60%）。赤以外で止めるか失敗でリセット | `flow_state`: perStack: 0.05, maxStacks: 12 |
+| `revenge_1` | リベンジ・フィッシング I | 1 | 3,000 | 失敗するたびゲージ捕獲率+3%を蓄積（最大5回=+15%）。成功でリセット | `revenge`: perStack: 0.03, maxStacks: 5 |
+| `revenge_2` | リベンジ・フィッシング II | 2 | 10,000 | 失敗するたびゲージ捕獲率+4%を蓄積（最大5回=+20%）。成功でリセット | `revenge`: perStack: 0.04, maxStacks: 5 |
+| `revenge_3` | リベンジ・フィッシング III | 3 | 30,000 | 失敗するたびゲージ捕獲率+5%を蓄積（最大6回=+30%）。成功でリセット | `revenge`: perStack: 0.05, maxStacks: 6 |
+| `revenge_4` | リベンジ・フィッシング 極 | 4 | 90,000 | 失敗するたびゲージ捕獲率+6%を蓄積（最大8回=+48%）。成功でリセット | `revenge`: perStack: 0.06, maxStacks: 8 |
