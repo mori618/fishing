@@ -23,7 +23,7 @@ global.MissionManager = {
 global.SaveManager = {
     save: () => { },
     getDefaultData: () => ({
-        player: { money: 0, baitInventory: {}, baitType: 'bait_d' },
+        player: { money: 0, baitStock: 0, baitUseCount: 0 },
         unlocked: { rods: [0], skins: [], skies: [] },
         statistics: {},
         port: {},

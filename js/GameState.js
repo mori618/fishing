@@ -6,8 +6,9 @@ const GameState = {
     // 基本ステータス
     // ========================================
     money: 0,
-    baitInventory: {},
-    baitType: 'bait_d',
+    baitStock: 0,        // 所持している餌の数（餌は1種類）
+    baitUseCount: 0,     // 1投で使う餌の数（段階: GAME_DATA.BAIT_CONFIG.tiers[].count）
+    activeBaitCount: null, // 投げた時点で確定した使用数（結果確定まで保持。null=未投擲）
 
     // ========================================
     // ランク (Rank)
@@ -121,25 +122,15 @@ const GameState = {
             // セーブデータから復元
             this.money = saveData.player.money;
             this.highTierGuaranteed = false; // ロード時はリセット
-            // 互換性チェック: 古いデータの場合は移行
-            if (saveData.player.baitInventory) {
-                this.baitInventory = { ...saveData.player.baitInventory };
-                // 強制的にDランクは無限(-1)にする（バグ修正・保護）
-                this.baitInventory['bait_d'] = -1;
+            // 餌: 新形式(baitStock)はそのまま、旧形式(ランク別baitInventory)は価値換算して引き継ぐ
+            this.activeBaitCount = null;
+            if (saveData.player.baitStock !== undefined) {
+                this.baitStock = this.clampBaitStock(saveData.player.baitStock);
+                this.baitUseCount = this.normalizeBaitUseCount(saveData.player.baitUseCount);
             } else {
-                // 旧データからの移行: 持っていた餌を現在の餌タイプに追加
-                this.baitInventory = {
-                    'bait_d': -1, // -1は無限
-                    'bait_c': 0,
-                    'bait_b': 0,
-                    'bait_a': 0,
-                    'bait_s': 0
-                };
-                if (saveData.player.baitType && saveData.player.baitCount > 0) {
-                    this.baitInventory[saveData.player.baitType] = saveData.player.baitCount;
-                }
+                this.baitStock = this.migrateLegacyBait(saveData.player);
+                this.baitUseCount = 0; // 旧セーブは「餌なし」(=旧Dランク餌相当)から開始
             }
-            this.baitType = saveData.player.baitType || 'bait_d';
 
             this.rodRankIndex = saveData.rod.rankIndex;
 
@@ -256,6 +247,17 @@ const GameState = {
             this.missionProgress = saveData.statistics.missionProgress ?? 0; // 旧互換用
 
             this.dynamicMissions = saveData.statistics.dynamicMissions ?? null;
+            // 旧「Xランクの餌を使用する」ミッションは「餌を合計○個使う」に置き換え（進捗は維持）
+            if (this.dynamicMissions) {
+                ['A', 'B', 'C'].forEach(slot => {
+                    const m = this.dynamicMissions[slot];
+                    if (m && m.templateId === 'use_bait' && m.param) {
+                        m.param = null;
+                        m.paramLabel = null;
+                        m.text = `餌を合計${m.target}個使う`;
+                    }
+                });
+            }
             this.dynamicMissionCompletedCount = saveData.statistics.dynamicMissionCompletedCount ?? 0;
             this.biggestFish = saveData.statistics.biggestFish;
 
@@ -291,14 +293,9 @@ const GameState = {
             this.init(defaultData);
 
             // 初期在庫の設定
-            this.baitInventory = {
-                'bait_d': -1, // 無限
-                'bait_c': 0,
-                'bait_b': 0,
-                'bait_a': 0,
-                'bait_s': 0
-            };
-            this.baitType = 'bait_d';
+            this.baitStock = GAME_DATA.BAIT_CONFIG.starterStock;
+            this.baitUseCount = 0;
+            this.activeBaitCount = null;
 
             this.rank = 1;
             this.exp = 0;
@@ -737,14 +734,6 @@ const GameState = {
                 bonus += effect.value * cosmicMult;
             }
         });
-
-        // 餌の補正も加算
-        if (this.baitType) {
-            const bait = GAME_DATA.BAITS.find(b => b.id === this.baitType);
-            if (bait) {
-                bonus += (bait.rareBoost || 0);
-            }
-        }
 
         // 時の釣り人 (夕)
         bonus += this.getTimeAnglerBonus('evening');
@@ -2138,49 +2127,63 @@ const GameState = {
 
 
     // ========================================
-    // 餌の購入
+    // 餌の購入・追加
     // ========================================
-    buyBait(baitId, quantity = null) {
-        const bait = GAME_DATA.BAITS.find(b => b.id === baitId);
-        if (!bait) return false;
-
-        // 指定数量、またはデフォルト数量
-        const amount = quantity || bait.quantity;
-        // 価格計算（数量指定の場合は比例計算、デフォルトの場合は設定価格）
-        // 注: 現在のGAME_DATAでは単価が定義されていないため、セット価格から算出する必要があるかもですが
-        // 一旦、購入時は基本セット単位とします。
-        // 要望により「個数を選べる」とあるので、単価計算ロジックが必要。
-        // ここでは単純に bait.price は bait.quantity 個分の価格と仮定して、単価を算出します。
-        const unitPrice = bait.quantity > 0 ? bait.price / bait.quantity : 0;
-        const baseTotalCost = Math.ceil(unitPrice * amount);
-
-        // 割引適用
+    // まとめ買いの価格（ショップ割引込み）。packCount が定義済みパックならパック価格、それ以外は単価×個数
+    getBaitCost(count) {
+        const cfg = GAME_DATA.BAIT_CONFIG;
+        const pack = cfg.packs.find(p => p.count === count);
+        const base = pack ? pack.price : Math.ceil(cfg.unitPrice * count);
         const discount = this.getShopDiscount();
-        const finalCost = Math.floor(baseTotalCost * (1.0 - discount));
+        return Math.floor(base * (1.0 - discount));
+    },
 
-        if (this.money < finalCost) {
-            return false;
-        }
+    buyBait(count) {
+        if (!count || count <= 0) return false;
+        const cost = this.getBaitCost(count);
+        if (this.money < cost) return false;
 
-        this.money -= finalCost;
-
-        // 餌を追加
-        if (this.baitInventory[baitId] === -1) {
-            // 無限の場合は増えない
-        } else {
-            this.baitInventory[baitId] = (this.baitInventory[baitId] || 0) + amount;
-        }
-
-        // 現在選択中の餌がこれなら切り替え不要、でなければ...自動で切り替えるかはUI次第だが
-        // 購入した餌をすぐに使いたいケースが多いので切り替えても良い
-        this.baitType = baitId;
-
-        // オートセーブ
+        this.money -= cost;
+        this.baitStock = this.clampBaitStock(this.baitStock + count);
         SaveManager.save(this);
-
         return true;
     },
 
+    // 餌の追加（宝箱などから）
+    addBait(amount) {
+        if (!amount || amount <= 0) return;
+        this.baitStock = this.clampBaitStock(this.baitStock + amount);
+        SaveManager.save(this);
+    },
+
+    clampBaitStock(n) {
+        const v = Math.floor(Number(n));
+        if (!isFinite(v) || v < 0) return 0;
+        return Math.min(v, GAME_DATA.BAIT_CONFIG.maxStock);
+    },
+
+    // 旧セーブ（ランク別 baitInventory / 更に古い baitType+baitCount）を新しい餌の個数に換算
+    // 旧餌1個あたりの価格（legacyUnitPrices）の合計価値 ÷ 新しい餌の単価。旧Dの無限(-1)は換算しない。
+    // 所持があったのに端数で0になる場合は最低1個。
+    migrateLegacyBait(player) {
+        const cfg = GAME_DATA.BAIT_CONFIG;
+        let inv = player && player.baitInventory;
+        if (!inv) {
+            inv = {};
+            if (player && player.baitType && player.baitCount > 0) inv[player.baitType] = player.baitCount;
+        }
+        let value = 0;
+        let hasAny = false;
+        for (const id in cfg.legacyUnitPrices) {
+            const n = inv[id];
+            if (n > 0) {
+                value += cfg.legacyUnitPrices[id] * n;
+                hasAny = true;
+            }
+        }
+        if (!hasAny) return 0;
+        return this.clampBaitStock(Math.max(1, Math.floor(value / cfg.unitPrice)));
+    },
     // ========================================
     // フィーバー報酬倍率（永遠の熱狂）
     // ========================================
@@ -2192,23 +2195,6 @@ const GameState = {
             });
         }
         return mult;
-    },
-
-    // ========================================
-    // 餌の追加（宝箱などから）
-    // ========================================
-    addBait(baitId, amount) {
-        if (!amount || amount <= 0) return;
-
-        // 餌を追加
-        if (this.baitInventory[baitId] === -1) {
-            // 無限の場合は増えない
-        } else {
-            this.baitInventory[baitId] = (this.baitInventory[baitId] || 0) + amount;
-        }
-
-        // オートセーブ
-        SaveManager.save(this);
     },
 
     // ========================================
@@ -2241,64 +2227,118 @@ const GameState = {
     },
 
     // ========================================
-    // 現在の餌の所持数を取得
+    // 餌の使用数（段階制）
     // ========================================
+    getBaitTiers() {
+        return GAME_DATA.BAIT_CONFIG.tiers;
+    },
+
+    // 許可された段階値のうち、指定値以下で最大のもの（無効値は0）
+    normalizeBaitUseCount(n) {
+        const tiers = this.getBaitTiers();
+        let best = tiers[0].count;
+        for (const t of tiers) {
+            if (t.count <= n) best = t.count;
+        }
+        return Number.isFinite(Number(n)) ? best : 0;
+    },
+
+    // 使用数に対応する段階データ
+    getBaitTier(count) {
+        const tiers = this.getBaitTiers();
+        const c = this.normalizeBaitUseCount(count);
+        return tiers.find(t => t.count === c) || tiers[0];
+    },
+
+    // 所持数（互換用エイリアス）
     getCurrentBaitCount() {
-        if (!this.baitType) return 0;
-        return this.baitInventory[this.baitType] ?? 0;
+        return this.baitStock;
     },
 
-    // ========================================
-    // 餌の切り替え
-    // ========================================
+    isInfiniteBait() {
+        return this.getEffectsByType('infinite_bait').length > 0;
+    },
+
+    // 使用数の切り替え（direction: +1 / -1。端で反対側へループ）
     switchBait(direction) {
-        const baits = GAME_DATA.BAITS;
-        const currentIndex = baits.findIndex(b => b.id === this.baitType);
-        if (currentIndex === -1) {
-            this.baitType = baits[0].id;
-            return;
-        }
+        const tiers = this.getBaitTiers();
+        let idx = tiers.findIndex(t => t.count === this.baitUseCount);
+        if (idx === -1) idx = 0;
+        idx = (idx + (direction >= 0 ? 1 : -1) + tiers.length) % tiers.length;
+        this.baitUseCount = tiers[idx].count;
+        SaveManager.save(this);
+        return this.baitUseCount;
+    },
 
-        let nextIndex = currentIndex + direction;
-        if (nextIndex >= baits.length) {
-            nextIndex = 0;
-        } else if (nextIndex < 0) {
-            nextIndex = baits.length - 1;
-        }
-
-        this.baitType = baits[nextIndex].id;
+    setBaitUseCount(count) {
+        this.baitUseCount = this.normalizeBaitUseCount(count);
         SaveManager.save(this);
     },
 
-    // ========================================
-    // 餌を1つ消費
-    // ========================================
-    useBait(isSuccess = true) {
-        if (!this.baitType) return false;
+    // 今投げたら実際に使われる数。所持数が足りなければ「所持数以下で最大の段階」に下がる。
+    // 無限餌スキルなら所持数に関わらず選択どおり（消費しない）。
+    getPlannedBaitCount() {
+        const want = this.normalizeBaitUseCount(this.baitUseCount);
+        if (this.isInfiniteBait()) return want;
+        return this.normalizeBaitUseCount(Math.min(want, this.baitStock));
+    },
 
-        const bait = GAME_DATA.BAITS.find(b => b.id === this.baitType);
-        if (!bait) return false;
+    // 抽選・成功率などが参照する使用数（投擲中は確定値、未投擲なら予定値）
+    getActiveBaitCount() {
+        return this.activeBaitCount !== null ? this.activeBaitCount : this.getPlannedBaitCount();
+    },
 
-        const currentCount = this.baitInventory[this.baitType];
-        if (currentCount === -1) return true;
+    getActiveBaitTier() {
+        return this.getBaitTier(this.getActiveBaitCount());
+    },
 
-        if ((bait.rank === 'C' || bait.rank === 'B') && !isSuccess) {
-            return true;
+    // 投げた時点で餌を消費して使用数を確定する。戻り値: { used: 使用数, spent: 実際に減った数, short: 不足で下げたか }
+    commitBait() {
+        const want = this.normalizeBaitUseCount(this.baitUseCount);
+        const used = this.getPlannedBaitCount();
+        const spent = this.isInfiniteBait() ? 0 : used;
+        this.activeBaitCount = used;
+        if (spent > 0) {
+            this.baitStock -= spent;
+            SaveManager.save(this);
         }
+        return { used, spent, short: used < want };
+    },
 
-        if (currentCount <= 0) return false;
+    // 結果確定時の精算。成功: 餌の達人で使用した餌が1個ごと確率で戻る / 失敗: 使用数の一部が戻る
+    // 戻り値: 戻った餌の数
+    settleBait(isSuccess) {
+        if (this.activeBaitCount === null) return 0;
+        const used = this.activeBaitCount;
+        this.activeBaitCount = null;
+        if (used <= 0 || this.isInfiniteBait()) return 0;
 
+        let refund = 0;
         if (isSuccess) {
-            const saveChance = this.getBaitSaveChance();
-            if (Math.random() < saveChance) {
-                console.log('✨ 餌の達人発動！');
-                return true;
+            const chance = this.getBaitSaveChance();
+            for (let i = 0; i < used; i++) {
+                if (Math.random() < chance) refund++;
             }
+            if (refund > 0) console.log(`✨ 餌の達人発動！ 餌${refund}個が戻った`);
+        } else {
+            refund = Math.floor(used * GAME_DATA.BAIT_CONFIG.failRefundRate);
         }
-
-        this.baitInventory[this.baitType]--;
+        if (refund > 0) {
+            this.baitStock = this.clampBaitStock(this.baitStock + refund);
+        }
         SaveManager.save(this);
-        return true;
+        return refund;
+    },
+
+    // 釣りを中断した場合: 確定済みの餌を全額戻す
+    cancelBait() {
+        if (this.activeBaitCount === null) return;
+        const used = this.activeBaitCount;
+        this.activeBaitCount = null;
+        if (used > 0 && !this.isInfiniteBait()) {
+            this.baitStock = this.clampBaitStock(this.baitStock + used);
+            SaveManager.save(this);
+        }
     },
 
     // ========================================

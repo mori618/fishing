@@ -111,12 +111,12 @@ function simulateEconomy() {
     // Rod 1 (Bamboo) vs Rank C Fish, etc.
 
     const scenarios = [
-        { rodIdx: 0, bait: 'bait_d', targetRarity: 'D' },
-        { rodIdx: 0, bait: 'bait_c', targetRarity: 'C' }, // Stretching
-        { rodIdx: 1, bait: 'bait_c', targetRarity: 'C' },
-        { rodIdx: 2, bait: 'bait_b', targetRarity: 'B' },
-        { rodIdx: 3, bait: 'bait_a', targetRarity: 'A' },
-        { rodIdx: 4, bait: 'bait_s', targetRarity: 'S' }
+        { rodIdx: 0, bait: 0, targetRarity: 'D' },
+        { rodIdx: 0, bait: 1, targetRarity: 'C' }, // Stretching
+        { rodIdx: 1, bait: 1, targetRarity: 'C' },
+        { rodIdx: 2, bait: 3, targetRarity: 'B' },
+        { rodIdx: 3, bait: 5, targetRarity: 'A' },
+        { rodIdx: 4, bait: 10, targetRarity: 'S' }
     ];
 
     scenarios.forEach(sc => {
@@ -127,12 +127,8 @@ function simulateEconomy() {
         const rod = GAME_DATA.RODS[sc.rodIdx];
         const playerPower = rod.basePower;
 
-        const bait = GAME_DATA.BAITS.find(b => b.id === sc.bait);
-        const baitCost = bait.price; // Cost per unit (assuming bulk logic isn't complex)
-        // Wait, bait price is for a batch?
-        // Let's check BAITS data structure
-        // 'quantity' property exists
-        const costPerCast = bait.price / bait.quantity;
+        // 餌は1種類。1投あたり bait 個を使う（単価 × 個数）
+        const costPerCast = GAME_DATA.BAIT_CONFIG.unitPrice * sc.bait;
 
         // Find average fish of that rarity
         const targetFish = GAME_DATA.FISH.filter(f => f.rarity === sc.targetRarity);
@@ -146,16 +142,8 @@ function simulateEconomy() {
 
         // Expected Value
         // EV = (WinRate * AvgPrice) - CostPerCast
-        // Note: Bait is consumed on success usually? Or always?
-        // Logic says: C/B rank bait not consumed on fail? 
-        // Let's assume consumed on success for simplicity involved in 'profit per catch'
-
-        // Consumption rate logic adjustment
-        let consumptionRate = 1.0;
-        if (sc.bait === 'bait_c' || sc.bait === 'bait_b') {
-            // "Not consumed on fail" -> Consumed only on Win
-            consumptionRate = winRate;
-        }
+        // 餌は投げた時点で消費。失敗時は使用数の半分が戻る
+        const consumptionRate = winRate + (1 - winRate) * (1 - GAME_DATA.BAIT_CONFIG.failRefundRate);
 
         const expectedCost = costPerCast * consumptionRate;
         const expectedRevenue = winRate * avgFishPrice;
@@ -179,10 +167,10 @@ function simulateProgression() {
     // Strategy: Use efficient bait for current rod
 
     const steps = [
-        { from: 0, to: 1, bait: 'bait_d', target: 'D' }, // Wood -> Bamboo
-        { from: 1, to: 2, bait: 'bait_c', target: 'C' }, // Bamboo -> Carbon
-        { from: 2, to: 3, bait: 'bait_b', target: 'B' }, // Carbon -> Titanium
-        { from: 3, to: 4, bait: 'bait_a', target: 'A' }, // Titanium -> Legendary
+        { from: 0, to: 1, bait: 0, target: 'D' }, // Wood -> Bamboo
+        { from: 1, to: 2, bait: 1, target: 'C' }, // Bamboo -> Carbon
+        { from: 2, to: 3, bait: 3, target: 'B' }, // Carbon -> Titanium
+        { from: 3, to: 4, bait: 5, target: 'A' }, // Titanium -> Legendary
     ];
 
     steps.forEach(step => {
@@ -192,15 +180,14 @@ function simulateProgression() {
 
         // Calculate Profit Per Cast for this strategy
         const playerPower = currentRod.basePower;
-        const bait = GAME_DATA.BAITS.find(b => b.id === step.bait);
-        const costPerCast = bait.price / bait.quantity;
+        const costPerCast = GAME_DATA.BAIT_CONFIG.unitPrice * step.bait;
 
         const targetFish = GAME_DATA.FISH.filter(f => f.rarity === step.target);
         const avgFishPower = targetFish.reduce((sum, f) => sum + f.power, 0) / targetFish.length;
         const avgFishPrice = targetFish.reduce((sum, f) => sum + (f.price || 0), 0) / targetFish.length;
 
         const winRate = calculateWinRate(playerPower, avgFishPower, step.target);
-        const consumptionRate = (step.bait === 'bait_c' || step.bait === 'bait_b') ? winRate : 1.0;
+        const consumptionRate = winRate + (1 - winRate) * (1 - GAME_DATA.BAIT_CONFIG.failRefundRate);
 
         const profitPerCast = (winRate * avgFishPrice) - (costPerCast * consumptionRate);
 
@@ -213,7 +200,7 @@ function simulateProgression() {
         const totalCatches = Math.ceil(catchesNeeded / winRate); // Total attempts
 
         console.log(`[${currentRod.name} -> ${nextRod.name}] (Target: ¥${targetMoney})`);
-        console.log(`  Strategy: Fish Rank ${step.target} with ${bait.name}`);
+        console.log(`  Strategy: Fish Rank ${step.target} with ${step.bait} baits`);
         console.log(`  Profit/Attempt: ¥${profitPerCast.toFixed(1)}`);
         console.log(`  Attempts Needed: ${totalCatches} (~${(totalCatches * 10 / 60).toFixed(1)} min @ 10s/catch)`);
     });

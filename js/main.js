@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 釣り画面のクリック（全画面対応）
     document.getElementById('fishing-screen').addEventListener('pointerdown', (e) => {
         // ボタンまたはその子要素（アイコンなど）のクリックは無視
-        if (e.target.closest('button')) return;
+        if (e.target.closest('button, #bait-status-display')) return; // 餌セレクターのタップで投げないように
 
         FishingGame.onClick();
     });

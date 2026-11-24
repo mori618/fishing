@@ -21,8 +21,8 @@ const contextObj = {
                 money: 0,
                 level: 1,
                 exp: 0,
-                baitInventory: {},
-                baitType: 'bait_d',
+                baitStock: 0,
+                baitUseCount: 0,
                 selectedSkin: 'skin_default',
                 selectedSky: 'sky_default'
             },

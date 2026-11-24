@@ -145,10 +145,10 @@ const FishingGame = {
             };
         }
 
-        const bait = GAME_DATA.BAITS.find(b => b.id === GameState.baitType) || GAME_DATA.BAITS[0]; // デフォルトD
-
-        // 餌ごとのランク出現重み設定 (ユーザー要望に基づく)
-        // ... (既存コメント)
+        // 使用した餌の数に対応する段階（重みテーブル・相当ランク）
+        const baitTier = GameState.getActiveBaitTier();
+        const baitRankNames = ['D', 'C', 'B', 'A', 'S'];
+        const baitRankName = baitRankNames[baitTier.effectiveRank] || 'D';
 
         // ========================================
         // 上位魚確定イベント (鳥)
@@ -159,9 +159,9 @@ const FishingGame = {
             // フラグ消費
             GameState.setHighTierGuaranteed(false);
 
-            // 現在の餌ランクより一つ上のランクを計算
+            // 現在の餌（使用数）の相当ランクより一つ上のランクを計算
             const rankOrder = ['D', 'C', 'B', 'A', 'S', 'SS'];
-            const currentRankIndex = rankOrder.indexOf(bait.rank);
+            const currentRankIndex = baitTier.effectiveRank;
             let targetRank = 'S'; // デフォルト
 
             if (currentRankIndex !== -1 && currentRankIndex < rankOrder.length - 1) {
@@ -175,7 +175,7 @@ const FishingGame = {
                 targetRank = 'C';
             }
 
-            console.log(`🦅 ランクアップ: ${bait.rank} -> ${targetRank} 確定`);
+            console.log(`🦅 ランクアップ: 餌${baitTier.count}個(${baitRankName}相当) -> ${targetRank} 確定`);
 
             // ターゲットランクの魚を抽出
             const targetPool = GAME_DATA.FISH.filter(f => f.rarity === targetRank);
@@ -195,32 +195,15 @@ const FishingGame = {
                 return { ...targetPool[0] };
             }
         }
-        // 餌ごとの出現確率DCBAS
-        const spawnWeights = {
-            'D': { D: 0.9, C: 0.1, S: 0.01 },
-            'C': { C: 0.8, D: 0.2, B: 0.1 },
-            'B': { B: 0.8, C: 0.2, D: 0.1, A: 0.05 },
-            'A': { A: 0.6, B: 0.4, C: 0.2, S: 0.05 },
-            'S': { A: 0.6, S: 0.2, B: 0.2, SS: 0.033 }
-        };
-
-        let currentWeights = spawnWeights[bait.rank] || spawnWeights['D'];
+        // 使用数ごとの出現ランク重み（スキル補正で書き換えるためコピーを使う）
+        let currentWeights = { ...baitTier.weights };
 
         // ========================================
-        // フィーバーモード (月) の場合: 指定されたランク出現率を適用
+        // フィーバーモード (月) の場合: 使用数ごとのフィーバー用ランク出現率を適用
         // ========================================
         if (GameState.fever.isActive && GameState.fever.type === 'moon') {
-            console.log('🔥 月フィーバー: 餌ごとの刷新されたランク出現率を適用！');
-
-            const feverWeights = {
-                'D': { D: 10, C: 85, B: 1, A: 2, S: 2 },
-                'C': { C: 24, B: 76 },
-                'B': { B: 30, A: 70 },
-                'A': { A: 70, S: 30 },
-                'S': { A: 40, S: 50, SS: 10 }
-            };
-
-            currentWeights = feverWeights[bait.rank] || feverWeights['D'];
+            console.log('🔥 月フィーバー: 使用数ごとの刷新されたランク出現率を適用！');
+            currentWeights = { ...baitTier.feverWeights };
         }
 
 
@@ -260,7 +243,7 @@ const FishingGame = {
             console.log(`🎯 特殊ランクスナイパー発動: ${selectedRarity}確定`);
         }
 
-        console.log(`🎲 ランク抽選: 餌=${bait.rank} -> 結果=${selectedRarity} (Weights: ${JSON.stringify(currentWeights)})`);
+        console.log(`🎲 ランク抽選: 餌=${baitTier.count}個 -> 結果=${selectedRarity} (Weights: ${JSON.stringify(currentWeights)})`);
 
         // 選択されたランクの魚プールを作成
         const fishPool = GAME_DATA.FISH.filter(f => f.rarity === selectedRarity);
@@ -341,9 +324,9 @@ const FishingGame = {
         let titleChanceMult = GameState.getTitleChanceMultiplier();
 
         // ユーザー要望の「特定条件下での称号確率アップ」
-        if ((bait.rank === 'B' && selectedRarity === 'D') ||
-            (bait.rank === 'A' && selectedRarity === 'C') ||
-            (bait.rank === 'S' && selectedRarity === 'B')) {
+        if ((baitRankName === 'B' && selectedRarity === 'D') ||
+            (baitRankName === 'A' && selectedRarity === 'C') ||
+            (baitRankName === 'S' && selectedRarity === 'B')) {
             console.log('✨ 特定条件ボーナス: 称号確率アップ適用！');
             titleChanceMult *= 3.0; // 3倍に設定（調整可能）
         }
@@ -377,13 +360,20 @@ const FishingGame = {
     cast() {
         if (this.state !== 'idle') return false;
 
-        // 餌のチェック (ガチャモードは無視)
-        if (!this.isGachaMode) {
-            const currentBaitCount = GameState.getCurrentBaitCount();
-            if (currentBaitCount === 0) {
-                UIManager.showBaitPurchaseDialog(GameState.baitType);
-                return false;
+        // 餌を消費して使用数を確定（ガチャモードは餌なし扱い）
+        // 所持数が選択した使用数に足りない場合は、所持数以下で最大の段階に自動で下げて投げる
+        if (this.isGachaMode) {
+            GameState.activeBaitCount = 0;
+        } else {
+            const bait = GameState.commitBait();
+            if (bait.short) {
+                const wanted = GameState.baitUseCount;
+                UIManager.showMessage(bait.used > 0
+                    ? `餌が足りないので${bait.used}個で投げます（選択: ${wanted}個）`
+                    : `餌がないので餌なしで投げます（選択: ${wanted}個）`, 2500);
             }
+            UIManager.updateBaitInfo();
+            if (bait.spent > 0) MissionManager.checkMission('use_bait', { count: bait.spent });
         }
 
         this.state = 'casting';
@@ -415,13 +405,7 @@ const FishingGame = {
             waitTime = 1500; // ガチャは短め
         } else {
             // 餌を使用している場合は時間短縮
-            let waitTimeReduction = 0;
-            if (GameState.baitType) {
-                const bait = GAME_DATA.BAITS.find(b => b.id === GameState.baitType);
-                if (bait && bait.hitTimeReduction) {
-                    waitTimeReduction = bait.hitTimeReduction;
-                }
-            }
+            const waitTimeReduction = GameState.getActiveBaitTier().waitTimeReduction || 0;
 
             const baseWaitTime = GAME_DATA.FISHING_CONFIG.waitTimeMin +
                 Math.random() * (GAME_DATA.FISHING_CONFIG.waitTimeMax - GAME_DATA.FISHING_CONFIG.waitTimeMin);
@@ -464,12 +448,9 @@ const FishingGame = {
                 }
                 // 魚の場合、ランク比較
                 else {
-                    const baitId = GameState.baitType;
-                    const bait = GAME_DATA.BAITS.find(b => b.id === baitId);
-
                     const rankIndices = { 'D': 0, 'C': 1, 'B': 2, 'A': 3, 'S': 4, 'SS': 5, 'GOD': 6 };
                     const fishRankVal = rankIndices[this.currentFish.rarity] || 0;
-                    const baitRankVal = bait ? (rankIndices[bait.rank] || 0) : 0; // 餌なしは最低ランク扱い
+                    const baitRankVal = GameState.getActiveBaitTier().effectiveRank; // 使用数に応じた相当ランク（餌なし=D）
 
                     const rankDiff = fishRankVal - baitRankVal;
 
@@ -593,11 +574,9 @@ const FishingGame = {
             this.state = 'idle';
             UIManager.showMissed('反応が遅かった！魚に逃げられた...');
 
-            // 餌を消費（ヒットを逃した＝失敗）
-            if (GameState.baitType) {
-                GameState.useBait(false);
-                UIManager.updateBaitInfo();
-            }
+            // 餌の精算（ヒットを逃した＝失敗）
+            GameState.settleBait(false);
+            UIManager.updateBaitInfo();
 
             // フィーバー中は失敗でもゲージが溜まる
             if (GameState.fever.isActive) {
@@ -815,11 +794,10 @@ const FishingGame = {
             // ========================================
             // 赤ゲージ停止時の動的成功率計算
             // ========================================
-            const bait = GAME_DATA.BAITS.find(b => b.id === GameState.baitType) || GAME_DATA.BAITS[0];
             const rankIndices = { 'D': 0, 'C': 1, 'B': 2, 'A': 3, 'S': 4, 'SS': 5 };
 
             const fishRank = rankIndices[this.currentFish.rarity] || 0;
-            const baitRank = rankIndices[bait.rank] || 0;
+            const baitRank = GameState.getActiveBaitTier().effectiveRank;
             const rankDiff = fishRank - baitRank;
 
             // ランク差によるベース成功率
@@ -931,11 +909,9 @@ const FishingGame = {
 
         // 宝箱の場合
         if (this.currentFish.isTreasure) {
-            // 餌を消費
-            if (GameState.baitType) {
-                GameState.useBait(true);
-                UIManager.updateBaitInfo();
-            }
+            // 餌の精算（成功）
+            GameState.settleBait(true);
+            UIManager.updateBaitInfo();
 
             // ========================================
             // フィーバー進行判定
@@ -1136,7 +1112,7 @@ const FishingGame = {
 
         // 初心者ミッション判定 + 動的ミッション判定（魚情報付き）
         MissionManager.checkMission('catch_success', {
-            baitId: GameState.baitType,
+            baitCount: GameState.getActiveBaitCount(),
             rarity: this.currentFish.rarity,
             frequency: this.currentFish.frequency,
             fishId: this.currentFish.id,
@@ -1147,15 +1123,9 @@ const FishingGame = {
             reactionMs: this.lastReactionMs
         });
 
-        // 餌を消費
-        if (GameState.baitType) {
-            const baitData = GAME_DATA.BAITS.find(b => b.id === GameState.baitType);
-            const baitRank = baitData ? baitData.rank : 'D';
-            GameState.useBait(true);
-            UIManager.updateBaitInfo();
-            // 餌使用のミッション判定
-            MissionManager.checkMission('use_bait', { rank: baitRank });
-        }
+        // 餌の精算（成功: 餌の達人で使った餌が確率で戻る）
+        GameState.settleBait(true);
+        UIManager.updateBaitInfo();
 
         // ========================================
         // フィーバー進行判定
@@ -1190,11 +1160,9 @@ const FishingGame = {
         GameState.registerCatchResult(false);
         MissionManager.checkMission('early_click');
 
-        // 餌を消費
-        if (GameState.baitType) {
-            GameState.useBait(false);
-            UIManager.updateBaitInfo();
-        }
+        // 餌の精算（失敗: 使用数の一部が戻る）
+        GameState.settleBait(false);
+        UIManager.updateBaitInfo();
 
         // フィーバー中は失敗でもゲージが溜まる
         if (GameState.fever.isActive) {
@@ -1234,11 +1202,9 @@ const FishingGame = {
         GameState.registerCatchResult(false);
         MissionManager.checkMission('catch_failed');
 
-        // 餌を消費
-        if (GameState.baitType) {
-            GameState.useBait(false);
-            UIManager.updateBaitInfo();
-        }
+        // 餌の精算（失敗: 使用数の一部が戻る）
+        GameState.settleBait(false);
+        UIManager.updateBaitInfo();
 
         // 失敗時は確定でフィーバーゲージ+1
         const feverResult = GameState.progressFever(true);
@@ -1339,65 +1305,12 @@ const FishingGame = {
         GameState.addMoney(finalMoney);
         results.push({ type: 'money', value: finalMoney, name: `${finalMoney.toLocaleString()} G` });
 
-        // 2. 餌
-        // 2. 餌
-        if (lootTable.baits && lootTable.baits.length > 0) {
-            let selectedBaitConfig = null;
-
-            // --- 優先排出ロジック ---
-            const currentBaitId = GameState.baitType;
-            const currentBaitData = GAME_DATA.BAITS.find(b => b.id === currentBaitId);
-            const rankOrder = { 'D': 0, 'C': 1, 'B': 2, 'A': 3, 'S': 4 };
-            const currentRank = currentBaitData ? (rankOrder[currentBaitData.rank] ?? -1) : -1;
-
-            // 候補リスト作成（ランク情報を付与）
-            const candidates = lootTable.baits.map(b => {
-                const d = GAME_DATA.BAITS.find(db => db.id === b.id);
-                return { ...b, rankValue: d ? (rankOrder[d.rank] ?? 0) : 0 };
-            });
-
-            // 上位ランクの餌のみを抽出
-            const betterBaits = candidates.filter(b => b.rankValue > currentRank);
-
-            // 上位餌があれば優先、なければ全候補
-            const targetList = (betterBaits.length > 0) ? betterBaits : candidates;
-
-            if (betterBaits.length > 0) {
-                console.log(`✨ 宝箱: 装備(Rank ${currentBaitData?.rank})より上位の餌を優先します`);
-            }
-
-            // 重み計算 (質の高い餌の重みを qualityMult で増やす)
-            const weightedBaits = targetList.map((b, index) => {
-                let w = b.weight;
-                // インデックスが大きい(=恐らくリストの下の方にある良い餌)ほどブースト
-                if (index > 0) w *= qualityMult;
-                return { ...b, effectiveWeight: w };
-            });
-
-            let accumulatedWeight = 0;
-            weightedBaits.forEach(b => accumulatedWeight += b.effectiveWeight);
-
-            let randomVal = Math.random() * accumulatedWeight;
-
-            for (const b of weightedBaits) {
-                randomVal -= b.effectiveWeight;
-                if (randomVal < 0) {
-                    selectedBaitConfig = b;
-                    break;
-                }
-            }
-            if (!selectedBaitConfig) selectedBaitConfig = weightedBaits[0];
-
-            // 個数 (量ボーナス)
-            const baseCount = selectedBaitConfig.min + Math.floor(Math.random() * (selectedBaitConfig.max - selectedBaitConfig.min + 1));
-            const finalCount = Math.max(1, Math.floor(baseCount * quantityMult)); // 最低1個
-
-            const baitData = GAME_DATA.BAITS.find(b => b.id === selectedBaitConfig.id);
-
-            if (baitData && finalCount > 0) {
-                GameState.addBait(selectedBaitConfig.id, finalCount);
-                results.push({ type: 'bait', id: selectedBaitConfig.id, count: finalCount, name: baitData.name });
-            }
+        // 2. 餌（1種類。個数に量ボーナス・質ボーナスが乗る）
+        if (lootTable.baits) {
+            const baseCount = lootTable.baits.min + Math.floor(Math.random() * (lootTable.baits.max - lootTable.baits.min + 1));
+            const finalCount = Math.max(1, Math.floor(baseCount * quantityMult * (1 + (qualityMult - 1) * 0.5)));
+            GameState.addBait(finalCount);
+            results.push({ type: 'bait', id: 'bait', count: finalCount, name: GAME_DATA.BAIT_CONFIG.name });
         }
 
         // 3. スキル (確率)
@@ -1498,6 +1411,7 @@ const FishingGame = {
             this.state = 'idle';
             UIManager.showIdle();
         });
+        return results;
     },
 
     // ========================================
@@ -1568,6 +1482,7 @@ const FishingGame = {
 
     abort() {
         this.cleanupTimers();
+        GameState.cancelBait(); // 結果が出る前に中断したら、確定済みの餌は全額戻す
         this.state = 'idle';
         this.currentFish = null;
         this.isGachaMode = false; // ガチャモードも解除

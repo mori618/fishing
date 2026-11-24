@@ -85,7 +85,7 @@ try {
 }
 
 // Load additional test files (新ミッション / 新スキル)
-['test_new_missions.js', 'test_new_skills.js'].forEach(name => {
+['test_new_missions.js', 'test_new_skills.js', 'test_bait.js'].forEach(name => {
     const fp = path.join(__dirname, name);
     if (!fs.existsSync(fp)) return;
     try {

@@ -136,7 +136,7 @@ const ShopManager = {
                 <div class="building-icon"><span class="material-icons">grass</span></div>
                 <div class="building-info">
                     <div class="building-name">万屋 タックル</div>
-                    <div class="building-desc">各種ランクの餌を取り扱っています</div>
+                    <div class="building-desc">餌を多く使うほど高ランクの魚が釣れやすくなります</div>
                 </div>
             </div>
              <div class="shop-building styles" onclick="ShopManager.setCategory('skins')" style="border-color: var(--accent-color);">
@@ -1281,77 +1281,70 @@ const ShopManager = {
     },
 
     // ========================================
-    // 餌ショップ
+    // 餌ショップ（餌は1種類。まとめ買い）
     // ========================================
     renderBaitShop() {
         const container = document.getElementById('shop-items');
         container.innerHTML = '';
 
-        GAME_DATA.BAITS.filter(b => b.id !== 'bait_d').forEach(bait => {
-            const canBuy = GameState.money >= bait.price;
+        const cfg = GAME_DATA.BAIT_CONFIG;
+        const buttonsHtml = cfg.packs.map(pack => {
+            const finalPrice = GameState.getBaitCost(pack.count);
+            const canBuy = GameState.money >= finalPrice;
+            const unit = (finalPrice / pack.count).toFixed(1).replace(/\.0$/, '');
+            return `
+                <button class="btn btn-buy ${canBuy ? '' : 'disabled'}"
+                        style="width: 100%; border-radius: 50px; font-weight: bold; box-shadow: 0 4px 0 #e08e0b;"
+                        onclick="ShopManager.buyBait(${pack.count})" ${canBuy ? '' : 'disabled'}>
+                    <div style="font-size: 0.9em;">${pack.count}個 <small>(1個 ¥${unit})</small></div>
+                    <div style="font-size: 1.0em;">¥${finalPrice.toLocaleString()}</div>
+                </button>`;
+        }).join('');
 
-            const item = document.createElement('div');
-            item.className = `shop-item ${!canBuy ? 'locked' : ''}`;
+        const item = document.createElement('div');
+        item.className = 'shop-item';
+        item.innerHTML = `
+            <div class="item-info">
+                <div class="item-name">${cfg.name}</div>
+                <div class="item-desc">${cfg.description}<br>釣り画面の下のバーで、1回に使う数（${cfg.tiers.map(t => t.count).join(' / ')}個）を選べます。失敗しても使った餌の半分が戻ります。</div>
+                <div class="item-stats">所持: ${GameState.baitStock.toLocaleString()}個</div>
+            </div>
+            <div class="item-action bait-purchase-grid" style="display: flex; gap: 8px; flex-direction: column; min-width: 140px;">
+                ${buttonsHtml}
+            </div>
+        `;
+        container.appendChild(item);
 
-            item.innerHTML = `
-                <div class="item-info">
-                    <div class="item-name">${bait.name}</div>
-                    <div class="item-desc">${bait.description}</div>
-                    <div class="item-stats">
-                        ${bait.quantity}個入り
-                    </div>
-                </div>
-                <div class="item-action bait-purchase-grid" style="display: flex; gap: 8px; flex-direction: column; min-width: 140px;">
-                    ${(() => {
-                    // 割引計算
-                    const discount = GameState.getShopDiscount();
-                    const buttonsHtml = [1, 10].map(multiplier => {
-                        const finalPrice = Math.floor(bait.price * multiplier * (1.0 - discount));
-                        const canBuy = GameState.money >= finalPrice;
-                        const isDiscounted = discount > 0;
-                        const label = multiplier === 1 ? '1セット' : `${multiplier}セット`;
-
-                        return `
-                                <button class="btn btn-buy ${canBuy ? '' : 'disabled'}" 
-                                        style="width: 100%; border-radius: 50px; font-weight: bold; box-shadow: 0 4px 0 #e08e0b;"
-                                        onclick="ShopManager.buyBait('${bait.id}', ${multiplier})" ${canBuy ? '' : 'disabled'}>
-                                    <div style="font-size: 0.9em;">${label}</div>
-                                    <div style="font-size: 1.0em;">¥${finalPrice.toLocaleString()}</div>
-                                </button>
-                            `;
-                    }).join('');
-
-                    return buttonsHtml;
-                })()}
-
-            `;
-
-            container.appendChild(item);
-        });
-
-        // 現在の餌情報
+        // 使用数ごとの出現率
         this.renderBaitInfo();
     },
 
-    // ========================================
-    // 現在の餌情報
-    // ========================================
+    // 使用数ごとのランク出現率の一覧
     renderBaitInfo() {
         const container = document.getElementById('upgrade-section');
         if (!container) return;
 
-        const baitCount = GameState.getCurrentBaitCount();
-        const baitType = GameState.baitType;
-        const bait = baitType ? GAME_DATA.BAITS.find(b => b.id === baitType) : null;
+        const ranks = ['D', 'C', 'B', 'A', 'S', 'SS'];
+        const rows = GameState.getBaitTiers().map(t => {
+            const total = Object.values(t.weights).reduce((a, b) => a + b, 0);
+            const cells = ranks.map(r => {
+                const pct = total > 0 ? (t.weights[r] || 0) / total * 100 : 0;
+                return `<td>${pct >= 0.5 ? Math.round(pct) + '%' : (pct > 0 ? '<1%' : '-')}</td>`;
+            }).join('');
+            const sel = t.count === GameState.baitUseCount ? ' style="font-weight:bold;background:rgba(255,255,255,0.35);"' : '';
+            return `<tr${sel}><th>${t.count === 0 ? '餌なし' : t.count + '個'}</th>${cells}</tr>`;
+        }).join('');
 
         container.innerHTML = `
             <h3>所持中の餌</h3>
             <div class="bait-info">
-                ${bait
-                ? `<strong>${bait.name}</strong> × ${baitCount}`
-                : '<span class="none">なし</span>'
-            }
+                <strong>餌</strong> × ${GameState.baitStock.toLocaleString()}
             </div>
+            <h3>使用数ごとの出現率</h3>
+            <table class="bait-rate-table">
+                <thead><tr><th>使用数</th>${ranks.map(r => `<th>${r}</th>`).join('')}</tr></thead>
+                <tbody>${rows}</tbody>
+            </table>
         `;
     },
 
@@ -1439,19 +1432,15 @@ const ShopManager = {
     // ========================================
     // 餌購入
     // ========================================
-    buyBait(baitId, multiplier = 1) {
-        const bait = GAME_DATA.BAITS.find(b => b.id === baitId);
-        if (!bait) return;
-
-        const totalQuantity = bait.quantity * multiplier;
-
-        if (GameState.buyBait(baitId, totalQuantity)) {
-            UIManager.showMessage(`${bait.name}を${totalQuantity}個(${multiplier}セット)購入しました！`);
+    buyBait(count) {
+        if (GameState.buyBait(count)) {
+            UIManager.showMessage(`餌を${count}個購入しました！`);
             this.renderShop();
             UIManager.updateMoney();
+            UIManager.updateBaitInfo();
 
             // 初心者ミッション判定: 餌を買う
-            MissionManager.checkMission('buy_bait', { count: totalQuantity });
+            MissionManager.checkMission('buy_bait', { count: count });
         } else {
             UIManager.showMessage('お金が足りません！');
         }

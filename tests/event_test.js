@@ -79,7 +79,7 @@ describe('Event Logic', () => {
             GameState.init(null);
             GameState.fever = { isActive: false, value: 0, type: 'sun' }; // Ensure no fever
             GameState.highTierGuaranteed = true;
-            GameState.baitType = 'bait_c'; // C Rank Bait
+            GameState.baitUseCount = 1; GameState.baitStock = 10; // 餌1個 = C相当
 
             // Expected: One rank higher than C -> B
             // FishingGame.selectFish calls GameState methods, so those need to be available.
@@ -95,7 +95,7 @@ describe('Event Logic', () => {
             GameState.init(null);
             GameState.fever = { isActive: false, value: 0, type: 'sun' }; // Ensure no fever
             GameState.highTierGuaranteed = true;
-            GameState.baitType = 'bait_s'; // S Rank
+            GameState.baitUseCount = 10; GameState.baitStock = 10; // 餌10個 = S相当
 
             const selectedFish = FishingGame.selectFish();
 

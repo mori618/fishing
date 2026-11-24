@@ -45,9 +45,9 @@ const MissionManager = {
         },
         {
             id: 'catch_with_bait',
-            text: '餌を変更して魚を釣ろう',
+            text: '餌を使って魚を釣ろう',
             rewardText: '報酬: 50G + スキル「釣りパワー増加I」',
-            check: (type, data) => type === 'catch_success' && data.baitId !== 'bait_d',
+            check: (type, data) => type === 'catch_success' && (data.baitCount || 0) >= 1,
             reward: () => {
                 GameState.gainGachaResult('power_up_1');
             }
@@ -115,7 +115,8 @@ const MissionManager = {
             { id: 'treasure', textFn: (t) => `宝箱を${t}回釣る`, minTarget: 1, maxTarget: 1, baseReward: 800 },
             { id: 'earn_money', textFn: (t) => `${t.toLocaleString()}コイン手に入れる`, minTarget: 500, maxTarget: 10000, baseReward: 500, valueOptions: [500, 1000, 2000, 5000, 10000] },
             { id: 'red_gauge', textFn: (t) => `赤ゲージで${t}回止める`, minTarget: 3, maxTarget: 5, baseReward: 700 },
-            { id: 'use_bait', textFn: (t, p) => `${p}ランクの餌を${t}個使用する`, minTarget: 5, maxTarget: 10, baseReward: 600, rankList: ['D', 'C', 'B', 'A', 'S'] },
+            { id: 'use_bait', textFn: (t) => `餌を合計${t}個使う`, minTarget: 10, maxTarget: 30, baseReward: 600,
+              onEvent: (type, d) => (type === 'use_bait' ? (d.count || 0) : 0) },
             { id: 'complete_missions', textFn: (t) => `ミッションを${t}個達成する`, minTarget: 3, maxTarget: 5, baseReward: 1200 },
             // --- 多様化ミッション (C: 腕前・経済・施設利用系) ---
             { id: 'perfect_catch', textFn: (t) => `赤ゲージ(Perfect)で止めて${t}匹釣り上げる`, minTarget: 2, maxTarget: 4, baseReward: 1200, expMult: 4, ticketMult: 2,
@@ -448,9 +449,6 @@ const MissionManager = {
                     break;
                 case 'red_gauge':
                     if (type === 'red_gauge_stop') progress = 1;
-                    break;
-                case 'use_bait':
-                    if (type === 'use_bait' && data.rank === mission.param) progress = 1;
                     break;
                 case 'complete_missions':
                     if (type === 'mission_completed') progress = 1;

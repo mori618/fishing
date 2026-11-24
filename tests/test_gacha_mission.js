@@ -80,20 +80,20 @@ describe('# Mission System Logic', () => {
         expect(isDone('buy_bait')).toBe(true);
     });
 
-    it('Should NOT complete "catch_with_bait" if bait is D-rank', () => {
+    it('Should NOT complete "catch_with_bait" if no bait was used', () => {
         GameState.beginnerMissionCompleted = ['help', 'catch_1', 'go_town', 'sell_fish', 'buy_bait'];
-        MissionManager.checkMission('catch_success', { baitId: 'bait_d' });
+        MissionManager.checkMission('catch_success', { baitCount: 0 });
         expect(isDone('catch_with_bait')).toBe(false);
     });
 
-    it('Should complete "catch_with_bait" if bait is NOT D-rank', () => {
+    it('Should complete "catch_with_bait" if 1+ bait was used', () => {
         GameState.beginnerMissionCompleted = ['help', 'catch_1', 'go_town', 'sell_fish', 'buy_bait'];
 
         // Mock UIManager.showMessage to avoid error
         const originalShowMessage = UIManager.showMessage;
         UIManager.showMessage = () => { };
 
-        MissionManager.checkMission('catch_success', { baitId: 'bait_c' });
+        MissionManager.checkMission('catch_success', { baitCount: 1 });
 
         expect(isDone('catch_with_bait')).toBe(true);
         expect(GameState.getSkillCount('power_up_1') > 0).toBe(true);
