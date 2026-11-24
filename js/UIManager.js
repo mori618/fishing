@@ -132,6 +132,10 @@ const UIManager = {
         }
 
         // 画面固有の初期化
+        if (typeof RodAnimator !== 'undefined') {
+            if (screenId === 'fishing') RodAnimator.start();
+            else RodAnimator.stop();
+        }
         if (screenId === 'fishing') {
             this.showIdle();
             this.updateStatus();
@@ -328,21 +332,36 @@ const UIManager = {
     // 釣り竿の状態更新
     // ========================================
     updateRodView(state) {
-        const rodView = document.getElementById('fishing-rod-view');
-        if (!rodView) return;
+        this.rodState = state;
 
-        rodView.className = 'fishing-rod-view';
-        if (state) {
-            rodView.classList.add(state);
+        // 竿・糸・ウキは RodAnimator（SVG）が描く
+        if (typeof RodAnimator !== 'undefined') {
+            const options = {};
+            if (state === 'battle') options.matchup = this.getBattleMatchup();
+            RodAnimator.setState(state, options);
         }
 
-        // スキル色を適用
-        const skin = GameState.getCurrentSkin();
-        const rodShaft = rodView.querySelector('.rod-shaft');
-        if (rodShaft) {
-            rodShaft.style.backgroundColor = skin.rodColor;
-            // 枠線の色も少し暗くして調整（簡易的）
-            rodShaft.style.borderColor = skin.rodColor;
+        // 旧DOM版の竿（互換用。通常は非表示）
+        const rodView = document.getElementById('fishing-rod-view');
+        if (rodView) {
+            rodView.className = 'fishing-rod-view';
+            if (state) rodView.classList.add(state);
+        }
+    },
+
+    // バトル中の竿のしなり方を決める力関係（見た目だけ。ゲームロジックには使わない）
+    getBattleMatchup() {
+        try {
+            const fishPower = FishingGame.currentFish ? FishingGame.currentFish.power : 0;
+            const playerPower = GameState.getTotalPower();
+            if (!fishPower || !playerPower) return 'even';
+            const ratio = fishPower / playerPower;
+            if (ratio < 0.8) return 'easy';
+            if (ratio < 1.1) return 'even';
+            if (ratio < 1.5) return 'hard';
+            return 'reckless';
+        } catch (e) {
+            return 'even';
         }
     },
 
@@ -394,6 +413,7 @@ const UIManager = {
         if (!fishingArea) return;
 
         const skin = GameState.getCurrentSkin();
+        this.nibbleScale = scale;
 
         fishingArea.innerHTML = `
             <div class="nibble-state">
@@ -414,6 +434,9 @@ const UIManager = {
     // ウキの揺れを1回分実行
     // ========================================
     triggerBobberShake(durationMs) {
+        // 画面に見えるウキ（SVG）を沈ませる
+        if (typeof RodAnimator !== 'undefined') RodAnimator.nibble(this.nibbleScale || 1);
+
         const bobber = document.querySelector('.bobber');
         if (!bobber) return;
 
@@ -514,6 +537,7 @@ const UIManager = {
         if (indicator) {
             indicator.style.left = `${position}%`;
         }
+        if (typeof RodAnimator !== 'undefined') RodAnimator.setGauge(position);
     },
 
     // ========================================
@@ -548,6 +572,8 @@ const UIManager = {
     showCatchSuccess(fish, onClose, count = 1, extraRewards = []) {
         const fishingArea = document.getElementById('fishing-area');
         if (!fishingArea) return;
+
+        this.updateRodView('success');
 
         const fishIcon = fish.icon || 'set_meal';
 
@@ -636,6 +662,8 @@ const UIManager = {
     showCatchFailed(fish, onClose) {
         const fishingArea = document.getElementById('fishing-area');
         if (!fishingArea) return;
+
+        this.updateRodView('fail');
 
         const fishIcon = fish.icon || 'set_meal';
         fishingArea.innerHTML = `
@@ -816,6 +844,8 @@ const UIManager = {
         const fishingArea = document.getElementById('fishing-area');
         if (!fishingArea) return;
 
+        this.updateRodView('success');
+
         // 結果リストのHTML生成
         const itemsHtml = results.map(item => {
             let icon = 'help';
@@ -883,6 +913,9 @@ const UIManager = {
     showMissed(message) {
         const fishingArea = document.getElementById('fishing-area');
         if (!fishingArea) return;
+
+        // 早合わせは 'early'（巻き取り）が既に始まっている。それ以外（反応が遅れた等）は糸がたるむ
+        if (this.rodState !== 'early') this.updateRodView('fail');
 
         fishingArea.innerHTML = `
             <div class="result-state missed">

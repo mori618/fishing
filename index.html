@@ -96,7 +96,10 @@
             </div>
         </main>
 
-        <!-- 1人称視点の釣り竿 -->
+        <!-- 竿・糸・ウキ（js/RodAnimator.js がSVGで描く） -->
+        <svg id="rod-scene" class="rod-scene" aria-hidden="true"></svg>
+
+        <!-- 旧DOM版の竿（互換用・非表示） -->
         <div id="fishing-rod-view" class="fishing-rod-view">
             <div class="rod-shaft"></div>
             <div class="rod-line"></div>
@@ -436,6 +439,7 @@
     <script src="js/DebugManager.js"></script>
     <script src="js/SoundManager.js"></script>
     <script src="js/FishArt.js"></script>
+    <script src="js/RodAnimator.js"></script>
     <script src="js/FxManager.js"></script>
     <script src="js/main.js"></script>
 </body>

@@ -624,7 +624,7 @@ const FishingGame = {
             case 'nibble':
                 // 早すぎるクリック - 失敗扱いにする
                 this.cleanupTimers();
-                UIManager.updateRodView('strike');
+                UIManager.updateRodView('early');   // 竿をあおってウキを竿先まで巻き取る
                 this.earlyClickFailed();
                 break;
 

@@ -58,12 +58,11 @@ const FxManager = {
     },
 
     rodTip() {
-        const shaft = document.querySelector('#fishing-rod-view .rod-shaft');
         const scr = this.screen();
-        if (!shaft || !scr) return { x: this.W * 0.8, y: this.H * 0.6 };
-        const r = shaft.getBoundingClientRect();
-        const s = scr.getBoundingClientRect();
-        return { x: r.left + r.width / 2 - s.left, y: Math.max(0, r.top - s.top) };
+        const s = scr ? scr.getBoundingClientRect() : null;
+        const tip = (typeof RodAnimator !== 'undefined' && RodAnimator.getTip) ? RodAnimator.getTip() : null;
+        if (tip && s) return { x: tip.x - s.left, y: tip.y - s.top };
+        return { x: this.W * 0.8, y: this.H * 0.6 };
     },
 
     setFocus(on) {
@@ -456,8 +455,8 @@ const FxManager = {
         });
 
         this.after(U, 'showCasting', function () {
+            // ウキと糸は RodAnimator が竿先から飛ばす（castFlight は使わない）
             this.sound('cast');
-            this.castFlight();
         });
 
         this.after(U, 'showWaiting', function () {
@@ -543,7 +542,7 @@ const FxManager = {
         });
 
         this.after(U, 'updateRodView', function (state) {
-            if (state === 'strike') this.sound('strike');
+            if (state === 'strike' || state === 'early') this.sound('strike');
         });
     },
 
