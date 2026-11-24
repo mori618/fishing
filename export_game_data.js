@@ -84,14 +84,14 @@ const skillRows = DATA.SKILLS.map(item => [
 writeCSV('skills.csv', skillHeaders, skillRows);
 
 // 4. Baits (餌)
-const baitHeaders = ['ID', '名前', 'ランク', '価格', 'セット数', '説明'];
-const baitRows = DATA.BAITS.map(item => [
-    item.id,
-    item.name,
-    item.rank,
-    item.price,
-    item.quantity,
-    item.description
+// 餌は1種類。使用数（段階）ごとの出現率重み・相当ランク・待ち時間短縮を出力する
+const baitHeaders = ['使用数', '相当ランク(0=D..4=S)', '待ち時間短縮', '通常重み', 'フィーバー重み'];
+const baitRows = DATA.BAIT_CONFIG.tiers.map(t => [
+    t.count,
+    t.effectiveRank,
+    t.waitTimeReduction,
+    JSON.stringify(t.weights),
+    JSON.stringify(t.feverWeights)
 ]);
 writeCSV('baits.csv', baitHeaders, baitRows);
 

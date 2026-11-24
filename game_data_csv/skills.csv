@@ -193,10 +193,10 @@ xp_boost_1,経験値アップ I,1,2000,xp_boost,0.1,"獲得経験値 +10%",成�
 xp_boost_2,経験値アップ II,2,8000,xp_boost,0.2,"獲得経験値 +20%",成長グループ,trending_up
 xp_boost_3,経験値アップ III,3,25000,xp_boost,0.5,"獲得経験値 +50%",成長グループ,trending_up
 xp_boost_4,経験値アップ 極,4,80000,xp_boost,1,"獲得経験値 +100%",成長グループ,trending_up
-bait_master_1,餌の達人 I,1,500,bait_save,0.15,"釣り成功時、15%で餌を消費しない",便利グループ,build
-bait_master_2,餌の達人 II,2,2000,bait_save,0.3,"釣り成功時、30%で餌を消費しない",便利グループ,build
-bait_master_3,餌の達人 III,3,6000,bait_save,0.5,"釣り成功時、50%で餌を消費しない",便利グループ,build
-bait_master_4,餌の達人 極,4,25000,bait_save,0.75,"釣り成功時、75%で餌を消費しない",便利グループ,build
+bait_master_1,餌の達人 I,1,500,bait_save,0.15,"釣り成功時、使った餌が1個ごとに15%で戻る",便利グループ,build
+bait_master_2,餌の達人 II,2,2000,bait_save,0.3,"釣り成功時、使った餌が1個ごとに30%で戻る",便利グループ,build
+bait_master_3,餌の達人 III,3,6000,bait_save,0.5,"釣り成功時、使った餌が1個ごとに50%で戻る",便利グループ,build
+bait_master_4,餌の達人 極,4,25000,bait_save,0.75,"釣り成功時、使った餌が1個ごとに75%で戻る",便利グループ,build
 recycle_boost_1,リサイクル強化 I,1,2000,recycle_boost,,"リサイクルの必要スキル数 -1",便利グループ,build
 recycle_boost_2,リサイクル強化 II,2,8000,recycle_boost,,"リサイクルの必要スキル数 -2",便利グループ,build
 recycle_boost_3,リサイクル強化 III,3,25000,recycle_boost,,"リサイクル時の獲得スキル数 +1",便利グループ,build
