@@ -355,11 +355,21 @@ const FxManager = {
 
         // 魚のイラストに差し替え
         const icon = card.querySelector('.result-icon');
-        if (icon && typeof FishArt !== 'undefined' && FishArt.isFish(fish)) {
+        if (icon && typeof FishArt !== 'undefined' && (FishArt.isFish(fish) || FishArt.isCatchItem(fish))) {
             const holder = document.createElement('div');
             holder.className = 'fx-result-fish';
-            holder.innerHTML = FishArt.svg(fish, { className: 'fish-art fx-result-fish-svg' });
+            holder.innerHTML = FishArt.artHtml(fish, { className: 'fish-art fx-result-fish-svg', imgClass: 'fx-result-fish-img' });
             icon.replaceWith(holder);
+        }
+        // 系統（魚以外の釣れるもの）
+        if (fish.category) {
+            const nameEl = card.querySelector('.fish-name');
+            if (nameEl && !card.querySelector('.catch-category-badge')) {
+                const badge = document.createElement('div');
+                badge.className = 'catch-category-badge';
+                badge.textContent = fish.category;
+                nameEl.insertAdjacentElement('afterend', badge);
+            }
         }
 
         const circle = card.querySelector('.icon-circle');
@@ -527,10 +537,10 @@ const FxManager = {
             if (typeof SoundManager !== 'undefined') SoundManager.stopReel();
             this.sound('fail');
             const icon = document.querySelector('#result-overlay .result-icon');
-            if (icon && fish && typeof FishArt !== 'undefined' && FishArt.isFish(fish)) {
+            if (icon && fish && typeof FishArt !== 'undefined' && (FishArt.isFish(fish) || FishArt.isCatchItem(fish))) {
                 const holder = document.createElement('div');
                 holder.className = 'fx-result-fish escaped';
-                holder.innerHTML = FishArt.svg(fish, { className: 'fish-art fx-result-fish-svg' });
+                holder.innerHTML = FishArt.artHtml(fish, { className: 'fish-art fx-result-fish-svg', imgClass: 'fx-result-fish-img' });
                 icon.replaceWith(holder);
             }
         });

@@ -223,15 +223,44 @@ const FishArt = {
         </svg>`;
     },
 
+    // 魚以外の「釣れるもの」かどうか
+    isCatchItem(fish) {
+        return !!fish && typeof fish.id === 'string' && fish.id.indexOf('catch_') === 0;
+    },
+
+    // 釣れるものの仮画像（画像がまだ無いとき）: 系統の色の丸＋系統の絵文字
+    placeholderSvg(item, opts = {}) {
+        const cats = (typeof GAME_DATA !== 'undefined' && GAME_DATA.CATCH_CATEGORIES) || {};
+        const cat = cats[item.category] || { emoji: '❔', hue: 200 };
+        const pal = this.RARITY_PALETTE[item.rarity] || this.RARITY_PALETTE.D;
+        const uid = 'cp' + (++this._uid);
+        const cls = opts.className || 'fish-art catch-placeholder';
+        return `<svg class="${cls}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${item.name}">
+            <defs><radialGradient id="${uid}" cx="0.35" cy="0.3" r="0.8">
+                <stop offset="0" stop-color="hsl(${cat.hue},70%,78%)"/>
+                <stop offset="1" stop-color="hsl(${cat.hue},55%,42%)"/>
+            </radialGradient></defs>
+            <circle cx="50" cy="50" r="44" fill="url(#${uid})" stroke="${pal.accent}" stroke-width="4"/>
+            <text x="50" y="52" text-anchor="middle" dominant-baseline="central" font-size="46">${cat.emoji}</text>
+        </svg>`;
+    },
+
+    // 釣果カード・図鑑の絵（画像 → 魚SVG → 仮画像 の順）
+    artHtml(fish, opts = {}) {
+        if (fish && fish.image) {
+            const cls = opts.imgClass || 'fish-illustration';
+            return `<img src="${fish.image}" alt="${fish.name}" class="${cls}" data-fish-id="${fish.id}" onerror="FishArt.replaceBrokenImage(this)">`;
+        }
+        if (this.isCatchItem(fish)) return this.placeholderSvg(fish, opts);
+        return this.svg(fish, opts);
+    },
+
     // 図鑑など: 画像があれば画像、読み込めなければSVGに差し替え
     iconHtml(fish) {
-        if (!this.isFish(fish)) {
+        if (!this.isFish(fish) && !this.isCatchItem(fish)) {
             return `<span class="material-icons">${(fish && fish.icon) || 'set_meal'}</span>`;
         }
-        if (fish.image) {
-            return `<img src="${fish.image}" alt="${fish.name}" class="fish-illustration" data-fish-id="${fish.id}" onerror="FishArt.replaceBrokenImage(this)">`;
-        }
-        return this.svg(fish);
+        return this.artHtml(fish);
     },
 
     replaceBrokenImage(img) {
@@ -239,7 +268,7 @@ const FishArt = {
         const fish = (typeof GAME_DATA !== 'undefined' && GAME_DATA.FISH || []).find(f => f.id === id);
         if (!fish) return;
         const wrap = document.createElement('span');
-        wrap.innerHTML = this.svg(fish);
+        wrap.innerHTML = this.isCatchItem(fish) ? this.placeholderSvg(fish) : this.svg(fish);
         img.replaceWith(wrap.firstElementChild);
     }
 };

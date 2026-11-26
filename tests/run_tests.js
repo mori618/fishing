@@ -45,6 +45,8 @@ const loadScript = (filePath) => {
 
 console.log('Loading Game Scripts...');
 loadScript('data/gameData.js');
+loadScript('data/catchImages.js');
+loadScript('data/catchItems.js');
 loadScript('js/SaveManager.js');
 loadScript('js/GameState.js');
 loadScript('js/EncyclopediaManager.js');
@@ -85,7 +87,7 @@ try {
 }
 
 // Load additional test files (新ミッション / 新スキル)
-['test_new_missions.js', 'test_new_skills.js', 'test_bait.js'].forEach(name => {
+['test_new_missions.js', 'test_new_skills.js', 'test_bait.js', 'test_catch_items.js'].forEach(name => {
     const fp = path.join(__dirname, name);
     if (!fs.existsSync(fp)) return;
     try {
