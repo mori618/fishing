@@ -433,3 +433,56 @@
     position: relative;
     z-index: 2;
 }
+
+/* ===== 釣れるもの（魚以外） ===== */
+.fx-result-fish:has(.catch-placeholder),
+.fx-result-fish:has(.fx-result-fish-img) {
+    width: 96px;
+    height: 96px;
+}
+.fx-result-fish-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+.catch-category-badge {
+    display: inline-block;
+    margin: 2px auto 6px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+}
+.encyclopedia-filter {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 6px 4px 8px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+.encyclopedia-filter::-webkit-scrollbar { display: none; }
+.enc-filter-chip {
+    flex: 0 0 auto;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(0, 0, 0, 0.25);
+    color: inherit;
+    font-size: 13px;
+    white-space: nowrap;
+}
+.enc-filter-chip.active {
+    background: #f5c542;
+    color: #2a1d05;
+    border-color: #f5c542;
+    font-weight: bold;
+}
+.enc-category-tag {
+    font-size: 11px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    white-space: nowrap;
+}

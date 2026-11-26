@@ -2,6 +2,35 @@
 // 図鑑画面の表示を管理
 
 const EncyclopediaManager = {
+    // 系統フィルター: 'all' | 'fish'（魚） | 系統名
+    filter: 'all',
+
+    // 系統で絞り込むボタン列
+    renderFilter(container) {
+        const cats = (GAME_DATA.CATCH_CATEGORIES) ? Object.keys(GAME_DATA.CATCH_CATEGORIES) : [];
+        if (cats.length === 0) return;
+        let bar = document.getElementById('encyclopedia-filter');
+        if (!bar) {
+            bar = document.createElement('div');
+            bar.id = 'encyclopedia-filter';
+            bar.className = 'encyclopedia-filter';
+            container.parentNode.insertBefore(bar, container);
+        }
+        const emoji = c => (GAME_DATA.CATCH_CATEGORIES[c] || {}).emoji || '';
+        const opts = [['all', 'すべて'], ['fish', '🐟 魚']].concat(cats.map(c => [c, `${emoji(c)} ${c}`]));
+        bar.innerHTML = opts.map(([v, label]) =>
+            `<button class="enc-filter-chip ${this.filter === v ? 'active' : ''}" data-filter="${v}">${label}</button>`).join('');
+        bar.querySelectorAll('.enc-filter-chip').forEach(btn => {
+            btn.onclick = () => { this.filter = btn.getAttribute('data-filter'); this.render(); };
+        });
+    },
+
+    matchesFilter(fish) {
+        if (this.filter === 'all') return true;
+        if (this.filter === 'fish') return !fish.category;
+        return fish.category === this.filter;
+    },
+
     // ========================================
     // 図鑑画面をレンダリング
     // ========================================
@@ -11,6 +40,7 @@ const EncyclopediaManager = {
         if (!container) return;
 
         container.innerHTML = '';
+        this.renderFilter(container);
 
         let caughtNormalCount = 0;
         let caughtSpecialCount = 0;
@@ -19,6 +49,14 @@ const EncyclopediaManager = {
         const totalSpecialEntries = GAME_DATA.FISH.length;
 
         GAME_DATA.FISH.forEach(fish => {
+            if (!this.matchesFilter(fish)) {
+                // 絞り込み外でも、全体の進捗には数える
+                const d = GameState.encyclopedia[fish.id];
+                if (d && d.count > 0) caughtNormalCount++;
+                if (d && ((d.specialCount !== undefined ? d.specialCount : (d.hasSpecial ? 1 : 0)) > 0)) caughtSpecialCount++;
+                return;
+            }
+            const unit = fish.category ? '個' : '匹';
             const data = GameState.encyclopedia[fish.id] || { count: 0, hasSpecial: false, specialCount: 0 };
 
             // 既存データ互換性: hasSpecialがtrueでspecialCountがない場合は1とする
@@ -44,8 +82,9 @@ const EncyclopediaManager = {
                     <div class="fish-info-col">
                         <div class="fish-header">
                             <div class="fish-name rarity-${fish.rarity}">${fish.name}</div>
+                            ${fish.category ? `<div class="enc-category-tag">${fish.category}</div>` : ''}
                         </div>
-                        <div class="fish-count">捕獲数: ${normalCount} 匹</div>
+                        <div class="fish-count">捕獲数: ${normalCount} ${unit}</div>
                         <div class="fish-frequency">出現頻度: ${fish.frequency || '不明'}</div>
                         <div class="fish-description">${fish.description}</div>
                     </div>
@@ -83,7 +122,7 @@ const EncyclopediaManager = {
                             <div class="fish-name rarity-${fish.rarity}">【${fish.specialTitle}】${fish.name}</div>
                             <div class="special-tag">ヌシ級</div>
                         </div>
-                        <div class="fish-count">捕獲数: ${specialCount} 匹</div>
+                        <div class="fish-count">捕獲数: ${specialCount} ${unit}</div>
                         <div class="fish-frequency">出現頻度: ${fish.frequency || '不明'}</div>
                         <div class="fish-description">${fish.titleDescription}</div>
                     </div>
