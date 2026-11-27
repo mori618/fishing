@@ -20,8 +20,13 @@ describe('Catch items (魚以外の釣れるもの)', () => {
     });
 
     it('画像がまだ無いものには image を付けない（404を出さない）', () => {
-        const withImage = items.filter(f => f.image);
+        // 既存の魚（タイ・マグロ）に当てる画像もあるので、魚全体で数える
+        const dir = window.CATCH_IMAGE_DIR || 'images/catch/';
+        const withImage = GAME_DATA.FISH.filter(f => f.image && f.image.indexOf(dir) === 0);
         expect(withImage.length).toBe((window.CATCH_IMAGE_READY || []).length);
+        // 画像の無い釣れるものには image が付いていない
+        const ready = new Set(window.CATCH_IMAGE_READY || []);
+        expect(items.filter(f => f.image && !ready.has(f.imageId)).length).toBe(0);
     });
 
     it('既存の魚と同じ名前（タイ・マグロ）は二重登録しない', () => {
